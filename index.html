@@ -130,7 +130,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            padding: 20px 0; /* Increased padding for larger logo */
+            padding: 25px 0; /* Increased padding for larger logo */
         }
 
         .navbar::after {
@@ -153,13 +153,13 @@
         .logo-container {
             display: flex;
             align-items: center;
-            gap: var(--space-md);
+            gap: 12px; /* Reduced from var(--space-md) to 12px */
             text-decoration: none;
         }
 
-        /* LARGER LOGO - Updated from 50px to 90px */
+        /* LARGER LOGO - Updated from 90px to 115px (25px increase) */
         .logo-image {
-            height: 90px; /* Increased from 50px */
+            height: 115px; /* Increased from 90px to 115px */
             width: auto;
             border-radius: var(--radius-md);
             object-fit: contain;
@@ -173,19 +173,21 @@
         .logo-text {
             font-family: var(--font-heading);
             font-weight: 800;
-            font-size: 2.25rem; /* Increased from 1.75rem */
+            font-size: 2.5rem; /* Increased from 2.25rem */
             background: var(--mm-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             letter-spacing: -0.5px;
+            line-height: 1; /* Reduced line height */
         }
 
         .logo-tagline {
             font-size: 0.875rem;
             color: var(--mm-gray-700);
             font-weight: 500;
-            margin-top: 2px;
+            margin-top: 4px; /* Reduced margin */
+            line-height: 1.2;
         }
 
         .nav-links {
@@ -327,7 +329,7 @@
         /* Sidebar */
         .sidebar {
             position: sticky;
-            top: calc(120px + var(--space-md));
+            top: calc(130px + var(--space-md)); /* Adjusted for larger logo */
             height: fit-content;
         }
 
@@ -773,13 +775,17 @@
                 right: -40%;
             }
             
-            /* Adjust logo size for mobile */
+            /* Adjust logo size for mobile - Increased by 25px */
             .logo-image {
-                height: 70px; /* Slightly smaller on mobile */
+                height: 95px; /* Increased from 70px to 95px (25px increase) */
             }
             
             .logo-text {
-                font-size: 1.75rem;
+                font-size: 2rem; /* Increased for mobile */
+            }
+            
+            .logo-container {
+                gap: 10px; /* Even smaller gap on mobile */
             }
         }
 
@@ -803,6 +809,14 @@
             
             .step {
                 padding: var(--space-md);
+            }
+            
+            .logo-image {
+                height: 85px; /* Slightly smaller for very small screens */
+            }
+            
+            .logo-text {
+                font-size: 1.75rem;
             }
         }
 
@@ -1003,7 +1017,7 @@
                     <span id="subtotal">$0.00</span>
                 </div>
                 <div class="total-row">
-                    <span>Tax (8.25%):</span>
+                    <span>Tax (<span id="tax-rate">8.25%</span>):</span>
                     <span id="tax">$0.00</span>
                 </div>
                 <div class="total-row">
@@ -1162,9 +1176,25 @@
             }
         };
 
+        // State sales tax rates (fallback if API fails)
+        const stateTaxRates = {
+            'AL': 0.04, 'AK': 0.00, 'AZ': 0.056, 'AR': 0.065, 'CA': 0.0725,
+            'CO': 0.029, 'CT': 0.0635, 'DE': 0.00, 'FL': 0.06, 'GA': 0.04,
+            'HI': 0.04, 'ID': 0.06, 'IL': 0.0625, 'IN': 0.07, 'IA': 0.06,
+            'KS': 0.065, 'KY': 0.06, 'LA': 0.0445, 'ME': 0.055, 'MD': 0.06,
+            'MA': 0.0625, 'MI': 0.06, 'MN': 0.06875, 'MS': 0.07, 'MO': 0.04225,
+            'MT': 0.00, 'NE': 0.055, 'NV': 0.0685, 'NH': 0.00, 'NJ': 0.06625,
+            'NM': 0.05125, 'NY': 0.04, 'NC': 0.0475, 'ND': 0.05, 'OH': 0.0575,
+            'OK': 0.045, 'OR': 0.00, 'PA': 0.06, 'RI': 0.07, 'SC': 0.06,
+            'SD': 0.045, 'TN': 0.07, 'TX': 0.0625, 'UT': 0.061, 'VT': 0.06,
+            'VA': 0.053, 'WA': 0.065, 'WV': 0.06, 'WI': 0.05, 'WY': 0.04,
+            'DC': 0.06, 'PR': 0.115
+        };
+
         // App State
         let currentCity = null;
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
+        let currentStateTaxRate = 0.0825; // Default 8.25%
 
         // Initialize App
         function init() {
@@ -1195,6 +1225,32 @@
                 currentTimeElement.textContent = timeString;
             }
             return now.getHours();
+        }
+
+        // GET SALES TAX RATE FOR STATE
+        async function getSalesTaxRate(stateCode) {
+            try {
+                // Use TaxAPI for sales tax rates (free tier available)
+                // Alternative: Use JSON file with state tax rates
+                const apiUrl = `https://api.api-ninjas.com/v1/salestax?state=${stateCode}`;
+                
+                // Note: For production, you need an API key from https://api-ninjas.com/api/salestax
+                // For now, we'll use our fallback stateTaxRates object
+                
+                // Check if we have the state in our fallback
+                const stateUpper = stateCode.toUpperCase();
+                if (stateTaxRates[stateUpper]) {
+                    return stateTaxRates[stateUpper];
+                }
+                
+                return 0.0825; // Default 8.25% if state not found
+                
+            } catch (error) {
+                console.error('Error fetching tax rate:', error);
+                // Use fallback
+                const stateUpper = stateCode.toUpperCase();
+                return stateTaxRates[stateUpper] || 0.0825;
+            }
         }
 
         // FIND LOCATION USING ZIP CODE API (Works for all USA)
@@ -1251,12 +1307,24 @@
 
                 // Get the primary place (first one in array)
                 const primaryPlace = data.places[0];
+                const stateCode = primaryPlace['state abbreviation'];
+                
+                // Get sales tax rate for the state
+                currentStateTaxRate = await getSalesTaxRate(stateCode);
+                
+                // Update tax rate display
+                const taxRateElement = document.getElementById('tax-rate');
+                if (taxRateElement) {
+                    taxRateElement.textContent = `${(currentStateTaxRate * 100).toFixed(2)}%`;
+                }
+                
                 currentCity = {
                     city: primaryPlace['place name'],
-                    state: primaryPlace['state abbreviation'],
+                    state: stateCode,
                     stateFull: primaryPlace.state,
-                    timezone: getTimezoneFromState(primaryPlace['state abbreviation']),
-                    cityId: 1 // Default city ID for menu lookup
+                    timezone: getTimezoneFromState(stateCode),
+                    cityId: 1, // Default city ID for menu lookup
+                    taxRate: currentStateTaxRate
                 };
 
                 // Update UI with real data
@@ -1292,7 +1360,7 @@
                 if (stateInput) stateInput.value = currentCity.state;
                 if (zipFormInput) zipFormInput.value = zipValue;
 
-                showNotification(`Menu loaded for ${currentCity.city}, ${currentCity.state}!`, 'success');
+                showNotification(`Menu loaded for ${currentCity.city}, ${currentCity.state}! Sales tax: ${(currentStateTaxRate * 100).toFixed(2)}%`, 'success');
 
             } catch (error) {
                 // Handle errors
@@ -1510,7 +1578,7 @@
                 subtotal += item.price * item.quantity;
             });
             
-            const tax = subtotal * 0.0825;
+            const tax = subtotal * currentStateTaxRate;
             const deliveryFee = 2.99;
             const total = subtotal + tax + deliveryFee;
             
