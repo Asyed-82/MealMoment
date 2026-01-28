@@ -1165,7 +1165,6 @@
         // App State
         let currentCity = null;
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
-        let currentOrder = null;
 
         // Initialize App
         function init() {
@@ -1177,7 +1176,8 @@
             const urlParams = new URLSearchParams(window.location.search);
             const zipParam = urlParams.get('zip');
             if (zipParam) {
-                document.getElementById('zip-code').value = zipParam;
+                const zipInput = document.getElementById('zip-code');
+                if (zipInput) zipInput.value = zipParam;
                 findLocation();
             }
         }
@@ -1190,29 +1190,47 @@
                 minute: '2-digit',
                 hour12: true
             });
-            document.getElementById('current-time').textContent = timeString;
+            const currentTimeElement = document.getElementById('current-time');
+            if (currentTimeElement) {
+                currentTimeElement.textContent = timeString;
+            }
             return now.getHours();
         }
 
         // FIND LOCATION USING ZIP CODE API (Works for all USA)
         async function findLocation() {
-            const zipInput = document.getElementById('zip-code').value.trim();
+            const zipInput = document.getElementById('zip-code');
+            if (!zipInput) {
+                showNotification('ZIP code input field not found', 'error');
+                return;
+            }
+            
+            const zipValue = zipInput.value.trim();
             const zipCodePattern = /^\d{5}$/;
 
             // Basic validation
-            if (!zipCodePattern.test(zipInput)) {
+            if (!zipCodePattern.test(zipValue)) {
                 showNotification('Please enter a valid 5-digit US ZIP code.', 'error');
                 return;
             }
 
-            // Show loading state
+            // Get DOM elements with null checks
             const mealTypeBadge = document.getElementById('meal-type');
+            const cityNameElement = document.getElementById('city-name');
+            const mealTextElement = document.getElementById('meal-text');
+            
+            if (!mealTypeBadge || !cityNameElement || !mealTextElement) {
+                showNotification('Page elements not loaded properly. Please refresh the page.', 'error');
+                return;
+            }
+
+            // Show loading state
             mealTypeBadge.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Looking up...`;
-            document.getElementById('city-name').textContent = `Checking ZIP ${zipInput}...`;
+            cityNameElement.textContent = `Checking ZIP ${zipValue}...`;
 
             try {
                 // Use Zippopotam.us API for real ZIP code data
-                const apiUrl = `https://api.zippopotam.us/us/${zipInput}`;
+                const apiUrl = `https://api.zippopotam.us/us/${zipValue}`;
                 const response = await fetch(apiUrl);
 
                 // Handle HTTP errors
@@ -1242,7 +1260,7 @@
                 };
 
                 // Update UI with real data
-                document.getElementById('city-name').textContent = `${currentCity.city}, ${currentCity.state}`;
+                cityNameElement.textContent = `${currentCity.city}, ${currentCity.state}`;
 
                 // Determine meal type based on time
                 const currentHour = updateTime();
@@ -1259,16 +1277,20 @@
                     mealIcon = '🍽️';
                 }
 
-                document.getElementById('meal-text').textContent = mealText;
-                document.getElementById('meal-type').innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
+                mealTextElement.textContent = mealText;
+                mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
 
                 // Load the menu for this city
                 loadMenu(currentCity.cityId, mealText.toLowerCase());
 
                 // Update checkout form with city/state info
-                document.getElementById('city').value = currentCity.city;
-                document.getElementById('state').value = currentCity.state;
-                document.getElementById('zip').value = zipInput;
+                const cityInput = document.getElementById('city');
+                const stateInput = document.getElementById('state');
+                const zipFormInput = document.getElementById('zip');
+                
+                if (cityInput) cityInput.value = currentCity.city;
+                if (stateInput) stateInput.value = currentCity.state;
+                if (zipFormInput) zipFormInput.value = zipValue;
 
                 showNotification(`Menu loaded for ${currentCity.city}, ${currentCity.state}!`, 'success');
 
@@ -1277,10 +1299,10 @@
                 console.error('Location fetch error:', error);
                 showNotification(error.message, 'error');
                 
-                // Reset UI to prompt state
-                document.getElementById('city-name').textContent = 'Select Your City';
-                document.getElementById('meal-text').textContent = 'Enter ZIP Code First';
-                mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> Enter ZIP Code First`;
+                // Reset UI to prompt state with null checks
+                if (cityNameElement) cityNameElement.textContent = 'Select Your City';
+                if (mealTextElement) mealTextElement.textContent = 'Enter ZIP Code First';
+                if (mealTypeBadge) mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> Enter ZIP Code First`;
             }
         }
 
@@ -1321,6 +1343,11 @@
         // Load menu based on city and meal type
         function loadMenu(cityId, mealType) {
             const menuContainer = document.getElementById('menu-container');
+            if (!menuContainer) {
+                console.error('Menu container not found');
+                return;
+            }
+            
             const items = database.menuItems[cityId] || [];
             
             // Filter special items (20 specials exactly)
@@ -1458,6 +1485,11 @@
             const taxEl = document.getElementById('tax');
             const totalEl = document.getElementById('total');
             
+            if (!cartContainer || !subtotalEl || !taxEl || !totalEl) {
+                console.error('Cart elements not found');
+                return;
+            }
+            
             if (currentCart.length === 0) {
                 cartContainer.innerHTML = `
                     <div class="loading">
@@ -1518,6 +1550,8 @@
 
         function updateCheckoutButton() {
             const checkoutBtn = document.getElementById('checkout-btn');
+            if (!checkoutBtn) return;
+            
             if (currentCart.length > 0 && currentCity) {
                 checkoutBtn.disabled = false;
                 checkoutBtn.style.opacity = '1';
@@ -1541,23 +1575,35 @@
                 return;
             }
             
-            document.getElementById('checkout-form').classList.remove('hidden');
-            document.getElementById('checkout-form').scrollIntoView({ behavior: 'smooth' });
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.classList.remove('hidden');
+                checkoutForm.scrollIntoView({ behavior: 'smooth' });
+            }
         }
 
         function hideCheckout() {
-            document.getElementById('checkout-form').classList.add('hidden');
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.classList.add('hidden');
+            }
         }
 
         function processPayment() {
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const address = document.getElementById('address').value.trim();
-            const city = document.getElementById('city').value.trim();
-            const state = document.getElementById('state').value.trim();
-            const zip = document.getElementById('zip').value.trim();
+            const name = document.getElementById('name');
+            const phone = document.getElementById('phone');
+            const address = document.getElementById('address');
+            const city = document.getElementById('city');
+            const state = document.getElementById('state');
+            const zip = document.getElementById('zip');
             
             if (!name || !phone || !address || !city || !state || !zip) {
+                showCheckoutMessage('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            if (!name.value.trim() || !phone.value.trim() || !address.value.trim() || 
+                !city.value.trim() || !state.value.trim() || !zip.value.trim()) {
                 showCheckoutMessage('Please fill in all required fields', 'error');
                 return;
             }
@@ -1568,10 +1614,10 @@
                 const orderNumber = 'MM-' + Date.now();
                 const deliveryTime = new Date(Date.now() + 45 * 60000);
                 
-                currentOrder = {
+                const currentOrder = {
                     orderNumber,
-                    customerName: name,
-                    deliveryAddress: `${address}, ${city}, ${state} ${zip}`,
+                    customerName: name.value.trim(),
+                    deliveryAddress: `${address.value.trim()}, ${city.value.trim()}, ${state.value.trim()} ${zip.value.trim()}`,
                     items: [...currentCart],
                     total: parseFloat(document.getElementById('total').textContent.replace('$', '')),
                     deliveryTime: deliveryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -1584,24 +1630,39 @@
                 currentCart = [];
                 localStorage.setItem('mealMomentCart', JSON.stringify([]));
                 
-                document.getElementById('checkout-form').classList.add('hidden');
-                document.getElementById('order-confirmation').classList.remove('hidden');
+                const checkoutForm = document.getElementById('checkout-form');
+                const orderConfirmation = document.getElementById('order-confirmation');
                 
-                document.getElementById('order-details').innerHTML = `
-                    Order #${orderNumber}<br>
-                    <small>${currentOrder.items.length} items • $${currentOrder.total.toFixed(2)}</small>
-                `;
-                document.getElementById('delivery-time').textContent = 
-                    `Estimated delivery: ${currentOrder.deliveryTime}`;
+                if (checkoutForm) checkoutForm.classList.add('hidden');
+                if (orderConfirmation) orderConfirmation.classList.remove('hidden');
+                
+                const orderDetails = document.getElementById('order-details');
+                const deliveryTimeElement = document.getElementById('delivery-time');
+                
+                if (orderDetails) {
+                    orderDetails.innerHTML = `
+                        Order #${orderNumber}<br>
+                        <small>${currentOrder.items.length} items • $${currentOrder.total.toFixed(2)}</small>
+                    `;
+                }
+                
+                if (deliveryTimeElement) {
+                    deliveryTimeElement.textContent = `Estimated delivery: ${currentOrder.deliveryTime}`;
+                }
                 
                 updateCartDisplay();
-                document.getElementById('order-confirmation').scrollIntoView({ behavior: 'smooth' });
+                
+                if (orderConfirmation) {
+                    orderConfirmation.scrollIntoView({ behavior: 'smooth' });
+                }
                 
             }, 2000);
         }
 
         function showCheckoutMessage(message, type) {
             const messageEl = document.getElementById('checkout-message');
+            if (!messageEl) return;
+            
             messageEl.innerHTML = `
                 <div class="${type}-message">
                     <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
@@ -1617,16 +1678,27 @@
         }
 
         function startNewOrder() {
-            document.getElementById('order-confirmation').classList.add('hidden');
-            document.getElementById('checkout-form').classList.add('hidden');
+            const orderConfirmation = document.getElementById('order-confirmation');
+            const checkoutForm = document.getElementById('checkout-form');
             
-            document.getElementById('name').value = '';
-            document.getElementById('phone').value = '';
-            document.getElementById('address').value = '';
-            document.getElementById('instructions').value = '';
-            document.getElementById('card-number').value = '';
-            document.getElementById('expiry').value = '';
-            document.getElementById('cvc').value = '';
+            if (orderConfirmation) orderConfirmation.classList.add('hidden');
+            if (checkoutForm) checkoutForm.classList.add('hidden');
+            
+            const name = document.getElementById('name');
+            const phone = document.getElementById('phone');
+            const address = document.getElementById('address');
+            const instructions = document.getElementById('instructions');
+            const cardNumber = document.getElementById('card-number');
+            const expiry = document.getElementById('expiry');
+            const cvc = document.getElementById('cvc');
+            
+            if (name) name.value = '';
+            if (phone) phone.value = '';
+            if (address) address.value = '';
+            if (instructions) instructions.value = '';
+            if (cardNumber) cardNumber.value = '';
+            if (expiry) expiry.value = '';
+            if (cvc) cvc.value = '';
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
