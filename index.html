@@ -3,201 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍽️ MealMoment - Food Ordering System</title>
+    <title>🍽️ MealMoment - Fresh Meals Based on Local Time</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
     <style>
-        /* Reset & Base */
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Brand Colors */
+            --mm-orange: #FF6A00;
+            --mm-orange-2: #FF8A2A;
+            --mm-green: #2E7D32;
+            --mm-green-2: #4CAF50;
+            --mm-charcoal: #1F1F1F;
+            --mm-gray-900: #2B2B2B;
+            --mm-gray-700: #5B5B5B;
+            --mm-gray-200: #EAEAEA;
+            --mm-bg: #FFFFFF;
+            --mm-bg-soft: #F8FAFC;
+            --mm-gradient: linear-gradient(90deg, #FF6A00 0%, #2E7D32 100%);
+            
+            /* Typography */
+            --font-heading: 'Poppins', system-ui, -apple-system, sans-serif;
+            --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+            
+            /* Spacing */
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2rem;
+            --space-xl: 3rem;
+            --space-2xl: 4rem;
+            
+            /* Border Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+        }
+
+        /* ===== RESET & BASE STYLES ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
+        html {
+            scroll-behavior: smooth;
         }
 
+        body {
+            font-family: var(--font-body);
+            background-color: var(--mm-bg);
+            color: var(--mm-charcoal);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: var(--space-md);
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+
+        h2 {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: var(--space-md);
+            color: var(--mm-gray-700);
+        }
+
+        a {
+            color: var(--mm-green);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--mm-orange);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Focus States for Accessibility */
+        *:focus {
+            outline: 3px solid var(--mm-green-2);
+            outline-offset: 2px;
+        }
+
+        /* ===== CONTAINER ===== */
         .container {
+            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 var(--space-md);
         }
 
-        /* Header */
-        header {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
+        /* ===== HEADER / NAVBAR ===== */
+        .navbar {
+            background-color: var(--mm-bg);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        .logo {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 3.5rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--mm-gradient);
+        }
+
+        .navbar-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-md) 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .logo-image {
+            height: 50px;
+            width: auto;
+            border-radius: var(--radius-sm);
+        }
+
+        .logo-text {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 1.75rem;
+            background: var(--mm-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            margin-bottom: 10px;
         }
 
-        .tagline {
-            color: #666;
+        .nav-links {
+            display: flex;
+            gap: var(--space-xl);
+            align-items: center;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: var(--mm-charcoal);
+            position: relative;
+            padding: var(--space-xs) 0;
+        }
+
+        .nav-link:hover {
+            color: var(--mm-orange);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--mm-gradient);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            padding: var(--space-2xl) 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 60%;
+            height: 200%;
+            background: linear-gradient(135deg, 
+                rgba(255, 106, 0, 0.08) 0%, 
+                rgba(46, 125, 50, 0.08) 100%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--mm-gray-700);
+            margin-bottom: var(--space-xl);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+            padding: 1rem 2rem;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--mm-gradient);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: var(--mm-bg);
+            color: var(--mm-charcoal);
+            border: 2px solid var(--mm-gray-200);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--mm-green);
+            color: var(--mm-green);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
             font-size: 1.2rem;
-            margin-bottom: 20px;
         }
 
-        /* Main Content */
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--mm-bg);
+            border: 1px solid var(--mm-gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--mm-green-2);
+        }
+
+        /* ===== MAIN CONTENT LAYOUT ===== */
         .main-content {
             display: grid;
             grid-template-columns: 1fr 2fr;
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: var(--space-xl);
+            margin-bottom: var(--space-xl);
         }
 
         /* Sidebar */
         .sidebar {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: sticky;
+            top: calc(80px + var(--space-md));
             height: fit-content;
         }
 
-        .sidebar h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-
+        /* Steps */
         .step {
-            margin-bottom: 25px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
+            margin-bottom: var(--space-lg);
+            padding: var(--space-lg);
+            background: var(--mm-bg-soft);
+            border-radius: var(--radius-lg);
+            border-left: 4px solid var(--mm-orange);
         }
 
         .step-number {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            background: #667eea;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--mm-gradient);
             color: white;
             border-radius: 50%;
-            text-align: center;
-            line-height: 30px;
-            margin-right: 10px;
-            font-weight: bold;
+            font-weight: 700;
+            margin-right: var(--space-sm);
+            margin-bottom: var(--space-sm);
         }
 
         .step h3 {
             display: inline-block;
-            color: #444;
-            margin-bottom: 10px;
+            color: var(--mm-charcoal);
         }
 
-        /* Menu Display */
+        /* Location Selector */
+        .location-selector {
+            margin-top: var(--space-xl);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--space-xs);
+            color: var(--mm-gray-900);
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--mm-charcoal);
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--mm-green);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        /* ===== MENU SECTION ===== */
         .menu-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--mm-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-sm);
         }
 
         .menu-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #eee;
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-md);
+            border-bottom: 2px solid var(--mm-gray-200);
         }
 
         .time-badge {
-            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 25px;
+            background: var(--mm-bg-soft);
+            color: var(--mm-charcoal);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-lg);
             font-weight: 600;
-            font-size: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--space-xs);
+            border: 2px solid var(--mm-gray-200);
+        }
+
+        .time-badge i {
+            color: var(--mm-orange);
         }
 
         /* Menu Grid */
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
         }
 
         .menu-item {
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 20px;
-            background: #fff;
-            transition: all 0.3s ease;
             position: relative;
-            cursor: pointer;
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            background: var(--mm-bg);
+            transition: all 0.3s ease;
         }
 
         .menu-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-            border-color: #667eea;
+            transform: translateY(-4px);
+            border-color: var(--mm-green);
+            box-shadow: var(--shadow-md);
         }
 
         .menu-item.special {
-            border: 2px solid #ff6b6b;
-            background: linear-gradient(135deg, #fff5f5, #ffeaea);
+            border-color: var(--mm-orange);
+            background: linear-gradient(135deg, rgba(255, 106, 0, 0.03) 0%, rgba(255, 106, 0, 0.08) 100%);
         }
 
         .special-badge {
             position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #ff6b6b;
+            top: -12px;
+            right: -12px;
+            background: var(--mm-orange);
             color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-lg);
             font-weight: 600;
-            box-shadow: 0 4px 10px rgba(255,107,107,0.3);
+            font-size: 0.875rem;
+            box-shadow: var(--shadow-sm);
         }
 
         .item-image {
             width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            height: 200px;
+            background: var(--mm-bg-soft);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--mm-gray-700);
         }
 
         .item-name {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
+            color: var(--mm-charcoal);
+            margin-bottom: var(--space-xs);
         }
 
         .item-description {
-            color: #666;
+            color: var(--mm-gray-700);
             font-size: 0.95rem;
-            margin-bottom: 15px;
-            line-height: 1.4;
+            margin-bottom: var(--space-md);
         }
 
         .item-footer {
@@ -209,216 +484,228 @@
         .item-price {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #667eea;
+            color: var(--mm-green);
         }
 
-        .item-calories {
-            color: #666;
-            font-size: 0.9rem;
-            background: #f8f9fa;
-            padding: 3px 10px;
-            border-radius: 15px;
+        .item-meta {
+            color: var(--mm-gray-700);
+            font-size: 0.875rem;
+            background: var(--mm-bg-soft);
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
         }
 
-        .add-to-cart {
-            background: #667eea;
+        .add-to-cart-btn {
+            background: var(--mm-gradient);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
             font-weight: 600;
-            transition: background 0.3s;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--space-xs);
+            transition: all 0.2s ease;
         }
 
-        .add-to-cart:hover {
-            background: #5a67d8;
+        .add-to-cart-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
 
-        /* Cart Section */
+        /* ===== CART SECTION ===== */
         .cart-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--mm-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            margin-top: var(--space-xl);
+            box-shadow: var(--shadow-sm);
         }
 
         .cart-items {
-            margin: 20px 0;
+            margin: var(--space-lg) 0;
         }
 
         .cart-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
+            padding: var(--space-md) 0;
+            border-bottom: 1px solid var(--mm-gray-200);
         }
 
         .cart-item:last-child {
             border-bottom: none;
         }
 
-        .cart-item-info h4 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
         .quantity-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: var(--space-md);
         }
 
         .quantity-btn {
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            border: 1px solid #667eea;
-            background: white;
-            color: #667eea;
+            border: 2px solid var(--mm-gray-200);
+            background: var(--mm-bg);
+            color: var(--mm-charcoal);
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
         }
 
         .quantity-btn:hover {
-            background: #667eea;
-            color: white;
+            border-color: var(--mm-green);
+            color: var(--mm-green);
         }
 
         .cart-total {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
+            background: var(--mm-bg-soft);
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-lg);
         }
 
         .total-row {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
+            margin: var(--space-sm) 0;
             font-size: 1.1rem;
         }
 
         .final-total {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #667eea;
-            border-top: 2px solid #667eea;
-            padding-top: 10px;
-            margin-top: 10px;
+            color: var(--mm-green);
+            border-top: 2px solid var(--mm-gray-200);
+            padding-top: var(--space-md);
+            margin-top: var(--space-md);
         }
 
-        /* Checkout Form */
+        /* ===== CHECKOUT FORM ===== */
         .checkout-form {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--mm-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            margin-top: var(--space-xl);
+            box-shadow: var(--shadow-sm);
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
+            gap: var(--space-lg);
+            margin: var(--space-lg) 0;
         }
 
         .form-group.full-width {
             grid-column: 1 / -1;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
+        /* Payment Section */
+        .payment-section {
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 2px solid var(--mm-gray-200);
+        }
+
+        /* Messages */
+        .message {
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin: var(--space-md) 0;
             font-weight: 500;
         }
 
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border 0.3s;
+        .success-message {
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--mm-green);
+            border: 1px solid rgba(46, 125, 50, 0.2);
         }
 
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
         }
 
-        /* Buttons */
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
+        .info-message {
+            background: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--mm-charcoal);
+            color: white;
+            padding: var(--space-2xl) 0 var(--space-xl);
+            margin-top: var(--space-2xl);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
         }
 
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
-        }
-
-        .btn-large {
-            width: 100%;
-            padding: 18px;
-            font-size: 1.2rem;
-            margin-top: 20px;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 30px;
-            color: white;
-            margin-top: 50px;
+        .footer-logo {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 2rem;
+            background: var(--mm-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .social-links {
             display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 20px 0;
+            gap: var(--space-md);
         }
 
         .social-links a {
             color: white;
             font-size: 1.5rem;
-            transition: transform 0.3s;
+            transition: color 0.2s ease;
         }
 
         .social-links a:hover {
-            transform: scale(1.2);
+            color: var(--mm-green-2);
         }
 
-        /* Responsive */
+        .footer-bottom {
+            text-align: center;
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: var(--space-2xl);
+            color: var(--mm-gray-700);
+        }
+
+        .loading i {
+            font-size: 3rem;
+            color: var(--mm-orange);
+            margin-bottom: var(--space-md);
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
         @media (max-width: 992px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -431,122 +718,249 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h2 {
+                font-size: 2rem;
+            }
         }
 
-        @media (max-width: 576px) {
+        @media (max-width: 768px) {
+            .navbar-content {
+                flex-direction: column;
+                gap: var(--space-md);
+            }
+            
+            .nav-links {
+                gap: var(--space-lg);
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
             .menu-grid {
                 grid-template-columns: 1fr;
             }
             
-            .logo {
-                font-size: 2.5rem;
+            .footer-content {
+                flex-direction: column;
+                gap: var(--space-xl);
+                text-align: center;
             }
             
-            .container {
-                padding: 10px;
+            .hero::before {
+                width: 80%;
+                height: 150%;
+                right: -40%;
             }
         }
 
-        /* Utility Classes */
-        .hidden {
-            display: none !important;
+        @media (max-width: 576px) {
+            .container {
+                padding: 0 var(--space-sm);
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.75rem;
+            }
+            
+            .btn {
+                padding: 0.875rem 1.5rem;
+                font-size: 0.95rem;
+            }
+            
+            .step {
+                padding: var(--space-md);
+            }
         }
 
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #667eea;
+        /* ===== ANIMATIONS ===== */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #c3e6cb;
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
         }
 
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #f5c6cb;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--mm-green);
+            color: white;
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.success {
+            background: var(--mm-green);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <h1 class="logo">🍽️ MealMoment</h1>
-            <p class="tagline">Fresh meals delivered based on your local time</p>
-            <div class="time-badge">
-                <i class="fas fa-clock"></i>
-                <span id="current-time">Loading...</span>
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <div class="logo-container">
+                    <img src="image/MealMomenetlogo.jpeg" alt="MealMoment Logo" class="logo-image">
+                    <span class="logo-text">MealMoment</span>
+                </div>
+                <nav class="nav-links">
+                    <a href="#menu" class="nav-link">Menu</a>
+                    <a href="#how-it-works" class="nav-link">How It Works</a>
+                    <a href="#cart" class="nav-link">Cart</a>
+                    <a href="#about" class="nav-link">About</a>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-user btn-icon"></i> Sign In
+                    </button>
+                </nav>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Main Content -->
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Fresh Meals, Perfect Timing</h1>
+                <p class="hero-subtitle">
+                    Your menu changes based on the time of day. Breakfast, lunch, or dinner - 
+                    we serve what's perfect for right now.
+                </p>
+                <div class="time-badge">
+                    <i class="fas fa-clock"></i>
+                    <span id="current-time">Loading local time...</span>
+                </div>
+                <div style="margin-top: var(--space-xl);">
+                    <a href="#how-it-works" class="btn btn-primary" style="margin-right: var(--space-sm);">
+                        <i class="fas fa-play-circle btn-icon"></i> Get Started
+                    </a>
+                    <a href="#menu" class="btn btn-secondary">
+                        <i class="fas fa-utensils btn-icon"></i> View Menu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
         <div class="main-content">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <h2>How It Works</h2>
+            <!-- Sidebar with Steps -->
+            <aside class="sidebar">
+                <h2 id="how-it-works">How It Works</h2>
+                
                 <div class="step">
                     <span class="step-number">1</span>
-                    <h3>Select Location</h3>
-                    <p>Enter your ZIP code to find available restaurants in your city</p>
+                    <h3>Enter ZIP Code</h3>
+                    <p>We'll find restaurants in your city with real-time menus</p>
                 </div>
+                
                 <div class="step">
                     <span class="step-number">2</span>
-                    <h3>Choose Meal Time</h3>
-                    <p>Menu changes automatically based on time: Breakfast, Lunch, or Dinner</p>
+                    <h3>Time-Based Menu</h3>
+                    <p>Menu automatically switches between breakfast, lunch, and dinner</p>
                 </div>
+                
                 <div class="step">
                     <span class="step-number">3</span>
-                    <h3>Add Items to Cart</h3>
-                    <p>Browse 20+ daily specials and regular menu items</p>
+                    <h3>Add to Cart</h3>
+                    <p>Choose from 20+ daily specials and regular menu items</p>
                 </div>
+                
                 <div class="step">
                     <span class="step-number">4</span>
-                    <h3>Checkout & Pay</h3>
-                    <p>Secure payment with order confirmation</p>
+                    <h3>Checkout & Enjoy</h3>
+                    <p>Secure payment with fresh delivery to your door</p>
                 </div>
 
                 <!-- Location Selector -->
-                <div class="form-group" style="margin-top: 30px;">
-                    <label for="zip-code"><i class="fas fa-map-marker-alt"></i> Enter ZIP Code</label>
-                    <input type="text" id="zip-code" placeholder="e.g., 90001, 10001, 60601" maxlength="5">
-                    <button class="btn btn-primary" onclick="findLocation()" style="width: 100%; margin-top: 15px;">
-                        <i class="fas fa-search"></i> Find Restaurants
+                <div class="location-selector">
+                    <h3><i class="fas fa-map-marker-alt"></i> Find Your Location</h3>
+                    <div class="form-group">
+                        <label for="zip-code">Enter ZIP Code</label>
+                        <input 
+                            type="text" 
+                            id="zip-code" 
+                            placeholder="e.g., 90001, 10001, 60601" 
+                            maxlength="5"
+                        >
+                    </div>
+                    <button class="btn btn-primary" onclick="findLocation()" style="width: 100%;">
+                        <i class="fas fa-search btn-icon"></i> Find Restaurants
                     </button>
                 </div>
-            </div>
+            </aside>
 
-            <!-- Menu Display -->
-            <div class="menu-section">
+            <!-- Menu Section -->
+            <section class="menu-section" id="menu">
                 <div class="menu-header">
                     <h2 id="city-name">Select Your City</h2>
                     <div class="time-badge" id="meal-type">
                         <i class="fas fa-utensils"></i>
-                        <span id="meal-text">Select ZIP first</span>
+                        <span id="meal-text">Enter ZIP Code First</span>
                     </div>
                 </div>
 
                 <div id="menu-container">
-                    <!-- Menu will be loaded here -->
                     <div class="loading">
-                        <i class="fas fa-utensils fa-spin fa-2x"></i>
-                        <p style="margin-top: 20px;">Please enter your ZIP code to see the menu</p>
+                        <i class="fas fa-utensils fa-spin"></i>
+                        <p>Please enter your ZIP code to see the menu</p>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
 
         <!-- Cart Section -->
-        <div class="cart-section">
+        <section class="cart-section" id="cart">
             <h2><i class="fas fa-shopping-cart"></i> Your Order</h2>
             <div class="cart-items" id="cart-items">
                 <div class="loading">
@@ -572,14 +986,15 @@
                     <span id="total">$2.99</span>
                 </div>
             </div>
-            <button class="btn btn-primary btn-large" onclick="showCheckout()" id="checkout-btn" disabled>
-                <i class="fas fa-lock"></i> Proceed to Checkout
+            <button class="btn btn-primary" onclick="showCheckout()" id="checkout-btn" disabled style="width: 100%; margin-top: var(--space-lg);">
+                <i class="fas fa-lock btn-icon"></i> Proceed to Checkout
             </button>
-        </div>
+        </section>
 
-        <!-- Checkout Form (Initially Hidden) -->
+        <!-- Checkout Form -->
         <div class="checkout-form hidden" id="checkout-form">
-            <h2><i class="fas fa-credit-card"></i> Checkout</h2>
+            <h2><i class="fas fa-credit-card"></i> Complete Your Order</h2>
+            
             <div class="form-grid">
                 <div class="form-group">
                     <label for="name"><i class="fas fa-user"></i> Full Name</label>
@@ -611,7 +1026,6 @@
                 </div>
             </div>
             
-            <!-- Payment Section -->
             <div class="payment-section">
                 <h3><i class="fas fa-credit-card"></i> Payment Information</h3>
                 <div class="form-grid">
@@ -632,42 +1046,54 @@
 
             <div id="checkout-message"></div>
             
-            <button class="btn btn-primary btn-large" onclick="processPayment()">
-                <i class="fas fa-check-circle"></i> Place Order & Pay
+            <button class="btn btn-primary" onclick="processPayment()" style="width: 100%;">
+                <i class="fas fa-check-circle btn-icon"></i> Place Order & Pay
             </button>
-            <button class="btn" onclick="hideCheckout()" style="background: #f8f9fa; margin-top: 10px;">
-                <i class="fas fa-arrow-left"></i> Back to Menu
+            <button class="btn btn-secondary" onclick="hideCheckout()" style="width: 100%; margin-top: var(--space-sm);">
+                <i class="fas fa-arrow-left btn-icon"></i> Back to Menu
             </button>
         </div>
 
-        <!-- Order Confirmation (Initially Hidden) -->
+        <!-- Order Confirmation -->
         <div class="checkout-form hidden" id="order-confirmation">
             <div class="success-message">
-                <i class="fas fa-check-circle fa-2x"></i>
+                <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: var(--space-md);"></i>
                 <h2>Order Confirmed! 🎉</h2>
                 <p id="order-details">Your order is being prepared</p>
                 <p id="delivery-time">Estimated delivery: 45 minutes</p>
             </div>
-            <button class="btn btn-primary" onclick="startNewOrder()">
-                <i class="fas fa-plus"></i> Start New Order
+            <button class="btn btn-primary" onclick="startNewOrder()" style="width: 100%;">
+                <i class="fas fa-plus btn-icon"></i> Start New Order
             </button>
         </div>
-    </div>
+    </main>
 
     <!-- Footer -->
-    <footer>
-        <div class="social-links">
-            <a href="#"><i class="fab fa-facebook"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-youtube"></i></a>
+    <footer class="footer" id="about">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <div class="footer-logo">MealMoment</div>
+                    <p style="color: rgba(255, 255, 255, 0.8); margin-top: var(--space-sm);">
+                        Fresh food delivered based on your local time
+                    </p>
+                </div>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 MealMoment. All rights reserved.</p>
+                <p>Fresh • Timely • Delicious</p>
+            </div>
         </div>
-        <p>© 2024 MealMoment. All rights reserved.</p>
-        <p>Fresh food delivered based on your local time</p>
     </footer>
 
     <script>
-        // Sample Data - In production, this would come from a backend API
+        // Database (simulated backend)
         const database = {
             zipCodes: {
                 '90001': { city: 'Los Angeles', state: 'CA', timezone: 'America/Los_Angeles', cityId: 1 },
@@ -678,55 +1104,22 @@
             },
             
             menuItems: {
-                1: [ // Los Angeles
-                    // Breakfast Specials (7 items, 5 specials)
-                    { id: 1, name: "Avocado Toast", description: "Smashed avocado on artisan bread with cherry tomatoes", price: 12.99, cuisine: "American", image: "🥑", isSpecial: true, calories: 450, prepTime: 15 },
-                    { id: 2, name: "Pancake Stack", description: "Three fluffy pancakes with maple syrup and butter", price: 14.99, cuisine: "American", image: "🥞", isSpecial: true, calories: 650, prepTime: 20 },
-                    { id: 3, name: "Eggs Benedict", description: "Poached eggs with ham on English muffin, hollandaise", price: 16.99, cuisine: "American", image: "🍳", isSpecial: true, calories: 520, prepTime: 25 },
-                    { id: 4, name: "Breakfast Burrito", description: "Scrambled eggs, sausage, cheese in flour tortilla", price: 13.99, cuisine: "Mexican", image: "🌯", isSpecial: true, calories: 780, prepTime: 15 },
-                    { id: 5, name: "Greek Yogurt Bowl", description: "Greek yogurt with honey, granola, and fresh berries", price: 10.99, cuisine: "Greek", image: "🥣", isSpecial: true, calories: 320, prepTime: 10 },
-                    { id: 6, name: "Belgian Waffles", description: "Crispy waffles with whipped cream and strawberries", price: 15.99, cuisine: "American", image: "🧇", isSpecial: false, calories: 580, prepTime: 20 },
-                    { id: 7, name: "Breakfast Sandwich", description: "Egg, cheese, and bacon on croissant", price: 11.99, cuisine: "American", image: "🥪", isSpecial: false, calories: 420, prepTime: 12 },
-                    
-                    // Lunch Combos (8 items, 5 specials)
-                    { id: 8, name: "Chicken Caesar Salad", description: "Grilled chicken, romaine, parmesan, caesar dressing", price: 15.99, cuisine: "American", image: "🥗", isSpecial: true, calories: 380, prepTime: 15 },
-                    { id: 9, name: "Turkey Club Sandwich", description: "Triple decker with bacon, avocado, and fries", price: 17.99, cuisine: "American", image: "🥪", isSpecial: true, calories: 720, prepTime: 20 },
-                    { id: 10, name: "Vegetable Wrap", description: "Grilled vegetables with hummus in spinach wrap", price: 13.99, cuisine: "American", image: "🌯", isSpecial: true, calories: 290, prepTime: 15 },
-                    { id: 11, name: "BBQ Chicken Pizza", description: "Wood-fired pizza with BBQ sauce and chicken", price: 21.99, cuisine: "Italian", image: "🍕", isSpecial: true, calories: 850, prepTime: 25 },
-                    { id: 12, name: "Beef Burger", description: "1/2 lb beef patty with cheese and all fixings", price: 18.99, cuisine: "American", image: "🍔", isSpecial: true, calories: 920, prepTime: 20 },
-                    { id: 13, name: "Cobb Salad", description: "Mixed greens with chicken, avocado, egg, bacon", price: 16.99, cuisine: "American", image: "🥗", isSpecial: false, calories: 410, prepTime: 15 },
-                    { id: 14, name: "Fish Tacos", description: "Grilled fish with cabbage slaw and lime crema", price: 16.99, cuisine: "Mexican", image: "🌮", isSpecial: false, calories: 480, prepTime: 18 },
-                    { id: 15, name: "Chicken Quesadilla", description: "Grilled chicken and cheese in flour tortilla", price: 14.99, cuisine: "Mexican", image: "🧀", isSpecial: false, calories: 620, prepTime: 15 },
-                    
-                    // Italian Classics (7 items, 5 specials)
-                    { id: 16, name: "Spaghetti Carbonara", description: "Pasta with eggs, cheese, pancetta, and black pepper", price: 18.99, cuisine: "Italian", image: "🍝", isSpecial: true, calories: 650, prepTime: 25 },
-                    { id: 17, name: "Margherita Pizza", description: "Classic pizza with tomato, mozzarella, and basil", price: 22.99, cuisine: "Italian", image: "🍕", isSpecial: true, calories: 820, prepTime: 30 },
-                    { id: 18, name: "Lasagna Bolognese", description: "Layers of pasta with meat sauce and cheese", price: 24.99, cuisine: "Italian", image: "🍝", isSpecial: true, calories: 780, prepTime: 35 },
-                    { id: 19, name: "Chicken Parmesan", description: "Breaded chicken with marinara and melted cheese", price: 26.99, cuisine: "Italian", image: "🍗", isSpecial: true, calories: 920, prepTime: 30 },
-                    { id: 20, name: "Fettuccine Alfredo", description: "Creamy pasta with parmesan cheese", price: 19.99, cuisine: "Italian", image: "🍝", isSpecial: true, calories: 720, prepTime: 25 },
-                    { id: 21, name: "Eggplant Parmesan", description: "Breaded eggplant with marinara and cheese", price: 22.99, cuisine: "Italian", image: "🍆", isSpecial: false, calories: 580, prepTime: 30 },
-                    { id: 22, name: "Minestrone Soup", description: "Traditional Italian vegetable soup", price: 9.99, cuisine: "Italian", image: "🍲", isSpecial: false, calories: 210, prepTime: 20 },
-                    
-                    // Chinese Favorites (8 items, 5 specials)
-                    { id: 23, name: "Kung Pao Chicken", description: "Spicy stir-fried chicken with peanuts", price: 19.99, cuisine: "Chinese", image: "🍗", isSpecial: true, calories: 680, prepTime: 25 },
-                    { id: 24, name: "Beef with Broccoli", description: "Tender beef stir-fried with fresh broccoli", price: 21.99, cuisine: "Chinese", image: "🥩", isSpecial: true, calories: 520, prepTime: 20 },
-                    { id: 25, name: "Vegetable Lo Mein", description: "Stir-fried noodles with mixed vegetables", price: 16.99, cuisine: "Chinese", image: "🍜", isSpecial: true, calories: 490, prepTime: 15 },
-                    { id: 26, name: "Sweet and Sour Pork", description: "Crispy pork in tangy sweet and sour sauce", price: 20.99, cuisine: "Chinese", image: "🍖", isSpecial: true, calories: 710, prepTime: 25 },
-                    { id: 27, name: "General Tso's Chicken", description: "Crispy chicken in spicy sauce", price: 22.99, cuisine: "Chinese", image: "🍗", isSpecial: true, calories: 850, prepTime: 25 },
-                    { id: 28, name: "Fried Rice", description: "Vegetable fried rice with eggs", price: 14.99, cuisine: "Chinese", image: "🍚", isSpecial: false, calories: 420, prepTime: 15 },
-                    { id: 29, name: "Wonton Soup", description: "Chicken broth with pork wontons", price: 8.99, cuisine: "Chinese", image: "🍲", isSpecial: false, calories: 180, prepTime: 10 },
-                    { id: 30, name: "Mongolian Beef", description: "Beef strips in savory sauce with scallions", price: 23.99, cuisine: "Chinese", image: "🥩", isSpecial: false, calories: 690, prepTime: 25 },
-                    
-                    // Additional specials to reach exactly 20
-                    { id: 31, name: "Grilled Salmon", description: "Atlantic salmon with lemon butter sauce", price: 28.99, cuisine: "American", image: "🐟", isSpecial: true, calories: 480, prepTime: 35 },
-                    { id: 32, name: "Filet Mignon", description: "8oz beef tenderloin with mashed potatoes", price: 39.99, cuisine: "American", image: "🥩", isSpecial: true, calories: 920, prepTime: 40 },
-                    { id: 33, name: "BBQ Ribs", description: "Pork ribs with house BBQ sauce", price: 32.99, cuisine: "American", image: "🍖", isSpecial: true, calories: 1120, prepTime: 45 },
-                    { id: 34, name: "Tandoori Chicken", description: "Chicken marinated in yogurt and spices", price: 24.99, cuisine: "Indian", image: "🍗", isSpecial: true, calories: 620, prepTime: 35 },
-                    { id: 35, name: "Vegetable Biryani", description: "Fragrant rice with vegetables", price: 18.99, cuisine: "Indian", image: "🍚", isSpecial: true, calories: 450, prepTime: 30 }
+                1: [
+                    { id: 1, name: "Avocado Toast", description: "Smashed avocado on artisan bread with cherry tomatoes", price: 12.99, cuisine: "American", emoji: "🥑", isSpecial: true, calories: 450, prepTime: 15 },
+                    { id: 2, name: "Pancake Stack", description: "Three fluffy pancakes with maple syrup and butter", price: 14.99, cuisine: "American", emoji: "🥞", isSpecial: true, calories: 650, prepTime: 20 },
+                    { id: 3, name: "Eggs Benedict", description: "Poached eggs with ham on English muffin, hollandaise", price: 16.99, cuisine: "American", emoji: "🍳", isSpecial: true, calories: 520, prepTime: 25 },
+                    { id: 4, name: "Breakfast Burrito", description: "Scrambled eggs, sausage, cheese in flour tortilla", price: 13.99, cuisine: "Mexican", emoji: "🌯", isSpecial: true, calories: 780, prepTime: 15 },
+                    { id: 5, name: "Greek Yogurt Bowl", description: "Greek yogurt with honey, granola, and fresh berries", price: 10.99, cuisine: "Greek", emoji: "🥣", isSpecial: true, calories: 320, prepTime: 10 },
+                    { id: 8, name: "Chicken Caesar Salad", description: "Grilled chicken, romaine, parmesan, caesar dressing", price: 15.99, cuisine: "American", emoji: "🥗", isSpecial: true, calories: 380, prepTime: 15 },
+                    { id: 9, name: "Turkey Club Sandwich", description: "Triple decker with bacon, avocado, and fries", price: 17.99, cuisine: "American", emoji: "🥪", isSpecial: true, calories: 720, prepTime: 20 },
+                    { id: 16, name: "Spaghetti Carbonara", description: "Pasta with eggs, cheese, pancetta, and black pepper", price: 18.99, cuisine: "Italian", emoji: "🍝", isSpecial: true, calories: 650, prepTime: 25 },
+                    { id: 17, name: "Margherita Pizza", description: "Classic pizza with tomato, mozzarella, and basil", price: 22.99, cuisine: "Italian", emoji: "🍕", isSpecial: true, calories: 820, prepTime: 30 },
+                    { id: 23, name: "Kung Pao Chicken", description: "Spicy stir-fried chicken with peanuts", price: 19.99, cuisine: "Chinese", emoji: "🍗", isSpecial: true, calories: 680, prepTime: 25 },
+                    { id: 31, name: "Grilled Salmon", description: "Atlantic salmon with lemon butter sauce", price: 28.99, cuisine: "American", emoji: "🐟", isSpecial: true, calories: 480, prepTime: 35 },
+                    { id: 32, name: "Filet Mignon", description: "8oz beef tenderloin with mashed potatoes", price: 39.99, cuisine: "American", emoji: "🥩", isSpecial: true, calories: 920, prepTime: 40 },
+                    { id: 33, name: "BBQ Ribs", description: "Pork ribs with house BBQ sauce", price: 32.99, cuisine: "American", emoji: "🍖", isSpecial: true, calories: 1120, prepTime: 45 }
                 ]
-            },
-            
-            cart: []
+            }
         };
 
         // App State
@@ -734,13 +1127,13 @@
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
         let currentOrder = null;
 
-        // Initialize
+        // Initialize App
         function init() {
             updateTime();
-            setInterval(updateTime, 60000); // Update every minute
+            setInterval(updateTime, 60000);
             updateCartDisplay();
             
-            // Check URL for zip parameter
+            // Check URL for ZIP parameter
             const urlParams = new URLSearchParams(window.location.search);
             const zipParam = urlParams.get('zip');
             if (zipParam) {
@@ -749,7 +1142,7 @@
             }
         }
 
-        // Update current time
+        // Update Time Display
         function updateTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('en-US', {
@@ -761,13 +1154,13 @@
             return now.getHours();
         }
 
-        // Find location based on ZIP
+        // Find Location
         function findLocation() {
             const zipInput = document.getElementById('zip-code').value.trim();
             const zipData = database.zipCodes[zipInput];
             
             if (!zipData) {
-                alert('Please enter a valid ZIP code. Try: 90001, 10001, 60601, 77001, or 33101');
+                showNotification('Please enter a valid ZIP code. Try: 90001, 10001, 60601, 77001, or 33101', 'error');
                 return;
             }
             
@@ -776,7 +1169,7 @@
             // Update UI
             document.getElementById('city-name').textContent = `${zipData.city}, ${zipData.state}`;
             
-            // Determine meal type based on time
+            // Determine meal type
             const currentHour = updateTime();
             let mealType, mealText, mealIcon;
             
@@ -797,92 +1190,57 @@
             document.getElementById('meal-text').textContent = mealText;
             document.getElementById('meal-type').innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
             
-            // Load menu for this city
+            // Load menu
             loadMenu(zipData.cityId, mealType);
             
             // Update checkout form
             document.getElementById('city').value = zipData.city;
             document.getElementById('state').value = zipData.state;
             document.getElementById('zip').value = zipInput;
+            
+            showNotification(`Menu loaded for ${zipData.city}!`, 'success');
         }
 
-        // Load menu based on city and meal type
+        // Load Menu
         function loadMenu(cityId, mealType) {
             const menuContainer = document.getElementById('menu-container');
-            const allItems = database.menuItems[cityId] || [];
+            const items = database.menuItems[cityId] || [];
             
-            // Filter items based on meal type logic
-            let filteredItems = allItems;
-            
-            // In a real app, you would filter by actual meal type from database
-            // For demo, we'll show all items but mark which ones are appropriate
-            
-            // Get exactly 20 specials
-            const specials = allItems.filter(item => item.isSpecial).slice(0, 20);
-            
-            // Group items by cuisine
-            const itemsByCuisine = {};
-            allItems.forEach(item => {
-                if (!itemsByCuisine[item.cuisine]) {
-                    itemsByCuisine[item.cuisine] = [];
-                }
-                itemsByCuisine[item.cuisine].push(item);
-            });
-            
-            // Build menu HTML
-            let html = '';
-            
-            // Display specials
-            html += `<h3><i class="fas fa-star"></i> Daily Specials (${specials.length} items)</h3>`;
+            let html = `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Daily Specials</h3>`;
             html += '<div class="menu-grid">';
-            specials.forEach(item => {
-                html += createMenuItemHTML(item);
+            
+            items.forEach(item => {
+                const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
+                const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
+                
+                html += `
+                    <div class="menu-item ${item.isSpecial ? 'special' : ''}">
+                        ${item.isSpecial ? '<div class="special-badge">SPECIAL</div>' : ''}
+                        <div class="item-image">
+                            ${item.emoji}
+                        </div>
+                        <h3 class="item-name">${item.name}</h3>
+                        <p class="item-description">${item.description}</p>
+                        <div class="item-footer">
+                            <div>
+                                <div class="item-price">$${item.price.toFixed(2)}</div>
+                                <div class="item-meta">${item.calories} cal • ${item.prepTime} min</div>
+                            </div>
+                            <button class="add-to-cart-btn" onclick="addToCart(${item.id})">
+                                <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
+                                ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
+                            </button>
+                        </div>
+                    </div>
+                `;
             });
+            
             html += '</div>';
-            
-            // Display by cuisine
-            for (const [cuisine, items] of Object.entries(itemsByCuisine)) {
-                html += `<h3 style="margin-top: 30px;"><i class="fas fa-utensil-spoon"></i> ${cuisine} Cuisine</h3>`;
-                html += '<div class="menu-grid">';
-                items.forEach(item => {
-                    html += createMenuItemHTML(item);
-                });
-                html += '</div>';
-            }
-            
             menuContainer.innerHTML = html;
-            
-            // Enable checkout if cart has items
             updateCheckoutButton();
         }
 
-        // Create menu item HTML
-        function createMenuItemHTML(item) {
-            const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
-            const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
-            
-            return `
-                <div class="menu-item ${item.isSpecial ? 'special' : ''}">
-                    ${item.isSpecial ? '<div class="special-badge">SPECIAL</div>' : ''}
-                    <div class="item-image" style="background: linear-gradient(45deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
-                        ${item.image}
-                    </div>
-                    <h3 class="item-name">${item.name}</h3>
-                    <p class="item-description">${item.description}</p>
-                    <div class="item-footer">
-                        <div>
-                            <div class="item-price">$${item.price.toFixed(2)}</div>
-                            <div class="item-calories">${item.calories} cal • ${item.prepTime} min</div>
-                        </div>
-                        <button class="add-to-cart" onclick="addToCart(${item.id})" ${isInCart ? 'style="background: #4CAF50;"' : ''}>
-                            ${isInCart ? `<i class="fas fa-check"></i> ${cartQuantity} in cart` : '<i class="fas fa-plus"></i> Add to cart'}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Add item to cart
+        // Cart Functions
         function addToCart(itemId) {
             const item = database.menuItems[1].find(i => i.id === itemId);
             if (!item) return;
@@ -897,22 +1255,16 @@
                     name: item.name,
                     price: item.price,
                     quantity: 1,
-                    image: item.image
+                    emoji: item.emoji
                 });
             }
             
-            // Save to localStorage
             localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
-            
-            // Update UI
             updateCartDisplay();
-            loadMenu(currentCity?.cityId || 1, 'dinner'); // Refresh menu to update buttons
-            
-            // Show notification
-            showNotification(`${item.name} added to cart!`);
+            loadMenu(currentCity?.cityId || 1, 'dinner');
+            showNotification(`${item.name} added to cart!`, 'success');
         }
 
-        // Update cart quantity
         function updateCartQuantity(itemId, change) {
             const itemIndex = currentCart.findIndex(item => item.id === itemId);
             if (itemIndex === -1) return;
@@ -925,12 +1277,9 @@
             
             localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
             updateCartDisplay();
-            loadMenu(currentCity?.cityId || 1, 'dinner'); // Refresh menu
-            
-            showNotification('Cart updated');
+            loadMenu(currentCity?.cityId || 1, 'dinner');
         }
 
-        // Update cart display
         function updateCartDisplay() {
             const cartContainer = document.getElementById('cart-items');
             const subtotalEl = document.getElementById('subtotal');
@@ -940,8 +1289,8 @@
             if (currentCart.length === 0) {
                 cartContainer.innerHTML = `
                     <div class="loading">
-                        <i class="fas fa-shopping-cart fa-2x"></i>
-                        <p style="margin-top: 10px;">Your cart is empty</p>
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Your cart is empty</p>
                     </div>
                 `;
                 subtotalEl.textContent = '$0.00';
@@ -951,7 +1300,6 @@
                 return;
             }
             
-            // Calculate totals
             let subtotal = 0;
             currentCart.forEach(item => {
                 subtotal += item.price * item.quantity;
@@ -961,19 +1309,17 @@
             const deliveryFee = 2.99;
             const total = subtotal + tax + deliveryFee;
             
-            // Update totals display
             subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
             taxEl.textContent = `$${tax.toFixed(2)}`;
             totalEl.textContent = `$${total.toFixed(2)}`;
             
-            // Build cart items HTML
             let cartHTML = '';
             currentCart.forEach(item => {
                 cartHTML += `
                     <div class="cart-item">
                         <div class="cart-item-info">
-                            <h4>${item.name}</h4>
-                            <div style="color: #667eea; font-weight: 500;">$${item.price.toFixed(2)} each</div>
+                            <h4>${item.name} ${item.emoji}</h4>
+                            <div style="color: var(--mm-green); font-weight: 500;">$${item.price.toFixed(2)} each</div>
                         </div>
                         <div class="quantity-controls">
                             <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)">
@@ -984,7 +1330,7 @@
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
-                        <div style="font-weight: 700; color: #333;">
+                        <div style="font-weight: 700; color: var(--mm-charcoal);">
                             $${(item.price * item.quantity).toFixed(2)}
                         </div>
                     </div>
@@ -995,7 +1341,6 @@
             updateCheckoutButton();
         }
 
-        // Update checkout button state
         function updateCheckoutButton() {
             const checkoutBtn = document.getElementById('checkout-btn');
             if (currentCart.length > 0 && currentCity) {
@@ -1009,15 +1354,15 @@
             }
         }
 
-        // Show checkout form
+        // Checkout Functions
         function showCheckout() {
             if (currentCart.length === 0) {
-                alert('Your cart is empty!');
+                showNotification('Your cart is empty!', 'error');
                 return;
             }
             
             if (!currentCity) {
-                alert('Please select your location first!');
+                showNotification('Please select your location first!', 'error');
                 return;
             }
             
@@ -1025,33 +1370,26 @@
             document.getElementById('checkout-form').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Hide checkout form
         function hideCheckout() {
             document.getElementById('checkout-form').classList.add('hidden');
         }
 
-        // Process payment
         function processPayment() {
-            // Get form data
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const address = document.getElementById('address').value.trim();
             const city = document.getElementById('city').value.trim();
             const state = document.getElementById('state').value.trim();
             const zip = document.getElementById('zip').value.trim();
-            const instructions = document.getElementById('instructions').value.trim();
             
-            // Validate form
             if (!name || !phone || !address || !city || !state || !zip) {
                 showCheckoutMessage('Please fill in all required fields', 'error');
                 return;
             }
             
-            // Simulate payment processing
             showCheckoutMessage('Processing payment...', 'info');
             
             setTimeout(() => {
-                // Create order
                 const orderNumber = 'MM-' + Date.now();
                 const deliveryTime = new Date(Date.now() + 45 * 60000);
                 
@@ -1064,20 +1402,16 @@
                     deliveryTime: deliveryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 };
                 
-                // Save order to localStorage (simulating database)
                 const orders = JSON.parse(localStorage.getItem('mealMomentOrders')) || [];
                 orders.push(currentOrder);
                 localStorage.setItem('mealMomentOrders', JSON.stringify(orders));
                 
-                // Clear cart
                 currentCart = [];
                 localStorage.setItem('mealMomentCart', JSON.stringify([]));
                 
-                // Show confirmation
                 document.getElementById('checkout-form').classList.add('hidden');
                 document.getElementById('order-confirmation').classList.remove('hidden');
                 
-                // Update confirmation details
                 document.getElementById('order-details').innerHTML = `
                     Order #${orderNumber}<br>
                     <small>${currentOrder.items.length} items • $${currentOrder.total.toFixed(2)}</small>
@@ -1085,16 +1419,12 @@
                 document.getElementById('delivery-time').textContent = 
                     `Estimated delivery: ${currentOrder.deliveryTime}`;
                 
-                // Update cart display
                 updateCartDisplay();
-                
-                // Scroll to confirmation
                 document.getElementById('order-confirmation').scrollIntoView({ behavior: 'smooth' });
                 
             }, 2000);
         }
 
-        // Show checkout message
         function showCheckoutMessage(message, type) {
             const messageEl = document.getElementById('checkout-message');
             messageEl.innerHTML = `
@@ -1111,12 +1441,10 @@
             }
         }
 
-        // Start new order
         function startNewOrder() {
             document.getElementById('order-confirmation').classList.add('hidden');
             document.getElementById('checkout-form').classList.add('hidden');
             
-            // Reset form
             document.getElementById('name').value = '';
             document.getElementById('phone').value = '';
             document.getElementById('address').value = '';
@@ -1125,58 +1453,34 @@
             document.getElementById('expiry').value = '';
             document.getElementById('cvc').value = '';
             
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Show notification
-        function showNotification(message) {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #4CAF50;
-                color: white;
-                padding: 15px 25px;
-                border-radius: 8px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                z-index: 1000;
-                animation: slideIn 0.3s ease;
-            `;
+        // Notification System
+        function showNotification(message, type = 'success') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
             
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
             notification.innerHTML = `
-                <i class="fas fa-check-circle"></i> ${message}
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
             `;
             
             document.body.appendChild(notification);
             
-            // Remove after 3 seconds
             setTimeout(() => {
                 notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
             }, 3000);
         }
 
-        // Add CSS animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Initialize app when page loads
+        // Initialize on load
         window.onload = init;
     </script>
 </body>
