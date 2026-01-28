@@ -809,6 +809,12 @@
                 position: relative;
                 z-index: 1;
             }
+            
+            /* Ensure sidebar is visible */
+            .sidebar {
+                position: relative;
+                top: 0;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1033,7 +1039,6 @@
                 <div class="step">
                     <span class="step-number">1</span>
                     <h3>Enter ZIP Code</h3>
-                    <!-- UPDATED TEXT: Removed "restaurants" reference -->
                     <p>We'll find 20+ local restaurant specials in your city with discounted prices</p>
                 </div>
                 
@@ -1046,49 +1051,47 @@
                 <div class="step">
                     <span class="step-number">3</span>
                     <h3>Add to Cart</h3>
-                    <!-- UPDATED TEXT: Clarified it's restaurant specials -->
                     <p>Choose from 20+ daily restaurant specials at discounted prices</p>
                 </div>
                 
                 <div class="step">
                     <span class="step-number">4</span>
                     <h3>Checkout & Enjoy</h3>
-                    <p>Secure payment with fresh delivery to your door</p>
+                    <p>Choose payment method with branch delivery to receive discount.</p>
                 </div>
 
-                <!-- Location Selector - FIXED FOR MOBILE -->
+                <!-- Location Selector - FIXED FOR ALL DEVICES -->
                 <div class="location-selector">
                     <h3><i class="fas fa-map-marker-alt"></i> Find Your Location</h3>
                     <div class="form-group">
                         <label for="zip-code">Enter ZIP Code</label>
-                        <input 
-                            type="text" 
-                            id="zip-code" 
-                            inputmode="numeric"
-                            pattern="[0-9]{5}"
-                            placeholder="e.g., 90001, 10001, 60601" 
-                            maxlength="5"
-                            onkeypress="return zipCodeKeyPress(event)"
-                            oninput="validateZipCodeInput()"
-                            style="font-size: 16px;"
-                        >
-                        <div id="zip-error" class="error-message hidden" style="margin-top: 8px; font-size: 0.875rem; padding: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <input 
+                                type="text" 
+                                id="zip-code" 
+                                inputmode="numeric"
+                                pattern="[0-9]{5}"
+                                placeholder="e.g., 90001" 
+                                maxlength="5"
+                                style="flex: 1; font-size: 16px;"
+                            >
+                            <button type="button" class="btn btn-primary" onclick="findLocation()" id="find-location-btn" style="min-width: 100px;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="zip-error" class="error-message hidden" style="padding: 0.5rem;">
                             Please enter a valid 5-digit ZIP code
                         </div>
                     </div>
-                    <!-- UPDATED BUTTON TEXT -->
-                    <button class="btn btn-primary" onclick="findLocation()" id="find-location-btn" style="width: 100%;">
-                        <i class="fas fa-search btn-icon"></i> Find Restaurant Specials
-                    </button>
                     
                     <!-- Mobile-friendly alternative input method -->
                     <div class="mobile-zip-options" id="mobile-zip-options">
-                        <p>Or try these popular ZIP codes:</p>
+                        <p>Try these popular ZIP codes:</p>
                         <div class="zip-buttons">
-                            <button type="button" class="zip-button" onclick="fillZipCode('10001')">10001 (NYC)</button>
-                            <button type="button" class="zip-button" onclick="fillZipCode('90001')">90001 (LA)</button>
-                            <button type="button" class="zip-button" onclick="fillZipCode('60601')">60601 (Chicago)</button>
-                            <button type="button" class="zip-button" onclick="fillZipCode('77001')">77001 (Houston)</button>
+                            <button type="button" class="zip-button" onclick="setZipCode('10001')">10001 (NYC)</button>
+                            <button type="button" class="zip-button" onclick="setZipCode('90001')">90001 (LA)</button>
+                            <button type="button" class="zip-button" onclick="setZipCode('60601')">60601 (Chicago)</button>
+                            <button type="button" class="zip-button" onclick="setZipCode('77001')">77001 (Houston)</button>
                         </div>
                     </div>
                 </div>
@@ -1313,16 +1316,15 @@
             setInterval(updateTime, 60000);
             updateCartDisplay();
             
+            // Setup ZIP code input event listeners
+            setupZipCodeInput();
+            
             // Check URL for zip parameter
             const urlParams = new URLSearchParams(window.location.search);
             const zipParam = urlParams.get('zip');
             if (zipParam) {
-                const zipInput = document.getElementById('zip-code');
-                if (zipInput) {
-                    zipInput.value = zipParam;
-                    validateZipCodeInput();
-                    setTimeout(() => findLocation(), 500);
-                }
+                setZipCode(zipParam);
+                setTimeout(() => findLocation(), 500);
             }
             
             // Show mobile ZIP options on mobile
@@ -1332,31 +1334,54 @@
                     mobileOptions.style.display = 'block';
                 }
             }
-            
-            // Fix mobile menu visibility by scrolling to menu section
-            const menuSection = document.getElementById('menu');
-            if (menuSection && window.innerWidth <= 992) {
-                // On mobile, ensure menu is visible when loaded
-                setTimeout(() => {
-                    if (currentCity) {
-                        menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }, 500);
-            }
         }
 
-        // MOBILE ZIP CODE FUNCTIONS - FIXED FOR MOBILE INPUT
-        function zipCodeKeyPress(event) {
-            // Allow only numeric input
-            const charCode = event.which ? event.which : event.keyCode;
+        // Setup ZIP code input handling
+        function setupZipCodeInput() {
+            const zipInput = document.getElementById('zip-code');
+            if (!zipInput) return;
             
-            // Allow numbers (48-57), backspace (8), tab (9), enter (13), delete (46)
-            if ((charCode < 48 || charCode > 57) && 
-                charCode !== 8 && charCode !== 9 && charCode !== 13 && charCode !== 46) {
-                event.preventDefault();
-                return false;
+            // Focus on the input for better UX
+            zipInput.focus();
+            
+            // Add input event listener
+            zipInput.addEventListener('input', function(e) {
+                // Only allow numbers
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                // Limit to 5 characters
+                if (this.value.length > 5) {
+                    this.value = this.value.slice(0, 5);
+                }
+                
+                // Validate as user types
+                validateZipCodeInput();
+                
+                // Auto-submit when 5 digits are entered (on mobile)
+                if (this.value.length === 5 && window.innerWidth <= 768) {
+                    setTimeout(() => findLocation(), 300);
+                }
+            });
+            
+            // Add enter key support
+            zipInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    findLocation();
+                }
+            });
+            
+            // Make sure input is visible and clickable
+            zipInput.style.opacity = '1';
+            zipInput.style.pointerEvents = 'auto';
+        }
+
+        // Set ZIP code value
+        function setZipCode(zipCode) {
+            const zipInput = document.getElementById('zip-code');
+            if (zipInput) {
+                zipInput.value = zipCode;
+                validateZipCodeInput();
             }
-            return true;
         }
 
         function validateZipCodeInput() {
@@ -1390,21 +1415,6 @@
             }
         }
 
-        function fillZipCode(zipCode) {
-            const zipInput = document.getElementById('zip-code');
-            if (zipInput) {
-                zipInput.value = zipCode;
-                validateZipCodeInput();
-                
-                // Auto-submit after a short delay on mobile
-                if (window.innerWidth <= 768) {
-                    setTimeout(() => {
-                        findLocation();
-                    }, 300);
-                }
-            }
-        }
-
         // Update Time Display
         function updateTime() {
             const now = new Date();
@@ -1423,13 +1433,6 @@
         // GET SALES TAX RATE FOR STATE
         async function getSalesTaxRate(stateCode) {
             try {
-                // Use TaxAPI for sales tax rates (free tier available)
-                // Alternative: Use JSON file with state tax rates
-                const apiUrl = `https://api.api-ninjas.com/v1/salestax?state=${stateCode}`;
-                
-                // Note: For production, you need an API key from https://api-ninjas.com/api/salestax
-                // For now, we'll use our fallback stateTaxRates object
-                
                 // Check if we have the state in our fallback
                 const stateUpper = stateCode.toUpperCase();
                 if (stateTaxRates[stateUpper]) {
@@ -1483,7 +1486,9 @@
             try {
                 // Use Zippopotam.us API for real ZIP code data
                 const apiUrl = `https://api.zippopotam.us/us/${zipValue}`;
-                const response = await fetch(apiUrl);
+                const response = await fetch(apiUrl, {
+                    timeout: 10000 // 10 second timeout
+                });
 
                 // Handle HTTP errors
                 if (!response.ok) {
@@ -1580,6 +1585,64 @@
                 if (cityNameElement) cityNameElement.textContent = 'Select Your City';
                 if (mealTextElement) mealTextElement.textContent = 'Enter ZIP Code First';
                 if (mealTypeBadge) mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> Enter ZIP Code First`;
+                
+                // For demo purposes, load a default city if API fails
+                if (zipValue === '90001' || zipValue === '10001' || zipValue === '60601') {
+                    setTimeout(() => {
+                        loadDemoCity(zipValue);
+                    }, 500);
+                }
+            }
+        }
+
+        // Load demo city for testing if API fails
+        function loadDemoCity(zipCode) {
+            const demoCities = {
+                '90001': { city: 'Los Angeles', state: 'CA' },
+                '10001': { city: 'New York', state: 'NY' },
+                '60601': { city: 'Chicago', state: 'IL' }
+            };
+            
+            if (demoCities[zipCode]) {
+                const demo = demoCities[zipCode];
+                currentCity = {
+                    city: demo.city,
+                    state: demo.state,
+                    cityId: 1,
+                    taxRate: stateTaxRates[demo.state] || 0.0825
+                };
+                
+                // Update UI
+                const cityNameElement = document.getElementById('city-name');
+                const mealTextElement = document.getElementById('meal-text');
+                const mealTypeBadge = document.getElementById('meal-type');
+                const taxRateElement = document.getElementById('tax-rate');
+                
+                if (cityNameElement) cityNameElement.textContent = `${demo.city}, ${demo.state}`;
+                if (taxRateElement) taxRateElement.textContent = `${(currentCity.taxRate * 100).toFixed(2)}%`;
+                
+                // Determine meal type
+                const currentHour = updateTime();
+                let mealText, mealIcon;
+                
+                if (currentHour >= 5 && currentHour < 11) {
+                    mealText = 'BREAKFAST MENU';
+                    mealIcon = '☕';
+                } else if (currentHour >= 11 && currentHour < 16) {
+                    mealText = 'LUNCH MENU';
+                    mealIcon = '🥪';
+                } else {
+                    mealText = 'DINNER MENU';
+                    mealIcon = '🍽️';
+                }
+
+                if (mealTextElement) mealTextElement.textContent = mealText;
+                if (mealTypeBadge) mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
+
+                // Load menu
+                loadMenu(currentCity.cityId, mealText.toLowerCase());
+                
+                showNotification(`Demo mode: Restaurant specials loaded for ${demo.city}, ${demo.state}`, 'success');
             }
         }
 
@@ -1642,7 +1705,7 @@
             // Build menu HTML
             let html = '';
             
-            // Display specials section - UPDATED TEXT
+            // Display specials section
             html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${specials.length} discounted items)</h3>`;
             html += '<div class="menu-grid">';
             
