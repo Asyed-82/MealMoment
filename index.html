@@ -400,6 +400,8 @@
             border-radius: var(--radius-lg);
             padding: var(--space-xl);
             box-shadow: var(--shadow-sm);
+            position: relative; /* Added for z-index control */
+            z-index: 2; /* Ensures menu is above other elements */
         }
 
         .menu-header {
@@ -540,6 +542,8 @@
             padding: var(--space-xl);
             margin-top: var(--space-xl);
             box-shadow: var(--shadow-sm);
+            position: relative; /* Added for z-index control */
+            z-index: 2; /* Ensures cart is above other elements */
         }
 
         .cart-items {
@@ -614,6 +618,8 @@
             padding: var(--space-xl);
             margin-top: var(--space-xl);
             box-shadow: var(--shadow-sm);
+            position: relative; /* Added for z-index control */
+            z-index: 10; /* Higher z-index for checkout overlay */
         }
 
         .form-grid {
@@ -745,6 +751,18 @@
             h2 {
                 font-size: 2rem;
             }
+            
+            /* Fix mobile z-index issue */
+            .menu-section {
+                margin-top: var(--space-lg);
+                position: relative;
+                z-index: 5;
+            }
+            
+            .hero {
+                position: relative;
+                z-index: 1;
+            }
         }
 
         @media (max-width: 768px) {
@@ -787,6 +805,15 @@
             .logo-container {
                 gap: 10px; /* Even smaller gap on mobile */
             }
+            
+            /* Fix mobile layout z-index */
+            .menu-section {
+                margin-top: var(--space-xl);
+            }
+            
+            .hero {
+                margin-bottom: var(--space-lg);
+            }
         }
 
         @media (max-width: 576px) {
@@ -817,6 +844,12 @@
             
             .logo-text {
                 font-size: 1.75rem;
+            }
+            
+            /* Ensure menu is fully visible on small screens */
+            .menu-section {
+                margin-top: var(--space-xl);
+                padding: var(--space-lg);
             }
         }
 
@@ -944,7 +977,8 @@
                 <div class="step">
                     <span class="step-number">1</span>
                     <h3>Enter ZIP Code</h3>
-                    <p>We'll find restaurants in your city with real-time menus</p>
+                    <!-- UPDATED TEXT: Removed "restaurants" reference -->
+                    <p>We'll find 20+ local restaurant specials in your city with discounted prices</p>
                 </div>
                 
                 <div class="step">
@@ -956,7 +990,8 @@
                 <div class="step">
                     <span class="step-number">3</span>
                     <h3>Add to Cart</h3>
-                    <p>Choose from 20+ daily specials and regular menu items</p>
+                    <!-- UPDATED TEXT: Clarified it's restaurant specials -->
+                    <p>Choose from 20+ daily restaurant specials at discounted prices</p>
                 </div>
                 
                 <div class="step">
@@ -977,8 +1012,9 @@
                             maxlength="5"
                         >
                     </div>
+                    <!-- UPDATED BUTTON TEXT -->
                     <button class="btn btn-primary" onclick="findLocation()" style="width: 100%;">
-                        <i class="fas fa-search btn-icon"></i> Find Restaurants
+                        <i class="fas fa-search btn-icon"></i> Find Restaurant Specials
                     </button>
                 </div>
             </aside>
@@ -996,7 +1032,7 @@
                 <div id="menu-container">
                     <div class="loading">
                         <i class="fas fa-utensils fa-spin"></i>
-                        <p>Please enter your ZIP code to see the menu</p>
+                        <p>Please enter your ZIP code to see restaurant specials</p>
                     </div>
                 </div>
             </section>
@@ -1210,6 +1246,17 @@
                 if (zipInput) zipInput.value = zipParam;
                 findLocation();
             }
+            
+            // Fix mobile menu visibility by scrolling to menu section
+            const menuSection = document.getElementById('menu');
+            if (menuSection && window.innerWidth <= 992) {
+                // On mobile, ensure menu is visible when loaded
+                setTimeout(() => {
+                    if (currentCity) {
+                        menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 500);
+            }
         }
 
         // Update Time Display
@@ -1360,7 +1407,17 @@
                 if (stateInput) stateInput.value = currentCity.state;
                 if (zipFormInput) zipFormInput.value = zipValue;
 
-                showNotification(`Menu loaded for ${currentCity.city}, ${currentCity.state}! Sales tax: ${(currentStateTaxRate * 100).toFixed(2)}%`, 'success');
+                showNotification(`Restaurant specials loaded for ${currentCity.city}, ${currentCity.state}! Sales tax: ${(currentStateTaxRate * 100).toFixed(2)}%`, 'success');
+
+                // On mobile, scroll to menu section to ensure visibility
+                if (window.innerWidth <= 992) {
+                    const menuSection = document.getElementById('menu');
+                    if (menuSection) {
+                        setTimeout(() => {
+                            menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 300);
+                    }
+                }
 
             } catch (error) {
                 // Handle errors
@@ -1433,8 +1490,8 @@
             // Build menu HTML
             let html = '';
             
-            // Display specials section
-            html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Daily Specials (${specials.length} items)</h3>`;
+            // Display specials section - UPDATED TEXT
+            html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${specials.length} discounted items)</h3>`;
             html += '<div class="menu-grid">';
             
             specials.forEach(item => {
@@ -1443,7 +1500,7 @@
                 
                 html += `
                     <div class="menu-item ${item.isSpecial ? 'special' : ''}">
-                        ${item.isSpecial ? '<div class="special-badge">SPECIAL</div>' : ''}
+                        ${item.isSpecial ? '<div class="special-badge">DISCOUNTED</div>' : ''}
                         <div class="item-image">
                             ${item.emoji}
                         </div>
@@ -1476,7 +1533,7 @@
                     
                     html += `
                         <div class="menu-item ${item.isSpecial ? 'special' : ''}">
-                            ${item.isSpecial ? '<div class="special-badge">SPECIAL</div>' : ''}
+                            ${item.isSpecial ? '<div class="special-badge">DISCOUNTED</div>' : ''}
                             <div class="item-image">
                                 ${item.emoji}
                             </div>
