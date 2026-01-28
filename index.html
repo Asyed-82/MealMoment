@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍽️ MealMoment - Food Ordering System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .sidebar h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .step {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .step h3 {
+            display: inline-block;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        /* Menu Display */
+        .menu-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .time-badge {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .menu-item {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            background: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .menu-item.special {
+            border: 2px solid #ff6b6b;
+            background: linear-gradient(135deg, #fff5f5, #ffeaea);
+        }
+
+        .special-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(255,107,107,0.3);
+        }
+
+        .item-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .item-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .item-description {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .item-calories {
+            color: #666;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            padding: 3px 10px;
+            border-radius: 15px;
+        }
+
+        .add-to-cart {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-to-cart:hover {
+            background: #5a67d8;
+        }
+
+        /* Cart Section */
+        .cart-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .cart-items {
+            margin: 20px 0;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #667eea;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .cart-total {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .final-total {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            border-top: 2px solid #667eea;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        /* Checkout Form */
+        .checkout-form {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+        }
+
+        .btn-large {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: white;
+            margin-top: 50px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .social-links a:hover {
+            transform: scale(1.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1 class="logo">🍽️ MealMoment</h1>
+            <p class="tagline">Fresh meals delivered based on your local time</p>
+            <div class="time-badge">
+                <i class="fas fa-clock"></i>
+                <span id="current-time">Loading...</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h2>How It Works</h2>
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <h3>Select Location</h3>
+                    <p>Enter your ZIP code to find available restaurants in your city</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <h3>Choose Meal Time</h3>
+                    <p>Menu changes automatically based on time: Breakfast, Lunch, or Dinner</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <h3>Add Items to Cart</h3>
+                    <p>Browse 20+ daily specials and regular menu items</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <h3>Checkout & Pay</h3>
+                    <p>Secure payment with order confirmation</p>
+                </div>
+
+                <!-- Location Selector -->
+                <div class="form-group" style="margin-top: 30px;">
+                    <label for="zip-code"><i class="fas fa-map-marker-alt"></i> Enter ZIP Code</label>
+                    <input type="text" id="zip-code" placeholder="e.g., 90001, 10001, 60601" maxlength="5">
+                    <button class="btn btn-primary" onclick="findLocation()" style="width: 100%; margin-top: 15px;">
+                        <i class="fas fa-search"></i> Find Restaurants
+                    </button>
+                </div>
+            </div>
+
+            <!-- Menu Display -->
+            <div class="menu-section">
+                <div class="menu-header">
+                    <h2 id="city-name">Select Your City</h2>
+                    <div class="time-badge" id="meal-type">
+                        <i class="fas fa-utensils"></i>
+                        <span id="meal-text">Select ZIP first</span>
+                    </div>
+                </div>
+
+                <div id="menu-container">
+                    <!-- Menu will be loaded here -->
+                    <div class="loading">
+                        <i class="fas fa-utensils fa-spin fa-2x"></i>
+                        <p style="margin-top: 20px;">Please enter your ZIP code to see the menu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Section -->
+        <div class="cart-section">
+            <h2><i class="fas fa-shopping-cart"></i> Your Order</h2>
+            <div class="cart-items" id="cart-items">
+                <div class="loading">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>Your cart is empty</p>
+                </div>
+            </div>
+            <div class="cart-total">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Tax (8.25%):</span>
+                    <span id="tax">$0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Delivery Fee:</span>
+                    <span id="delivery-fee">$2.99</span>
+                </div>
+                <div class="total-row final-total">
+                    <span>Total:</span>
+                    <span id="total">$2.99</span>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-large" onclick="showCheckout()" id="checkout-btn" disabled>
+                <i class="fas fa-lock"></i> Proceed to Checkout
+            </button>
+        </div>
+
+        <!-- Checkout Form (Initially Hidden) -->
+        <div class="checkout-form hidden" id="checkout-form">
+            <h2><i class="fas fa-credit-card"></i> Checkout</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Full Name</label>
+                    <input type="text" id="name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+                    <input type="tel" id="phone" placeholder="(123) 456-7890" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="address"><i class="fas fa-home"></i> Delivery Address</label>
+                    <input type="text" id="address" placeholder="123 Main Street" required>
+                </div>
+                <div class="form-group">
+                    <label for="city"><i class="fas fa-city"></i> City</label>
+                    <input type="text" id="city" placeholder="Los Angeles" required>
+                </div>
+                <div class="form-group">
+                    <label for="state"><i class="fas fa-map"></i> State</label>
+                    <input type="text" id="state" placeholder="CA" required>
+                </div>
+                <div class="form-group">
+                    <label for="zip"><i class="fas fa-mail-bulk"></i> ZIP Code</label>
+                    <input type="text" id="zip" placeholder="90001" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="instructions"><i class="fas fa-sticky-note"></i> Special Instructions</label>
+                    <textarea id="instructions" rows="3" placeholder="Dietary restrictions, delivery notes, etc."></textarea>
+                </div>
+            </div>
+            
+            <!-- Payment Section -->
+            <div class="payment-section">
+                <h3><i class="fas fa-credit-card"></i> Payment Information</h3>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="card-number">Card Number</label>
+                        <input type="text" id="card-number" placeholder="4242 4242 4242 4242" maxlength="19" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiry">Expiry Date</label>
+                        <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cvc">CVC</label>
+                        <input type="text" id="cvc" placeholder="123" maxlength="3" required>
+                    </div>
+                </div>
+            </div>
+
+            <div id="checkout-message"></div>
+            
+            <button class="btn btn-primary btn-large" onclick="processPayment()">
+                <i class="fas fa-check-circle"></i> Place Order & Pay
+            </button>
+            <button class="btn" onclick="hideCheckout()" style="background: #f8f9fa; margin-top: 10px;">
+                <i class="fas fa-arrow-left"></i> Back to Menu
+            </button>
+        </div>
+
+        <!-- Order Confirmation (Initially Hidden) -->
+        <div class="checkout-form hidden" id="order-confirmation">
+            <div class="success-message">
+                <i class="fas fa-check-circle fa-2x"></i>
+                <h2>Order Confirmed! 🎉</h2>
+                <p id="order-details">Your order is being prepared</p>
+                <p id="delivery-time">Estimated delivery: 45 minutes</p>
+            </div>
+            <button class="btn btn-primary" onclick="startNewOrder()">
+                <i class="fas fa-plus"></i> Start New Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="social-links">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+        </div>
+        <p>© 2024 MealMoment. All rights reserved.</p>
+        <p>Fresh food delivered based on your local time</p>
+    </footer>
+
+    <script>
+        // Sample Data - In production, this would come from a backend API
+        const database = {
+            zipCodes: {
+                '90001': { city: 'Los Angeles', state: 'CA', timezone: 'America/Los_Angeles', cityId: 1 },
+                '10001': { city: 'New York', state: 'NY', timezone: 'America/New_York', cityId: 2 },
+                '60601': { city: 'Chicago', state: 'IL', timezone: 'America/Chicago', cityId: 3 },
+                '77001': { city: 'Houston', state: 'TX', timezone: 'America/Chicago', cityId: 4 },
+                '33101': { city: 'Miami', state: 'FL', timezone: 'America/New_York', cityId: 5 }
+            },
+            
+            menuItems: {
+                1: [ // Los Angeles
+                    // Breakfast Specials (7 items, 5 specials)
+                    { id: 1, name: "Avocado Toast", description: "Smashed avocado on artisan bread with cherry tomatoes", price: 12.99, cuisine: "American", image: "🥑", isSpecial: true, calories: 450, prepTime: 15 },
+                    { id: 2, name: "Pancake Stack", description: "Three fluffy pancakes with maple syrup and butter", price: 14.99, cuisine: "American", image: "🥞", isSpecial: true, calories: 650, prepTime: 20 },
+                    { id: 3, name: "Eggs Benedict", description: "Poached eggs with ham on English muffin, hollandaise", price: 16.99, cuisine: "American", image: "🍳", isSpecial: true, calories: 520, prepTime: 25 },
+                    { id: 4, name: "Breakfast Burrito", description: "Scrambled eggs, sausage, cheese in flour tortilla", price: 13.99, cuisine: "Mexican", image: "🌯", isSpecial: true, calories: 780, prepTime: 15 },
+                    { id: 5, name: "Greek Yogurt Bowl", description: "Greek yogurt with honey, granola, and fresh berries", price: 10.99, cuisine: "Greek", image: "🥣", isSpecial: true, calories: 320, prepTime: 10 },
+                    { id: 6, name: "Belgian Waffles", description: "Crispy waffles with whipped cream and strawberries", price: 15.99, cuisine: "American", image: "🧇", isSpecial: false, calories: 580, prepTime: 20 },
+                    { id: 7, name: "Breakfast Sandwich", description: "Egg, cheese, and bacon on croissant", price: 11.99, cuisine: "American", image: "🥪", isSpecial: false, calories: 420, prepTime: 12 },
+                    
+                    // Lunch Combos (8 items, 5 specials)
+                    { id: 8, name: "Chicken Caesar Salad", description: "Grilled chicken, romaine, parmesan, caesar dressing", price: 15.99, cuisine: "American", image: "🥗", isSpecial: true, calories: 380, prepTime: 15 },
+                    { id: 9, name: "Turkey Club Sandwich", description: "Triple decker with bacon, avocado, and fries", price: 17.99, cuisine: "American", image: "🥪", isSpecial: true, calories: 720, prepTime: 20 },
+                    { id: 10, name: "Vegetable Wrap", description: "Grilled vegetables with hummus in spinach wrap", price: 13.99, cuisine: "American", image: "🌯", isSpecial: true, calories: 290, prepTime: 15 },
+                    { id: 11, name: "BBQ Chicken Pizza", description: "Wood-fired pizza with BBQ sauce and chicken", price: 21.99, cuisine: "Italian", image: "🍕", isSpecial: true, calories: 850, prepTime: 25 },
+                    { id: 12, name: "Beef Burger", description: "1/2 lb beef patty with cheese and all fixings", price: 18.99, cuisine: "American", image: "🍔", isSpecial: true, calories: 920, prepTime: 20 },
+                    { id: 13, name: "Cobb Salad", description: "Mixed greens with chicken, avocado, egg, bacon", price: 16.99, cuisine: "American", image: "🥗", isSpecial: false, calories: 410, prepTime: 15 },
+                    { id: 14, name: "Fish Tacos", description: "Grilled fish with cabbage slaw and lime crema", price: 16.99, cuisine: "Mexican", image: "🌮", isSpecial: false, calories: 480, prepTime: 18 },
+                    { id: 15, name: "Chicken Quesadilla", description: "Grilled chicken and cheese in flour tortilla", price: 14.99, cuisine: "Mexican", image: "🧀", isSpecial: false, calories: 620, prepTime: 15 },
+                    
+                    // Italian Classics (7 items, 5 specials)
+                    { id: 16, name: "Spaghetti Carbonara", description: "Pasta with eggs, cheese, pancetta, and black pepper", price: 18.99, cuisine: "Italian", image: "🍝", isSpecial: true, calories: 650, prepTime: 25 },
+                    { id: 17, name: "Margherita Pizza", description: "Classic pizza with tomato, mozzarella, and basil", price: 22.99, cuisine: "Italian", image: "🍕", isSpecial: true, calories: 820, prepTime: 30 },
+                    { id: 18, name: "Lasagna Bolognese", description: "Layers of pasta with meat sauce and cheese", price: 24.99, cuisine: "Italian", image: "🍝", isSpecial: true, calories: 780, prepTime: 35 },
+                    { id: 19, name: "Chicken Parmesan", description: "Breaded chicken with marinara and melted cheese", price: 26.99, cuisine: "Italian", image: "🍗", isSpecial: true, calories: 920, prepTime: 30 },
+                    { id: 20, name: "Fettuccine Alfredo", description: "Creamy pasta with parmesan cheese", price: 19.99, cuisine: "Italian", image: "🍝", isSpecial: true, calories: 720, prepTime: 25 },
+                    { id: 21, name: "Eggplant Parmesan", description: "Breaded eggplant with marinara and cheese", price: 22.99, cuisine: "Italian", image: "🍆", isSpecial: false, calories: 580, prepTime: 30 },
+                    { id: 22, name: "Minestrone Soup", description: "Traditional Italian vegetable soup", price: 9.99, cuisine: "Italian", image: "🍲", isSpecial: false, calories: 210, prepTime: 20 },
+                    
+                    // Chinese Favorites (8 items, 5 specials)
+                    { id: 23, name: "Kung Pao Chicken", description: "Spicy stir-fried chicken with peanuts", price: 19.99, cuisine: "Chinese", image: "🍗", isSpecial: true, calories: 680, prepTime: 25 },
+                    { id: 24, name: "Beef with Broccoli", description: "Tender beef stir-fried with fresh broccoli", price: 21.99, cuisine: "Chinese", image: "🥩", isSpecial: true, calories: 520, prepTime: 20 },
+                    { id: 25, name: "Vegetable Lo Mein", description: "Stir-fried noodles with mixed vegetables", price: 16.99, cuisine: "Chinese", image: "🍜", isSpecial: true, calories: 490, prepTime: 15 },
+                    { id: 26, name: "Sweet and Sour Pork", description: "Crispy pork in tangy sweet and sour sauce", price: 20.99, cuisine: "Chinese", image: "🍖", isSpecial: true, calories: 710, prepTime: 25 },
+                    { id: 27, name: "General Tso's Chicken", description: "Crispy chicken in spicy sauce", price: 22.99, cuisine: "Chinese", image: "🍗", isSpecial: true, calories: 850, prepTime: 25 },
+                    { id: 28, name: "Fried Rice", description: "Vegetable fried rice with eggs", price: 14.99, cuisine: "Chinese", image: "🍚", isSpecial: false, calories: 420, prepTime: 15 },
+                    { id: 29, name: "Wonton Soup", description: "Chicken broth with pork wontons", price: 8.99, cuisine: "Chinese", image: "🍲", isSpecial: false, calories: 180, prepTime: 10 },
+                    { id: 30, name: "Mongolian Beef", description: "Beef strips in savory sauce with scallions", price: 23.99, cuisine: "Chinese", image: "🥩", isSpecial: false, calories: 690, prepTime: 25 },
+                    
+                    // Additional specials to reach exactly 20
+                    { id: 31, name: "Grilled Salmon", description: "Atlantic salmon with lemon butter sauce", price: 28.99, cuisine: "American", image: "🐟", isSpecial: true, calories: 480, prepTime: 35 },
+                    { id: 32, name: "Filet Mignon", description: "8oz beef tenderloin with mashed potatoes", price: 39.99, cuisine: "American", image: "🥩", isSpecial: true, calories: 920, prepTime: 40 },
+                    { id: 33, name: "BBQ Ribs", description: "Pork ribs with house BBQ sauce", price: 32.99, cuisine: "American", image: "🍖", isSpecial: true, calories: 1120, prepTime: 45 },
+                    { id: 34, name: "Tandoori Chicken", description: "Chicken marinated in yogurt and spices", price: 24.99, cuisine: "Indian", image: "🍗", isSpecial: true, calories: 620, prepTime: 35 },
+                    { id: 35, name: "Vegetable Biryani", description: "Fragrant rice with vegetables", price: 18.99, cuisine: "Indian", image: "🍚", isSpecial: true, calories: 450, prepTime: 30 }
+                ]
+            },
+            
+            cart: []
+        };
+
+        // App State
+        let currentCity = null;
+        let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
+        let currentOrder = null;
+
+        // Initialize
+        function init() {
+            updateTime();
+            setInterval(updateTime, 60000); // Update every minute
+            updateCartDisplay();
+            
+            // Check URL for zip parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const zipParam = urlParams.get('zip');
+            if (zipParam) {
+                document.getElementById('zip-code').value = zipParam;
+                findLocation();
+            }
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            document.getElementById('current-time').textContent = timeString;
+            return now.getHours();
+        }
+
+        // Find location based on ZIP
+        function findLocation() {
+            const zipInput = document.getElementById('zip-code').value.trim();
+            const zipData = database.zipCodes[zipInput];
+            
+            if (!zipData) {
+                alert('Please enter a valid ZIP code. Try: 90001, 10001, 60601, 77001, or 33101');
+                return;
+            }
+            
+            currentCity = zipData;
+            
+            // Update UI
+            document.getElementById('city-name').textContent = `${zipData.city}, ${zipData.state}`;
+            
+            // Determine meal type based on time
+            const currentHour = updateTime();
+            let mealType, mealText, mealIcon;
+            
+            if (currentHour >= 5 && currentHour < 11) {
+                mealType = 'breakfast';
+                mealText = 'BREAKFAST MENU';
+                mealIcon = '☕';
+            } else if (currentHour >= 11 && currentHour < 16) {
+                mealType = 'lunch';
+                mealText = 'LUNCH MENU';
+                mealIcon = '🥪';
+            } else {
+                mealType = 'dinner';
+                mealText = 'DINNER MENU';
+                mealIcon = '🍽️';
+            }
+            
+            document.getElementById('meal-text').textContent = mealText;
+            document.getElementById('meal-type').innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
+            
+            // Load menu for this city
+            loadMenu(zipData.cityId, mealType);
+            
+            // Update checkout form
+            document.getElementById('city').value = zipData.city;
+            document.getElementById('state').value = zipData.state;
+            document.getElementById('zip').value = zipInput;
+        }
+
+        // Load menu based on city and meal type
+        function loadMenu(cityId, mealType) {
+            const menuContainer = document.getElementById('menu-container');
+            const allItems = database.menuItems[cityId] || [];
+            
+            // Filter items based on meal type logic
+            let filteredItems = allItems;
+            
+            // In a real app, you would filter by actual meal type from database
+            // For demo, we'll show all items but mark which ones are appropriate
+            
+            // Get exactly 20 specials
+            const specials = allItems.filter(item => item.isSpecial).slice(0, 20);
+            
+            // Group items by cuisine
+            const itemsByCuisine = {};
+            allItems.forEach(item => {
+                if (!itemsByCuisine[item.cuisine]) {
+                    itemsByCuisine[item.cuisine] = [];
+                }
+                itemsByCuisine[item.cuisine].push(item);
+            });
+            
+            // Build menu HTML
+            let html = '';
+            
+            // Display specials
+            html += `<h3><i class="fas fa-star"></i> Daily Specials (${specials.length} items)</h3>`;
+            html += '<div class="menu-grid">';
+            specials.forEach(item => {
+                html += createMenuItemHTML(item);
+            });
+            html += '</div>';
+            
+            // Display by cuisine
+            for (const [cuisine, items] of Object.entries(itemsByCuisine)) {
+                html += `<h3 style="margin-top: 30px;"><i class="fas fa-utensil-spoon"></i> ${cuisine} Cuisine</h3>`;
+                html += '<div class="menu-grid">';
+                items.forEach(item => {
+                    html += createMenuItemHTML(item);
+                });
+                html += '</div>';
+            }
+            
+            menuContainer.innerHTML = html;
+            
+            // Enable checkout if cart has items
+            updateCheckoutButton();
+        }
+
+        // Create menu item HTML
+        function createMenuItemHTML(item) {
+            const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
+            const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
+            
+            return `
+                <div class="menu-item ${item.isSpecial ? 'special' : ''}">
+                    ${item.isSpecial ? '<div class="special-badge">SPECIAL</div>' : ''}
+                    <div class="item-image" style="background: linear-gradient(45deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                        ${item.image}
+                    </div>
+                    <h3 class="item-name">${item.name}</h3>
+                    <p class="item-description">${item.description}</p>
+                    <div class="item-footer">
+                        <div>
+                            <div class="item-price">$${item.price.toFixed(2)}</div>
+                            <div class="item-calories">${item.calories} cal • ${item.prepTime} min</div>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(${item.id})" ${isInCart ? 'style="background: #4CAF50;"' : ''}>
+                            ${isInCart ? `<i class="fas fa-check"></i> ${cartQuantity} in cart` : '<i class="fas fa-plus"></i> Add to cart'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Add item to cart
+        function addToCart(itemId) {
+            const item = database.menuItems[1].find(i => i.id === itemId);
+            if (!item) return;
+            
+            const existingItem = currentCart.find(cartItem => cartItem.id === itemId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                currentCart.push({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: 1,
+                    image: item.image
+                });
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
+            
+            // Update UI
+            updateCartDisplay();
+            loadMenu(currentCity?.cityId || 1, 'dinner'); // Refresh menu to update buttons
+            
+            // Show notification
+            showNotification(`${item.name} added to cart!`);
+        }
+
+        // Update cart quantity
+        function updateCartQuantity(itemId, change) {
+            const itemIndex = currentCart.findIndex(item => item.id === itemId);
+            if (itemIndex === -1) return;
+            
+            currentCart[itemIndex].quantity += change;
+            
+            if (currentCart[itemIndex].quantity <= 0) {
+                currentCart.splice(itemIndex, 1);
+            }
+            
+            localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
+            updateCartDisplay();
+            loadMenu(currentCity?.cityId || 1, 'dinner'); // Refresh menu
+            
+            showNotification('Cart updated');
+        }
+
+        // Update cart display
+        function updateCartDisplay() {
+            const cartContainer = document.getElementById('cart-items');
+            const subtotalEl = document.getElementById('subtotal');
+            const taxEl = document.getElementById('tax');
+            const totalEl = document.getElementById('total');
+            
+            if (currentCart.length === 0) {
+                cartContainer.innerHTML = `
+                    <div class="loading">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                        <p style="margin-top: 10px;">Your cart is empty</p>
+                    </div>
+                `;
+                subtotalEl.textContent = '$0.00';
+                taxEl.textContent = '$0.00';
+                totalEl.textContent = '$2.99';
+                updateCheckoutButton();
+                return;
+            }
+            
+            // Calculate totals
+            let subtotal = 0;
+            currentCart.forEach(item => {
+                subtotal += item.price * item.quantity;
+            });
+            
+            const tax = subtotal * 0.0825;
+            const deliveryFee = 2.99;
+            const total = subtotal + tax + deliveryFee;
+            
+            // Update totals display
+            subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+            taxEl.textContent = `$${tax.toFixed(2)}`;
+            totalEl.textContent = `$${total.toFixed(2)}`;
+            
+            // Build cart items HTML
+            let cartHTML = '';
+            currentCart.forEach(item => {
+                cartHTML += `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <h4>${item.name}</h4>
+                            <div style="color: #667eea; font-weight: 500;">$${item.price.toFixed(2)} each</div>
+                        </div>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span style="font-weight: 600; min-width: 30px; text-align: center;">${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div style="font-weight: 700; color: #333;">
+                            $${(item.price * item.quantity).toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            cartContainer.innerHTML = cartHTML;
+            updateCheckoutButton();
+        }
+
+        // Update checkout button state
+        function updateCheckoutButton() {
+            const checkoutBtn = document.getElementById('checkout-btn');
+            if (currentCart.length > 0 && currentCity) {
+                checkoutBtn.disabled = false;
+                checkoutBtn.style.opacity = '1';
+                checkoutBtn.style.cursor = 'pointer';
+            } else {
+                checkoutBtn.disabled = true;
+                checkoutBtn.style.opacity = '0.5';
+                checkoutBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Show checkout form
+        function showCheckout() {
+            if (currentCart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            
+            if (!currentCity) {
+                alert('Please select your location first!');
+                return;
+            }
+            
+            document.getElementById('checkout-form').classList.remove('hidden');
+            document.getElementById('checkout-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Hide checkout form
+        function hideCheckout() {
+            document.getElementById('checkout-form').classList.add('hidden');
+        }
+
+        // Process payment
+        function processPayment() {
+            // Get form data
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const zip = document.getElementById('zip').value.trim();
+            const instructions = document.getElementById('instructions').value.trim();
+            
+            // Validate form
+            if (!name || !phone || !address || !city || !state || !zip) {
+                showCheckoutMessage('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Simulate payment processing
+            showCheckoutMessage('Processing payment...', 'info');
+            
+            setTimeout(() => {
+                // Create order
+                const orderNumber = 'MM-' + Date.now();
+                const deliveryTime = new Date(Date.now() + 45 * 60000);
+                
+                currentOrder = {
+                    orderNumber,
+                    customerName: name,
+                    deliveryAddress: `${address}, ${city}, ${state} ${zip}`,
+                    items: [...currentCart],
+                    total: parseFloat(document.getElementById('total').textContent.replace('$', '')),
+                    deliveryTime: deliveryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                
+                // Save order to localStorage (simulating database)
+                const orders = JSON.parse(localStorage.getItem('mealMomentOrders')) || [];
+                orders.push(currentOrder);
+                localStorage.setItem('mealMomentOrders', JSON.stringify(orders));
+                
+                // Clear cart
+                currentCart = [];
+                localStorage.setItem('mealMomentCart', JSON.stringify([]));
+                
+                // Show confirmation
+                document.getElementById('checkout-form').classList.add('hidden');
+                document.getElementById('order-confirmation').classList.remove('hidden');
+                
+                // Update confirmation details
+                document.getElementById('order-details').innerHTML = `
+                    Order #${orderNumber}<br>
+                    <small>${currentOrder.items.length} items • $${currentOrder.total.toFixed(2)}</small>
+                `;
+                document.getElementById('delivery-time').textContent = 
+                    `Estimated delivery: ${currentOrder.deliveryTime}`;
+                
+                // Update cart display
+                updateCartDisplay();
+                
+                // Scroll to confirmation
+                document.getElementById('order-confirmation').scrollIntoView({ behavior: 'smooth' });
+                
+            }, 2000);
+        }
+
+        // Show checkout message
+        function showCheckoutMessage(message, type) {
+            const messageEl = document.getElementById('checkout-message');
+            messageEl.innerHTML = `
+                <div class="${type}-message">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+            
+            if (type !== 'info') {
+                setTimeout(() => {
+                    messageEl.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Start new order
+        function startNewOrder() {
+            document.getElementById('order-confirmation').classList.add('hidden');
+            document.getElementById('checkout-form').classList.add('hidden');
+            
+            // Reset form
+            document.getElementById('name').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('instructions').value = '';
+            document.getElementById('card-number').value = '';
+            document.getElementById('expiry').value = '';
+            document.getElementById('cvc').value = '';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            notification.innerHTML = `
+                <i class="fas fa-check-circle"></i> ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize app when page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
