@@ -130,6 +130,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
+            padding: 20px 0; /* Increased padding for larger logo */
         }
 
         .navbar::after {
@@ -146,29 +147,45 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: var(--space-md) 0;
+            padding: 0;
         }
 
         .logo-container {
             display: flex;
             align-items: center;
-            gap: var(--space-sm);
-     .logo-image {
-    height: 110px; /* Increased from 50px to 90px */
-    width: auto;
-    border-radius: var(--radius-md); /* Changed from sm to md */
-    object-fit: contain; /* Added to maintain aspect ratio */
-    transition: transform 0.3s ease; /* Added hover effect */
-}
+            gap: var(--space-md);
+            text-decoration: none;
+        }
+
+        /* LARGER LOGO - Updated from 50px to 90px */
+        .logo-image {
+            height: 90px; /* Increased from 50px */
+            width: auto;
+            border-radius: var(--radius-md);
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-image:hover {
+            transform: scale(1.05);
+        }
 
         .logo-text {
             font-family: var(--font-heading);
             font-weight: 800;
-            font-size: 1.75rem;
+            font-size: 2.25rem; /* Increased from 1.75rem */
             background: var(--mm-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-tagline {
+            font-size: 0.875rem;
+            color: var(--mm-gray-700);
+            font-weight: 500;
+            margin-top: 2px;
         }
 
         .nav-links {
@@ -310,7 +327,7 @@
         /* Sidebar */
         .sidebar {
             position: sticky;
-            top: calc(80px + var(--space-md));
+            top: calc(120px + var(--space-md));
             height: fit-content;
         }
 
@@ -755,6 +772,15 @@
                 height: 150%;
                 right: -40%;
             }
+            
+            /* Adjust logo size for mobile */
+            .logo-image {
+                height: 70px; /* Slightly smaller on mobile */
+            }
+            
+            .logo-text {
+                font-size: 1.75rem;
+            }
         }
 
         @media (max-width: 576px) {
@@ -849,10 +875,13 @@
     <header class="navbar">
         <div class="container">
             <div class="navbar-content">
-                <div class="logo-container">
+                <a href="#home" class="logo-container">
                     <img src="image/MealMomenetlogo.jpeg" alt="MealMoment Logo" class="logo-image">
-                    <span class="logo-text">MealMoment</span>
-                </div>
+                    <div>
+                        <div class="logo-text">MealMoment</div>
+                        <div class="logo-tagline">Fresh • Timely • Delicious</div>
+                    </div>
+                </a>
                 <nav class="nav-links">
                     <a href="#menu" class="nav-link">Menu</a>
                     <a href="#how-it-works" class="nav-link">How It Works</a>
@@ -1093,31 +1122,42 @@
     </footer>
 
     <script>
-        // Database (simulated backend)
+        // Database (simulated backend) - Menu items only
         const database = {
-            zipCodes: {
-                '90001': { city: 'Los Angeles', state: 'CA', timezone: 'America/Los_Angeles', cityId: 1 },
-                '10001': { city: 'New York', state: 'NY', timezone: 'America/New_York', cityId: 2 },
-                '60601': { city: 'Chicago', state: 'IL', timezone: 'America/Chicago', cityId: 3 },
-                '77001': { city: 'Houston', state: 'TX', timezone: 'America/Chicago', cityId: 4 },
-                '33101': { city: 'Miami', state: 'FL', timezone: 'America/New_York', cityId: 5 }
-            },
-            
             menuItems: {
                 1: [
+                    // Breakfast Specials
                     { id: 1, name: "Avocado Toast", description: "Smashed avocado on artisan bread with cherry tomatoes", price: 12.99, cuisine: "American", emoji: "🥑", isSpecial: true, calories: 450, prepTime: 15 },
                     { id: 2, name: "Pancake Stack", description: "Three fluffy pancakes with maple syrup and butter", price: 14.99, cuisine: "American", emoji: "🥞", isSpecial: true, calories: 650, prepTime: 20 },
                     { id: 3, name: "Eggs Benedict", description: "Poached eggs with ham on English muffin, hollandaise", price: 16.99, cuisine: "American", emoji: "🍳", isSpecial: true, calories: 520, prepTime: 25 },
                     { id: 4, name: "Breakfast Burrito", description: "Scrambled eggs, sausage, cheese in flour tortilla", price: 13.99, cuisine: "Mexican", emoji: "🌯", isSpecial: true, calories: 780, prepTime: 15 },
                     { id: 5, name: "Greek Yogurt Bowl", description: "Greek yogurt with honey, granola, and fresh berries", price: 10.99, cuisine: "Greek", emoji: "🥣", isSpecial: true, calories: 320, prepTime: 10 },
+                    { id: 6, name: "Belgian Waffles", description: "Crispy waffles with whipped cream and strawberries", price: 15.99, cuisine: "American", emoji: "🧇", isSpecial: false, calories: 580, prepTime: 20 },
+                    { id: 7, name: "Breakfast Sandwich", description: "Egg, cheese, and bacon on croissant", price: 11.99, cuisine: "American", emoji: "🥪", isSpecial: false, calories: 420, prepTime: 12 },
+                    
+                    // Lunch Combos
                     { id: 8, name: "Chicken Caesar Salad", description: "Grilled chicken, romaine, parmesan, caesar dressing", price: 15.99, cuisine: "American", emoji: "🥗", isSpecial: true, calories: 380, prepTime: 15 },
                     { id: 9, name: "Turkey Club Sandwich", description: "Triple decker with bacon, avocado, and fries", price: 17.99, cuisine: "American", emoji: "🥪", isSpecial: true, calories: 720, prepTime: 20 },
+                    { id: 10, name: "Vegetable Wrap", description: "Grilled vegetables with hummus in spinach wrap", price: 13.99, cuisine: "American", emoji: "🌯", isSpecial: true, calories: 290, prepTime: 15 },
+                    { id: 11, name: "BBQ Chicken Pizza", description: "Wood-fired pizza with BBQ sauce and chicken", price: 21.99, cuisine: "Italian", emoji: "🍕", isSpecial: true, calories: 850, prepTime: 25 },
+                    { id: 12, name: "Beef Burger", description: "1/2 lb beef patty with cheese and all fixings", price: 18.99, cuisine: "American", emoji: "🍔", isSpecial: true, calories: 920, prepTime: 20 },
+                    { id: 13, name: "Cobb Salad", description: "Mixed greens with chicken, avocado, egg, bacon", price: 16.99, cuisine: "American", emoji: "🥗", isSpecial: false, calories: 410, prepTime: 15 },
+                    { id: 14, name: "Fish Tacos", description: "Grilled fish with cabbage slaw and lime crema", price: 16.99, cuisine: "Mexican", emoji: "🌮", isSpecial: false, calories: 480, prepTime: 18 },
+                    { id: 15, name: "Chicken Quesadilla", description: "Grilled chicken and cheese in flour tortilla", price: 14.99, cuisine: "Mexican", emoji: "🧀", isSpecial: false, calories: 620, prepTime: 15 },
+                    
+                    // Italian Classics
                     { id: 16, name: "Spaghetti Carbonara", description: "Pasta with eggs, cheese, pancetta, and black pepper", price: 18.99, cuisine: "Italian", emoji: "🍝", isSpecial: true, calories: 650, prepTime: 25 },
                     { id: 17, name: "Margherita Pizza", description: "Classic pizza with tomato, mozzarella, and basil", price: 22.99, cuisine: "Italian", emoji: "🍕", isSpecial: true, calories: 820, prepTime: 30 },
-                    { id: 23, name: "Kung Pao Chicken", description: "Spicy stir-fried chicken with peanuts", price: 19.99, cuisine: "Chinese", emoji: "🍗", isSpecial: true, calories: 680, prepTime: 25 },
-                    { id: 31, name: "Grilled Salmon", description: "Atlantic salmon with lemon butter sauce", price: 28.99, cuisine: "American", emoji: "🐟", isSpecial: true, calories: 480, prepTime: 35 },
-                    { id: 32, name: "Filet Mignon", description: "8oz beef tenderloin with mashed potatoes", price: 39.99, cuisine: "American", emoji: "🥩", isSpecial: true, calories: 920, prepTime: 40 },
-                    { id: 33, name: "BBQ Ribs", description: "Pork ribs with house BBQ sauce", price: 32.99, cuisine: "American", emoji: "🍖", isSpecial: true, calories: 1120, prepTime: 45 }
+                    { id: 18, name: "Lasagna Bolognese", description: "Layers of pasta with meat sauce and cheese", price: 24.99, cuisine: "Italian", emoji: "🍝", isSpecial: true, calories: 780, prepTime: 35 },
+                    { id: 19, name: "Chicken Parmesan", description: "Breaded chicken with marinara and melted cheese", price: 26.99, cuisine: "Italian", emoji: "🍗", isSpecial: true, calories: 920, prepTime: 30 },
+                    { id: 20, name: "Fettuccine Alfredo", description: "Creamy pasta with parmesan cheese", price: 19.99, cuisine: "Italian", emoji: "🍝", isSpecial: true, calories: 720, prepTime: 25 },
+                    { id: 21, name: "Eggplant Parmesan", description: "Breaded eggplant with marinara and cheese", price: 22.99, cuisine: "Italian", emoji: "🍆", isSpecial: false, calories: 580, prepTime: 30 },
+                    { id: 22, name: "Minestrone Soup", description: "Traditional Italian vegetable soup", price: 9.99, cuisine: "Italian", emoji: "🍲", isSpecial: false, calories: 210, prepTime: 20 },
+                    
+                    // Additional specials
+                    { id: 23, name: "Grilled Salmon", description: "Atlantic salmon with lemon butter sauce", price: 28.99, cuisine: "American", emoji: "🐟", isSpecial: true, calories: 480, prepTime: 35 },
+                    { id: 24, name: "Filet Mignon", description: "8oz beef tenderloin with mashed potatoes", price: 39.99, cuisine: "American", emoji: "🥩", isSpecial: true, calories: 920, prepTime: 40 },
+                    { id: 25, name: "BBQ Ribs", description: "Pork ribs with house BBQ sauce", price: 32.99, cuisine: "American", emoji: "🍖", isSpecial: true, calories: 1120, prepTime: 45 }
                 ]
             }
         };
@@ -1133,7 +1173,7 @@
             setInterval(updateTime, 60000);
             updateCartDisplay();
             
-            // Check URL for ZIP parameter
+            // Check URL for zip parameter
             const urlParams = new URLSearchParams(window.location.search);
             const zipParam = urlParams.get('zip');
             if (zipParam) {
@@ -1154,62 +1194,155 @@
             return now.getHours();
         }
 
-        // Find Location
-        function findLocation() {
+        // FIND LOCATION USING ZIP CODE API (Works for all USA)
+        async function findLocation() {
             const zipInput = document.getElementById('zip-code').value.trim();
-            const zipData = database.zipCodes[zipInput];
-            
-            if (!zipData) {
-                showNotification('Please enter a valid ZIP code. Try: 90001, 10001, 60601, 77001, or 33101', 'error');
+            const zipCodePattern = /^\d{5}$/;
+
+            // Basic validation
+            if (!zipCodePattern.test(zipInput)) {
+                showNotification('Please enter a valid 5-digit US ZIP code.', 'error');
                 return;
             }
-            
-            currentCity = zipData;
-            
-            // Update UI
-            document.getElementById('city-name').textContent = `${zipData.city}, ${zipData.state}`;
-            
-            // Determine meal type
-            const currentHour = updateTime();
-            let mealType, mealText, mealIcon;
-            
-            if (currentHour >= 5 && currentHour < 11) {
-                mealType = 'breakfast';
-                mealText = 'BREAKFAST MENU';
-                mealIcon = '☕';
-            } else if (currentHour >= 11 && currentHour < 16) {
-                mealType = 'lunch';
-                mealText = 'LUNCH MENU';
-                mealIcon = '🥪';
-            } else {
-                mealType = 'dinner';
-                mealText = 'DINNER MENU';
-                mealIcon = '🍽️';
+
+            // Show loading state
+            const mealTypeBadge = document.getElementById('meal-type');
+            mealTypeBadge.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Looking up...`;
+            document.getElementById('city-name').textContent = `Checking ZIP ${zipInput}...`;
+
+            try {
+                // Use Zippopotam.us API for real ZIP code data
+                const apiUrl = `https://api.zippopotam.us/us/${zipInput}`;
+                const response = await fetch(apiUrl);
+
+                // Handle HTTP errors
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('ZIP code not found. Please enter a valid US ZIP code.');
+                    } else {
+                        throw new Error('Could not fetch location data. Please try again.');
+                    }
+                }
+
+                const data = await response.json();
+
+                // Process API response
+                if (!data.places || data.places.length === 0) {
+                    throw new Error('No city data found for this ZIP code.');
+                }
+
+                // Get the primary place (first one in array)
+                const primaryPlace = data.places[0];
+                currentCity = {
+                    city: primaryPlace['place name'],
+                    state: primaryPlace['state abbreviation'],
+                    stateFull: primaryPlace.state,
+                    timezone: getTimezoneFromState(primaryPlace['state abbreviation']),
+                    cityId: 1 // Default city ID for menu lookup
+                };
+
+                // Update UI with real data
+                document.getElementById('city-name').textContent = `${currentCity.city}, ${currentCity.state}`;
+
+                // Determine meal type based on time
+                const currentHour = updateTime();
+                let mealText, mealIcon;
+                
+                if (currentHour >= 5 && currentHour < 11) {
+                    mealText = 'BREAKFAST MENU';
+                    mealIcon = '☕';
+                } else if (currentHour >= 11 && currentHour < 16) {
+                    mealText = 'LUNCH MENU';
+                    mealIcon = '🥪';
+                } else {
+                    mealText = 'DINNER MENU';
+                    mealIcon = '🍽️';
+                }
+
+                document.getElementById('meal-text').textContent = mealText;
+                document.getElementById('meal-type').innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
+
+                // Load the menu for this city
+                loadMenu(currentCity.cityId, mealText.toLowerCase());
+
+                // Update checkout form with city/state info
+                document.getElementById('city').value = currentCity.city;
+                document.getElementById('state').value = currentCity.state;
+                document.getElementById('zip').value = zipInput;
+
+                showNotification(`Menu loaded for ${currentCity.city}, ${currentCity.state}!`, 'success');
+
+            } catch (error) {
+                // Handle errors
+                console.error('Location fetch error:', error);
+                showNotification(error.message, 'error');
+                
+                // Reset UI to prompt state
+                document.getElementById('city-name').textContent = 'Select Your City';
+                document.getElementById('meal-text').textContent = 'Enter ZIP Code First';
+                mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> Enter ZIP Code First`;
             }
-            
-            document.getElementById('meal-text').textContent = mealText;
-            document.getElementById('meal-type').innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
-            
-            // Load menu
-            loadMenu(zipData.cityId, mealType);
-            
-            // Update checkout form
-            document.getElementById('city').value = zipData.city;
-            document.getElementById('state').value = zipData.state;
-            document.getElementById('zip').value = zipInput;
-            
-            showNotification(`Menu loaded for ${zipData.city}!`, 'success');
         }
 
-        // Load Menu
+        // Helper function to estimate timezone from state
+        function getTimezoneFromState(stateAbbr) {
+            const stateTimezones = {
+                // Eastern Time
+                'CT': 'America/New_York', 'DC': 'America/New_York', 'DE': 'America/New_York',
+                'FL': 'America/New_York', 'GA': 'America/New_York', 'IN': 'America/New_York',
+                'KY': 'America/New_York', 'MA': 'America/New_York', 'MD': 'America/New_York',
+                'ME': 'America/New_York', 'MI': 'America/New_York', 'NC': 'America/New_York',
+                'NH': 'America/New_York', 'NJ': 'America/New_York', 'NY': 'America/New_York',
+                'OH': 'America/New_York', 'PA': 'America/New_York', 'RI': 'America/New_York',
+                'SC': 'America/New_York', 'TN': 'America/New_York', 'VT': 'America/New_York',
+                'VA': 'America/New_York', 'WV': 'America/New_York',
+                // Central Time
+                'AL': 'America/Chicago', 'AR': 'America/Chicago', 'IL': 'America/Chicago',
+                'IA': 'America/Chicago', 'KS': 'America/Chicago', 'LA': 'America/Chicago',
+                'MN': 'America/Chicago', 'MS': 'America/Chicago', 'MO': 'America/Chicago',
+                'NE': 'America/Chicago', 'ND': 'America/Chicago', 'OK': 'America/Chicago',
+                'SD': 'America/Chicago', 'TX': 'America/Chicago', 'WI': 'America/Chicago',
+                // Mountain Time
+                'AZ': 'America/Phoenix', 'CO': 'America/Denver', 'ID': 'America/Denver',
+                'MT': 'America/Denver', 'NM': 'America/Denver', 'UT': 'America/Denver',
+                'WY': 'America/Denver',
+                // Pacific Time
+                'CA': 'America/Los_Angeles', 'NV': 'America/Los_Angeles', 'OR': 'America/Los_Angeles',
+                'WA': 'America/Los_Angeles',
+                // Others
+                'AK': 'America/Anchorage', 'HI': 'Pacific/Honolulu',
+                // US Territories
+                'PR': 'America/Puerto_Rico', 'GU': 'Pacific/Guam', 'VI': 'America/St_Thomas',
+                'MP': 'Pacific/Saipan', 'AS': 'Pacific/Pago_Pago'
+            };
+            return stateTimezones[stateAbbr.toUpperCase()] || 'America/New_York';
+        }
+
+        // Load menu based on city and meal type
         function loadMenu(cityId, mealType) {
             const menuContainer = document.getElementById('menu-container');
             const items = database.menuItems[cityId] || [];
             
-            let html = `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Daily Specials</h3>`;
+            // Filter special items (20 specials exactly)
+            const specials = items.filter(item => item.isSpecial).slice(0, 20);
+            
+            // Group items by cuisine for display
+            const itemsByCuisine = {};
+            items.forEach(item => {
+                if (!itemsByCuisine[item.cuisine]) {
+                    itemsByCuisine[item.cuisine] = [];
+                }
+                itemsByCuisine[item.cuisine].push(item);
+            });
+            
+            // Build menu HTML
+            let html = '';
+            
+            // Display specials section
+            html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Daily Specials (${specials.length} items)</h3>`;
             html += '<div class="menu-grid">';
             
-            items.forEach(item => {
+            specials.forEach(item => {
                 const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
                 const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
                 
@@ -1236,11 +1369,46 @@
             });
             
             html += '</div>';
+            
+            // Display by cuisine sections
+            for (const [cuisine, cuisineItems] of Object.entries(itemsByCuisine)) {
+                html += `<h3 style="margin-top: 30px;"><i class="fas fa-utensil-spoon"></i> ${cuisine} Cuisine</h3>`;
+                html += '<div class="menu-grid">';
+                
+                cuisineItems.forEach(item => {
+                    const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
+                    const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
+                    
+                    html += `
+                        <div class="menu-item ${item.isSpecial ? 'special' : ''}">
+                            ${item.isSpecial ? '<div class="special-badge">SPECIAL</div>' : ''}
+                            <div class="item-image">
+                                ${item.emoji}
+                            </div>
+                            <h3 class="item-name">${item.name}</h3>
+                            <p class="item-description">${item.description}</p>
+                            <div class="item-footer">
+                                <div>
+                                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                                    <div class="item-meta">${item.calories} cal • ${item.prepTime} min</div>
+                                </div>
+                                <button class="add-to-cart-btn" onclick="addToCart(${item.id})">
+                                    <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
+                                    ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
             menuContainer.innerHTML = html;
             updateCheckoutButton();
         }
 
-        // Cart Functions
+        // Add item to cart
         function addToCart(itemId) {
             const item = database.menuItems[1].find(i => i.id === itemId);
             if (!item) return;
@@ -1265,6 +1433,7 @@
             showNotification(`${item.name} added to cart!`, 'success');
         }
 
+        // Update cart quantity
         function updateCartQuantity(itemId, change) {
             const itemIndex = currentCart.findIndex(item => item.id === itemId);
             if (itemIndex === -1) return;
@@ -1278,8 +1447,11 @@
             localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
             updateCartDisplay();
             loadMenu(currentCity?.cityId || 1, 'dinner');
+            
+            showNotification('Cart updated');
         }
 
+        // Update cart display
         function updateCartDisplay() {
             const cartContainer = document.getElementById('cart-items');
             const subtotalEl = document.getElementById('subtotal');
@@ -1300,6 +1472,7 @@
                 return;
             }
             
+            // Calculate totals
             let subtotal = 0;
             currentCart.forEach(item => {
                 subtotal += item.price * item.quantity;
@@ -1309,10 +1482,12 @@
             const deliveryFee = 2.99;
             const total = subtotal + tax + deliveryFee;
             
+            // Update totals display
             subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
             taxEl.textContent = `$${tax.toFixed(2)}`;
             totalEl.textContent = `$${total.toFixed(2)}`;
             
+            // Build cart items HTML
             let cartHTML = '';
             currentCart.forEach(item => {
                 cartHTML += `
