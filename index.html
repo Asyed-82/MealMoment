@@ -272,6 +272,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .btn-primary {
@@ -386,12 +387,20 @@
             font-size: 1rem;
             color: var(--mm-charcoal);
             transition: all 0.2s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--mm-green);
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        /* Mobile-specific input fixes */
+        input[type="text"], input[type="number"], input[type="tel"] {
+            font-size: 16px; /* Prevents iOS zoom on focus */
         }
 
         /* ===== MENU SECTION ===== */
@@ -730,6 +739,43 @@
             margin-bottom: var(--space-md);
         }
 
+        /* Mobile ZIP Options */
+        .mobile-zip-options {
+            margin-top: var(--space-md);
+            padding: var(--space-md);
+            background: var(--mm-bg-soft);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--mm-gray-200);
+        }
+
+        .mobile-zip-options p {
+            margin-bottom: var(--space-sm);
+            color: var(--mm-gray-700);
+            font-size: 0.9rem;
+        }
+
+        .zip-buttons {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .zip-button {
+            padding: 0.5rem 1rem;
+            background: var(--mm-bg);
+            border: 1px solid var(--mm-gray-200);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .zip-button:hover {
+            border-color: var(--mm-green);
+            background: var(--mm-bg-soft);
+        }
+
         /* ===== RESPONSIVE DESIGN ===== */
         @media (max-width: 992px) {
             .main-content {
@@ -813,6 +859,16 @@
             
             .hero {
                 margin-bottom: var(--space-lg);
+            }
+            
+            /* Mobile ZIP input improvements */
+            #zip-code {
+                font-size: 16px; /* Prevent zoom on iOS */
+                height: 50px;
+            }
+            
+            .mobile-zip-options {
+                display: block !important;
             }
         }
 
@@ -1000,7 +1056,7 @@
                     <p>Secure payment with fresh delivery to your door</p>
                 </div>
 
-                <!-- Location Selector -->
+                <!-- Location Selector - FIXED FOR MOBILE -->
                 <div class="location-selector">
                     <h3><i class="fas fa-map-marker-alt"></i> Find Your Location</h3>
                     <div class="form-group">
@@ -1008,14 +1064,33 @@
                         <input 
                             type="text" 
                             id="zip-code" 
+                            inputmode="numeric"
+                            pattern="[0-9]{5}"
                             placeholder="e.g., 90001, 10001, 60601" 
                             maxlength="5"
+                            onkeypress="return zipCodeKeyPress(event)"
+                            oninput="validateZipCodeInput()"
+                            style="font-size: 16px;"
                         >
+                        <div id="zip-error" class="error-message hidden" style="margin-top: 8px; font-size: 0.875rem; padding: 0.5rem;">
+                            Please enter a valid 5-digit ZIP code
+                        </div>
                     </div>
                     <!-- UPDATED BUTTON TEXT -->
-                    <button class="btn btn-primary" onclick="findLocation()" style="width: 100%;">
+                    <button class="btn btn-primary" onclick="findLocation()" id="find-location-btn" style="width: 100%;">
                         <i class="fas fa-search btn-icon"></i> Find Restaurant Specials
                     </button>
+                    
+                    <!-- Mobile-friendly alternative input method -->
+                    <div class="mobile-zip-options" id="mobile-zip-options">
+                        <p>Or try these popular ZIP codes:</p>
+                        <div class="zip-buttons">
+                            <button type="button" class="zip-button" onclick="fillZipCode('10001')">10001 (NYC)</button>
+                            <button type="button" class="zip-button" onclick="fillZipCode('90001')">90001 (LA)</button>
+                            <button type="button" class="zip-button" onclick="fillZipCode('60601')">60601 (Chicago)</button>
+                            <button type="button" class="zip-button" onclick="fillZipCode('77001')">77001 (Houston)</button>
+                        </div>
+                    </div>
                 </div>
             </aside>
 
@@ -1243,8 +1318,19 @@
             const zipParam = urlParams.get('zip');
             if (zipParam) {
                 const zipInput = document.getElementById('zip-code');
-                if (zipInput) zipInput.value = zipParam;
-                findLocation();
+                if (zipInput) {
+                    zipInput.value = zipParam;
+                    validateZipCodeInput();
+                    setTimeout(() => findLocation(), 500);
+                }
+            }
+            
+            // Show mobile ZIP options on mobile
+            if (window.innerWidth <= 768) {
+                const mobileOptions = document.getElementById('mobile-zip-options');
+                if (mobileOptions) {
+                    mobileOptions.style.display = 'block';
+                }
             }
             
             // Fix mobile menu visibility by scrolling to menu section
@@ -1256,6 +1342,66 @@
                         menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 }, 500);
+            }
+        }
+
+        // MOBILE ZIP CODE FUNCTIONS - FIXED FOR MOBILE INPUT
+        function zipCodeKeyPress(event) {
+            // Allow only numeric input
+            const charCode = event.which ? event.which : event.keyCode;
+            
+            // Allow numbers (48-57), backspace (8), tab (9), enter (13), delete (46)
+            if ((charCode < 48 || charCode > 57) && 
+                charCode !== 8 && charCode !== 9 && charCode !== 13 && charCode !== 46) {
+                event.preventDefault();
+                return false;
+            }
+            return true;
+        }
+
+        function validateZipCodeInput() {
+            const zipInput = document.getElementById('zip-code');
+            const errorElement = document.getElementById('zip-error');
+            const findButton = document.getElementById('find-location-btn');
+            
+            if (!zipInput || !errorElement || !findButton) return;
+            
+            const value = zipInput.value.trim();
+            
+            // Validate as user types
+            if (value.length === 5 && /^\d{5}$/.test(value)) {
+                // Valid 5-digit ZIP
+                errorElement.classList.add('hidden');
+                findButton.disabled = false;
+                findButton.style.opacity = '1';
+                findButton.style.cursor = 'pointer';
+            } else if (value.length > 0) {
+                // Invalid input
+                errorElement.classList.remove('hidden');
+                findButton.disabled = true;
+                findButton.style.opacity = '0.5';
+                findButton.style.cursor = 'not-allowed';
+            } else {
+                // Empty field
+                errorElement.classList.add('hidden');
+                findButton.disabled = false;
+                findButton.style.opacity = '1';
+                findButton.style.cursor = 'pointer';
+            }
+        }
+
+        function fillZipCode(zipCode) {
+            const zipInput = document.getElementById('zip-code');
+            if (zipInput) {
+                zipInput.value = zipCode;
+                validateZipCodeInput();
+                
+                // Auto-submit after a short delay on mobile
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        findLocation();
+                    }, 300);
+                }
             }
         }
 
@@ -1303,7 +1449,9 @@
         // FIND LOCATION USING ZIP CODE API (Works for all USA)
         async function findLocation() {
             const zipInput = document.getElementById('zip-code');
-            if (!zipInput) {
+            const errorElement = document.getElementById('zip-error');
+            
+            if (!zipInput || !errorElement) {
                 showNotification('ZIP code input field not found', 'error');
                 return;
             }
@@ -1313,6 +1461,7 @@
 
             // Basic validation
             if (!zipCodePattern.test(zipValue)) {
+                errorElement.classList.remove('hidden');
                 showNotification('Please enter a valid 5-digit US ZIP code.', 'error');
                 return;
             }
@@ -1407,6 +1556,7 @@
                 if (stateInput) stateInput.value = currentCity.state;
                 if (zipFormInput) zipFormInput.value = zipValue;
 
+                errorElement.classList.add('hidden');
                 showNotification(`Restaurant specials loaded for ${currentCity.city}, ${currentCity.state}! Sales tax: ${(currentStateTaxRate * 100).toFixed(2)}%`, 'success');
 
                 // On mobile, scroll to menu section to ensure visibility
@@ -1422,6 +1572,8 @@
             } catch (error) {
                 // Handle errors
                 console.error('Location fetch error:', error);
+                errorElement.classList.remove('hidden');
+                errorElement.textContent = error.message;
                 showNotification(error.message, 'error');
                 
                 // Reset UI to prompt state with null checks
