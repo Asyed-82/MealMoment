@@ -8,11 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Add Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <style>
         /* ===== CSS VARIABLES ===== */
         :root {
@@ -466,6 +461,32 @@
             display: none !important;
         }
 
+        /* Order Status */
+        .order-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: var(--space-sm);
+        }
+
+        .status-delivered {
+            background: var(--mm-green);
+            color: white;
+        }
+
+        .status-preparing {
+            background: var(--mm-orange);
+            color: white;
+        }
+
+        .status-pending {
+            background: var(--mm-gray-700);
+            color: white;
+        }
+
         /* ===== RESPONSIVE DESIGN ===== */
         @media (max-width: 992px) {
             .dashboard-layout {
@@ -582,7 +603,7 @@
         <div class="container">
             <div class="navbar-content">
                 <a href="/" class="logo-container">
-                    <img src="image/MealMomenetlogo.jpeg" alt="MealMoment Logo" class="logo-image">
+                    <img src="https://via.placeholder.com/60x60/FF6A00/FFFFFF?text=MM" alt="MealMoment Logo" class="logo-image">
                     <div>
                         <div class="logo-text">MealMoment</div>
                         <div class="logo-tagline">Restaurant Owner Dashboard</div>
@@ -648,7 +669,7 @@
                             <i class="fas fa-sign-in-alt"></i> Login to Dashboard
                         </button>
                         <p style="text-align: center; margin-top: var(--space-md); color: var(--mm-gray-700);">
-                            Demo: Use email "demo@restaurant.com" and any password
+                            Use email "demo@restaurant.com" and any password
                         </p>
                     </div>
                 </div>
@@ -756,10 +777,10 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="dish-image"><i class="fas fa-image"></i> Dish Image (optional)</label>
-                        <input type="file" id="dish-image" accept="image/*">
+                        <label for="dish-image"><i class="fas fa-image"></i> Dish Image URL (optional)</label>
+                        <input type="text" id="dish-image" placeholder="https://example.com/image.jpg">
                         <small style="color: var(--mm-gray-700); display: block; margin-top: 0.5rem;">
-                            Recommended: 800x600px, max 2MB
+                            Enter image URL (we'll use a placeholder if empty)
                         </small>
                     </div>
                     
@@ -774,6 +795,13 @@
                 <div id="orders-section" class="hidden">
                     <h1><i class="fas fa-shopping-cart"></i> Recent Orders</h1>
                     <p>View and manage customer orders for your restaurant.</p>
+                    
+                    <div class="filter-buttons" style="margin-bottom: var(--space-lg);">
+                        <button class="filter-btn active" onclick="setOrderFilter('all')">All Orders</button>
+                        <button class="filter-btn" onclick="setOrderFilter('today')">Today</button>
+                        <button class="filter-btn" onclick="setOrderFilter('pending')">Pending</button>
+                        <button class="filter-btn" onclick="setOrderFilter('delivered')">Delivered</button>
+                    </div>
                     
                     <div id="orders-container">
                         <div class="message info-message">
@@ -822,53 +850,42 @@
     </main>
 
     <script>
-        // ===== FIREBASE CONFIGURATION =====
-        // Replace with your actual Firebase config (same as in main app)
-        const firebaseConfig = {
-            apiKey: "AIzaSyYOUR_API_KEY_HERE",
-            authDomain: "your-project-id.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "1:YOUR_APP_ID:web:YOUR_APP_ID"
+        // ===== LOCAL STORAGE DATA MANAGEMENT =====
+        const STORAGE_KEYS = {
+            DISHES: 'meal_moment_dishes',
+            RESTAURANT: 'meal_moment_restaurant',
+            ORDERS: 'meal_moment_orders',
+            SESSION: 'meal_moment_session'
         };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const storage = firebase.storage();
 
         // Global Variables
         let currentUser = null;
         let restaurantInfo = null;
         let dishes = [];
+        let orders = [];
         let currentFilter = 'all';
+        let currentOrderFilter = 'all';
 
         // Initialize Dashboard
         function initDashboard() {
             // Check if user is logged in
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    currentUser = user;
-                    showDashboard();
-                    loadRestaurantInfo();
-                    loadDishes();
-                    loadOrders();
-                    setupRealTimeListeners();
-                } else {
-                    showLogin();
-                }
-            });
+            const session = getFromStorage(STORAGE_KEYS.SESSION);
+            if (session && session.loggedIn) {
+                currentUser = session.user;
+                showDashboard();
+                loadRestaurantInfo();
+                loadDishes();
+                loadOrders();
+            } else {
+                showLogin();
+                setupDemoLogin();
+            }
 
             // Setup search functionality
             const searchInput = document.getElementById('dish-search');
             if (searchInput) {
                 searchInput.addEventListener('input', filterDishes);
             }
-
-            // Demo login for testing
-            setupDemoLogin();
         }
 
         // Setup demo login for testing
@@ -891,40 +908,154 @@
 
             showMessage(messageEl, 'Logging in...', 'info');
 
-            // For demo purposes, allow any password with demo email
-            if (email === 'demo@restaurant.com') {
-                // Create demo user session
+            // Simple authentication - any email/password works for demo
+            setTimeout(() => {
                 currentUser = {
-                    uid: 'demo-user-123',
-                    email: 'demo@restaurant.com',
-                    displayName: 'Demo Restaurant'
+                    uid: 'user-' + Date.now(),
+                    email: email,
+                    displayName: email.split('@')[0]
                 };
                 
+                // Save session
+                saveToStorage(STORAGE_KEYS.SESSION, {
+                    loggedIn: true,
+                    user: currentUser
+                });
+                
+                // Initialize with demo data if first time
+                initializeDemoData();
+                
                 showDashboard();
-                loadDemoData();
                 showMessage(messageEl, 'Logged in successfully!', 'success');
-            } else {
-                // Real Firebase authentication
-                auth.signInWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        showMessage(messageEl, 'Logged in successfully!', 'success');
-                    })
-                    .catch((error) => {
-                        showMessage(messageEl, error.message, 'error');
-                    });
+            }, 500);
+        }
+
+        // Initialize demo data for first-time users
+        function initializeDemoData() {
+            // Check if restaurant info exists
+            const existingRestaurant = getFromStorage(STORAGE_KEYS.RESTAURANT);
+            if (!existingRestaurant) {
+                restaurantInfo = {
+                    id: currentUser.uid,
+                    name: 'My Restaurant',
+                    email: currentUser.email,
+                    zipCodes: ['90001', '90002'],
+                    phone: '(555) 123-4567',
+                    address: '123 Main Street, Los Angeles, CA',
+                    createdAt: new Date().toISOString()
+                };
+                saveToStorage(STORAGE_KEYS.RESTAURANT, restaurantInfo);
+            }
+
+            // Check if dishes exist
+            const existingDishes = getFromStorage(STORAGE_KEYS.DISHES);
+            if (!existingDishes || existingDishes.length === 0) {
+                const demoDishes = [
+                    {
+                        id: 'dish-' + Date.now(),
+                        name: 'Spaghetti Carbonara',
+                        description: 'Classic Italian pasta with eggs, cheese, pancetta, and black pepper',
+                        price: 18.99,
+                        cuisine: 'Italian',
+                        calories: 650,
+                        imageUrl: 'https://images.unsplash.com/photo-1598866594230-a7c12756260f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                        restaurantId: currentUser.uid,
+                        restaurantName: 'My Restaurant',
+                        status: 'approved',
+                        isActive: true,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'dish-' + (Date.now() + 1),
+                        name: 'Grilled Salmon',
+                        description: 'Atlantic salmon with lemon butter sauce, served with seasonal vegetables',
+                        price: 24.99,
+                        cuisine: 'American',
+                        calories: 480,
+                        imageUrl: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                        restaurantId: currentUser.uid,
+                        restaurantName: 'My Restaurant',
+                        status: 'approved',
+                        isActive: true,
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'dish-' + (Date.now() + 2),
+                        name: 'New Special Dish',
+                        description: 'Our new signature dish, chef\'s special creation',
+                        price: 16.99,
+                        cuisine: 'American',
+                        calories: 420,
+                        imageUrl: '',
+                        restaurantId: currentUser.uid,
+                        restaurantName: 'My Restaurant',
+                        status: 'pending',
+                        isActive: true,
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                saveToStorage(STORAGE_KEYS.DISHES, demoDishes);
+            }
+
+            // Check if orders exist
+            const existingOrders = getFromStorage(STORAGE_KEYS.ORDERS);
+            if (!existingOrders || existingOrders.length === 0) {
+                const demoOrders = [
+                    {
+                        id: 'order-' + Date.now(),
+                        orderNumber: 'ORD-1001',
+                        customerName: 'John Smith',
+                        customerEmail: 'john@example.com',
+                        items: [
+                            { name: 'Spaghetti Carbonara', price: 18.99, quantity: 2 },
+                            { name: 'Garlic Bread', price: 4.99, quantity: 1 }
+                        ],
+                        total: 42.97,
+                        deliveryAddress: '123 Main St, Los Angeles, CA 90001',
+                        restaurantIds: [currentUser.uid],
+                        status: 'delivered',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'order-' + (Date.now() + 1),
+                        orderNumber: 'ORD-1002',
+                        customerName: 'Sarah Johnson',
+                        customerEmail: 'sarah@example.com',
+                        items: [
+                            { name: 'Grilled Salmon', price: 24.99, quantity: 1 },
+                            { name: 'Caesar Salad', price: 8.99, quantity: 1 }
+                        ],
+                        total: 33.98,
+                        deliveryAddress: '456 Oak Ave, Los Angeles, CA 90002',
+                        restaurantIds: [currentUser.uid],
+                        status: 'preparing',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'order-' + (Date.now() + 2),
+                        orderNumber: 'ORD-1003',
+                        customerName: 'Mike Wilson',
+                        customerEmail: 'mike@example.com',
+                        items: [
+                            { name: 'New Special Dish', price: 16.99, quantity: 3 }
+                        ],
+                        total: 50.97,
+                        deliveryAddress: '789 Pine Rd, Los Angeles, CA 90003',
+                        restaurantIds: [currentUser.uid],
+                        status: 'pending',
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                saveToStorage(STORAGE_KEYS.ORDERS, demoOrders);
             }
         }
 
         // Logout Function
         function logout() {
-            auth.signOut()
-                .then(() => {
-                    currentUser = null;
-                    showLogin();
-                })
-                .catch((error) => {
-                    console.error('Logout error:', error);
-                });
+            // Clear session
+            saveToStorage(STORAGE_KEYS.SESSION, { loggedIn: false });
+            currentUser = null;
+            showLogin();
         }
 
         // Show/Hide Sections
@@ -932,25 +1063,34 @@
             // Hide all sections
             const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info'];
             sections.forEach(id => {
-                document.getElementById(`${id}-section`).classList.add('hidden');
-                document.getElementById(`nav-${id}`).classList.remove('active');
+                const section = document.getElementById(`${id}-section`);
+                const nav = document.getElementById(`nav-${id}`);
+                if (section) section.classList.add('hidden');
+                if (nav) nav.classList.remove('active');
             });
 
             // Show selected section
-            document.getElementById(`${sectionId}-section`).classList.remove('hidden');
-            document.getElementById(`nav-${sectionId}`).classList.add('active');
+            const selectedSection = document.getElementById(`${sectionId}-section`);
+            const selectedNav = document.getElementById(`nav-${sectionId}`);
+            if (selectedSection) selectedSection.classList.remove('hidden');
+            if (selectedNav) selectedNav.classList.add('active');
 
             // Load data for the section
             if (sectionId === 'dishes') {
                 loadDishes();
             } else if (sectionId === 'orders') {
                 loadOrders();
+            } else if (sectionId === 'dashboard') {
+                updateStats();
             }
         }
 
         function showLogin() {
             document.getElementById('login-section').classList.remove('hidden');
-            document.getElementById('dashboard-section').classList.add('hidden');
+            const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info'];
+            sections.forEach(id => {
+                document.getElementById(`${id}-section`).classList.add('hidden');
+            });
         }
 
         function showDashboard() {
@@ -960,30 +1100,25 @@
         }
 
         // Load Restaurant Info
-        async function loadRestaurantInfo() {
+        function loadRestaurantInfo() {
             if (!currentUser) return;
 
-            try {
-                const doc = await db.collection('restaurants').doc(currentUser.uid).get();
-                if (doc.exists) {
-                    restaurantInfo = doc.data();
-                    updateRestaurantUI();
-                } else {
-                    // Create default restaurant info
-                    restaurantInfo = {
-                        name: 'My Restaurant',
-                        email: currentUser.email,
-                        zipCodes: ['90001'],
-                        phone: '',
-                        address: ''
-                    };
-                    await db.collection('restaurants').doc(currentUser.uid).set(restaurantInfo);
-                    updateRestaurantUI();
-                }
-            } catch (error) {
-                console.error('Error loading restaurant info:', error);
-                loadDemoRestaurantInfo();
+            restaurantInfo = getFromStorage(STORAGE_KEYS.RESTAURANT);
+            if (!restaurantInfo) {
+                // Create default restaurant info
+                restaurantInfo = {
+                    id: currentUser.uid,
+                    name: 'My Restaurant',
+                    email: currentUser.email,
+                    zipCodes: ['90001'],
+                    phone: '',
+                    address: '',
+                    createdAt: new Date().toISOString()
+                };
+                saveToStorage(STORAGE_KEYS.RESTAURANT, restaurantInfo);
             }
+            
+            updateRestaurantUI();
         }
 
         function updateRestaurantUI() {
@@ -1008,7 +1143,7 @@
         }
 
         // Update Restaurant Info
-        async function updateRestaurantInfo() {
+        function updateRestaurantInfo() {
             if (!currentUser) return;
 
             const name = document.getElementById('restaurant-name-input').value.trim();
@@ -1023,27 +1158,23 @@
 
             const zipArray = zipCodes.split(',').map(zip => zip.trim()).filter(zip => zip.length === 5);
 
-            try {
-                await db.collection('restaurants').doc(currentUser.uid).update({
-                    name,
-                    address,
-                    phone,
-                    zipCodes: zipArray,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+            restaurantInfo = {
+                ...restaurantInfo,
+                name,
+                address,
+                phone,
+                zipCodes: zipArray,
+                updatedAt: new Date().toISOString()
+            };
 
-                restaurantInfo = { ...restaurantInfo, name, address, phone, zipCodes: zipArray };
-                updateRestaurantUI();
-                
-                showMessage('restaurant-info-message', 'Restaurant info updated successfully!', 'success');
-            } catch (error) {
-                console.error('Error updating restaurant info:', error);
-                showMessage('restaurant-info-message', 'Error updating restaurant info', 'error');
-            }
+            saveToStorage(STORAGE_KEYS.RESTAURANT, restaurantInfo);
+            updateRestaurantUI();
+            
+            showMessage('restaurant-info-message', 'Restaurant info updated successfully!', 'success');
         }
 
         // Load Dishes
-        async function loadDishes() {
+        function loadDishes() {
             if (!currentUser) return;
 
             const container = document.getElementById('dishes-container');
@@ -1056,25 +1187,14 @@
                 </div>
             `;
 
-            try {
-                const snapshot = await db.collection('dishes')
-                    .where('restaurantId', '==', currentUser.uid)
-                    .get();
+            dishes = getFromStorage(STORAGE_KEYS.DISHES) || [];
+            // Filter dishes for current restaurant
+            dishes = dishes.filter(dish => dish.restaurantId === currentUser.uid);
 
-                dishes = [];
-                snapshot.forEach(doc => {
-                    dishes.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-
+            setTimeout(() => {
                 renderDishes();
                 updateStats();
-            } catch (error) {
-                console.error('Error loading dishes:', error);
-                loadDemoDishes();
-            }
+            }, 300);
         }
 
         // Render Dishes with Filtering
@@ -1093,7 +1213,7 @@
             }
 
             // Apply filters
-            let filteredDishes = dishes;
+            let filteredDishes = [...dishes];
             
             // Search filter
             const searchTerm = document.getElementById('dish-search')?.value.toLowerCase() || '';
@@ -1101,7 +1221,7 @@
                 filteredDishes = filteredDishes.filter(dish => 
                     dish.name.toLowerCase().includes(searchTerm) ||
                     (dish.description && dish.description.toLowerCase().includes(searchTerm)) ||
-                    dish.cuisine.toLowerCase().includes(searchTerm)
+                    (dish.cuisine && dish.cuisine.toLowerCase().includes(searchTerm))
                 );
             }
 
@@ -1125,6 +1245,9 @@
                 `;
                 return;
             }
+
+            // Sort by creation date (newest first)
+            filteredDishes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
             // Render dishes
             container.innerHTML = filteredDishes.map(dish => `
@@ -1156,6 +1279,10 @@
                                 <i class="fas fa-${dish.isActive ? 'pause' : 'play'}"></i>
                                 ${dish.isActive ? 'Deactivate' : 'Activate'}
                             </button>
+                            <button class="btn btn-secondary" onclick="deleteDish('${dish.id}')" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                <i class="fas fa-trash"></i>
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1183,7 +1310,7 @@
         }
 
         // Add Dish
-        async function addDish() {
+        function addDish() {
             if (!currentUser || !restaurantInfo) {
                 showMessage('dish-form-message', 'Please login first', 'error');
                 return;
@@ -1194,17 +1321,13 @@
             const price = parseFloat(document.getElementById('dish-price').value);
             const cuisine = document.getElementById('dish-cuisine').value;
             const calories = document.getElementById('dish-calories').value;
-            const imageFile = document.getElementById('dish-image').files[0];
+            const imageUrl = document.getElementById('dish-image').value.trim();
 
             // Validation
             const errors = [];
             if (!name) errors.push('Dish name is required');
             if (!price || price <= 0) errors.push('Valid price is required');
             if (!cuisine) errors.push('Cuisine type is required');
-            
-            if (imageFile && imageFile.size > 2 * 1024 * 1024) {
-                errors.push('Image size must be less than 2MB');
-            }
 
             if (errors.length > 0) {
                 showMessage('dish-form-message', errors.join('<br>'), 'error');
@@ -1213,260 +1336,237 @@
 
             showMessage('dish-form-message', 'Adding dish...', 'info');
 
-            try {
-                let imageUrl = '';
-                
-                // Upload image if provided
-                if (imageFile) {
-                    const storageRef = storage.ref(`dishes/${currentUser.uid}/${Date.now()}_${imageFile.name}`);
-                    await storageRef.put(imageFile);
-                    imageUrl = await storageRef.getDownloadURL();
-                }
+            // Create dish object
+            const dishData = {
+                id: 'dish-' + Date.now(),
+                name,
+                description,
+                price,
+                cuisine,
+                calories: calories ? parseInt(calories) : null,
+                imageUrl: imageUrl || '',
+                restaurantId: currentUser.uid,
+                restaurantName: restaurantInfo.name,
+                status: 'pending',
+                isActive: true,
+                createdAt: new Date().toISOString()
+            };
 
-                // Add dish to Firestore
-                const dishData = {
-                    name,
-                    description,
-                    price,
-                    cuisine,
-                    calories: calories ? parseInt(calories) : null,
-                    imageUrl,
-                    restaurantId: currentUser.uid,
-                    restaurantName: restaurantInfo.name,
-                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001',
-                    status: 'pending', // Needs admin approval
-                    isActive: true,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
+            // Get existing dishes
+            let allDishes = getFromStorage(STORAGE_KEYS.DISHES) || [];
+            allDishes.push(dishData);
+            saveToStorage(STORAGE_KEYS.DISHES, allDishes);
 
-                await db.collection('dishes').add(dishData);
+            // Clear form
+            document.getElementById('dish-name').value = '';
+            document.getElementById('dish-description').value = '';
+            document.getElementById('dish-price').value = '';
+            document.getElementById('dish-cuisine').value = '';
+            document.getElementById('dish-calories').value = '';
+            document.getElementById('dish-image').value = '';
 
-                // Clear form
-                document.getElementById('dish-name').value = '';
-                document.getElementById('dish-description').value = '';
-                document.getElementById('dish-price').value = '';
-                document.getElementById('dish-cuisine').value = '';
-                document.getElementById('dish-calories').value = '';
-                document.getElementById('dish-image').value = '';
-
-                showMessage('dish-form-message', 'Dish added successfully! It will appear after admin approval.', 'success');
-                
-                // Reload dishes
-                loadDishes();
-                showSection('dishes');
-                
-            } catch (error) {
-                console.error('Error adding dish:', error);
-                showMessage('dish-form-message', 'Error adding dish: ' + error.message, 'error');
-            }
+            showMessage('dish-form-message', 'Dish added successfully! It will appear after admin approval.', 'success');
+            
+            // Reload dishes
+            loadDishes();
+            showSection('dishes');
         }
 
         // Toggle Dish Status
-        async function toggleDishStatus(dishId, currentStatus) {
-            try {
-                await db.collection('dishes').doc(dishId).update({
-                    isActive: !currentStatus,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+        function toggleDishStatus(dishId, currentStatus) {
+            let allDishes = getFromStorage(STORAGE_KEYS.DISHES) || [];
+            const dishIndex = allDishes.findIndex(dish => dish.id === dishId);
+            
+            if (dishIndex !== -1) {
+                allDishes[dishIndex].isActive = !currentStatus;
+                allDishes[dishIndex].updatedAt = new Date().toISOString();
+                saveToStorage(STORAGE_KEYS.DISHES, allDishes);
                 
-                await loadDishes();
+                loadDishes();
                 showMessage('dish-form-message', `Dish ${!currentStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
-            } catch (error) {
-                console.error('Error toggling dish status:', error);
-                showMessage('dish-form-message', 'Error updating dish status', 'error');
             }
         }
 
+        // Delete Dish
+        function deleteDish(dishId) {
+            if (!confirm('Are you sure you want to delete this dish?')) return;
+            
+            let allDishes = getFromStorage(STORAGE_KEYS.DISHES) || [];
+            allDishes = allDishes.filter(dish => dish.id !== dishId);
+            saveToStorage(STORAGE_KEYS.DISHES, allDishes);
+            
+            loadDishes();
+            showMessage('dish-form-message', 'Dish deleted successfully!', 'success');
+        }
+
         // Load Orders
-        async function loadOrders() {
+        function loadOrders() {
             if (!currentUser) return;
 
             const container = document.getElementById('orders-container');
             if (!container) return;
 
-            try {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
+            orders = getFromStorage(STORAGE_KEYS.ORDERS) || [];
+            // Filter orders for current restaurant
+            orders = orders.filter(order => 
+                order.restaurantIds && order.restaurantIds.includes(currentUser.uid)
+            );
 
-                const snapshot = await db.collection('orders')
-                    .where('restaurantIds', 'array-contains', currentUser.uid)
-                    .where('createdAt', '>=', today)
-                    .orderBy('createdAt', 'desc')
-                    .limit(10)
-                    .get();
+            renderOrders();
+        }
 
-                if (snapshot.empty) {
-                    container.innerHTML = `
-                        <div class="message info-message">
-                            <i class="fas fa-shopping-cart"></i>
-                            No orders today
-                        </div>
-                    `;
-                    return;
-                }
+        // Set Order Filter
+        function setOrderFilter(filter) {
+            currentOrderFilter = filter;
+            
+            // Update button states
+            const buttons = document.querySelectorAll('#orders-section .filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Set active on clicked button
+            event.target.classList.add('active');
+            
+            renderOrders();
+        }
 
-                const orders = [];
-                snapshot.forEach(doc => {
-                    orders.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
+        // Render Orders
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            if (!container) return;
 
-                container.innerHTML = orders.map(order => `
-                    <div class="dish-card" style="margin-bottom: var(--space-md);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
-                            <h4 style="margin: 0;">Order #${order.orderNumber}</h4>
-                            <span style="color: var(--mm-green); font-weight: 600;">$${order.total?.toFixed(2) || '0.00'}</span>
-                        </div>
-                        <p style="color: var(--mm-gray-700); font-size: 0.9rem; margin-bottom: var(--space-sm);">
-                            <i class="fas fa-user"></i> ${order.customerName}<br>
-                            <i class="fas fa-clock"></i> ${order.createdAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                        <div style="background: var(--mm-bg-soft); padding: var(--space-sm); border-radius: var(--radius-md);">
-                            <strong>Items:</strong>
-                            <ul style="margin-top: 0.5rem; padding-left: 1rem;">
-                                ${order.items?.map(item => `
-                                    <li>${item.quantity}x ${item.name} - $${(item.price * item.quantity).toFixed(2)}</li>
-                                `).join('') || '<li>No items</li>'}
-                            </ul>
-                        </div>
-                        <p style="color: var(--mm-gray-700); font-size: 0.875rem; margin-top: var(--space-sm);">
-                            <i class="fas fa-map-marker-alt"></i> ${order.deliveryAddress}
-                        </p>
-                    </div>
-                `).join('');
-
-            } catch (error) {
-                console.error('Error loading orders:', error);
+            if (orders.length === 0) {
                 container.innerHTML = `
-                    <div class="message error-message">
-                        <i class="fas fa-exclamation-circle"></i>
-                        Error loading orders
+                    <div class="message info-message">
+                        <i class="fas fa-shopping-cart"></i>
+                        No orders yet
                     </div>
                 `;
+                return;
+            }
+
+            // Filter orders
+            let filteredOrders = [...orders];
+            
+            if (currentOrderFilter === 'today') {
+                const today = new Date().toDateString();
+                filteredOrders = filteredOrders.filter(order => 
+                    new Date(order.createdAt).toDateString() === today
+                );
+            } else if (currentOrderFilter === 'pending') {
+                filteredOrders = filteredOrders.filter(order => order.status === 'pending');
+            } else if (currentOrderFilter === 'delivered') {
+                filteredOrders = filteredOrders.filter(order => order.status === 'delivered');
+            }
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="message info-message">
+                        <i class="fas fa-search"></i>
+                        No orders match your filter criteria
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by date (newest first)
+            filteredOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            container.innerHTML = filteredOrders.map(order => `
+                <div class="dish-card" style="margin-bottom: var(--space-md);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                        <h4 style="margin: 0;">Order #${order.orderNumber}</h4>
+                        <div>
+                            <span style="color: var(--mm-green); font-weight: 600;">$${order.total?.toFixed(2) || '0.00'}</span>
+                            <span class="order-status status-${order.status}">
+                                ${order.status.toUpperCase()}
+                            </span>
+                        </div>
+                    </div>
+                    <p style="color: var(--mm-gray-700); font-size: 0.9rem; margin-bottom: var(--space-sm);">
+                        <i class="fas fa-user"></i> ${order.customerName}<br>
+                        <i class="fas fa-clock"></i> ${new Date(order.createdAt).toLocaleDateString()} at 
+                        ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <div style="background: var(--mm-bg-soft); padding: var(--space-sm); border-radius: var(--radius-md);">
+                        <strong>Items:</strong>
+                        <ul style="margin-top: 0.5rem; padding-left: 1rem;">
+                            ${order.items?.map(item => `
+                                <li>${item.quantity}x ${item.name} - $${(item.price * item.quantity).toFixed(2)}</li>
+                            `).join('') || '<li>No items</li>'}
+                        </ul>
+                    </div>
+                    <p style="color: var(--mm-gray-700); font-size: 0.875rem; margin-top: var(--space-sm);">
+                        <i class="fas fa-map-marker-alt"></i> ${order.deliveryAddress}
+                    </p>
+                    <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-md);">
+                        <button class="btn btn-secondary" onclick="updateOrderStatus('${order.id}', 'preparing')" ${order.status !== 'pending' ? 'disabled' : ''}>
+                            <i class="fas fa-utensils"></i> Start Preparing
+                        </button>
+                        <button class="btn btn-secondary" onclick="updateOrderStatus('${order.id}', 'delivered')" ${order.status !== 'preparing' ? 'disabled' : ''}>
+                            <i class="fas fa-check"></i> Mark Delivered
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update Order Status
+        function updateOrderStatus(orderId, newStatus) {
+            let allOrders = getFromStorage(STORAGE_KEYS.ORDERS) || [];
+            const orderIndex = allOrders.findIndex(order => order.id === orderId);
+            
+            if (orderIndex !== -1) {
+                allOrders[orderIndex].status = newStatus;
+                allOrders[orderIndex].updatedAt = new Date().toISOString();
+                saveToStorage(STORAGE_KEYS.ORDERS, allOrders);
+                
+                loadOrders();
+                updateStats();
+                showMessage('orders-message', `Order status updated to ${newStatus}!`, 'success');
             }
         }
 
         // Update Stats
         function updateStats() {
-            if (!dishes) return;
+            if (!dishes || !orders) return;
 
             const totalDishes = dishes.length;
             const approvedDishes = dishes.filter(dish => dish.status === 'approved').length;
             const activeDishes = dishes.filter(dish => dish.isActive).length;
+            
+            // Today's orders
+            const today = new Date().toDateString();
+            const todayOrders = orders.filter(order => 
+                new Date(order.createdAt).toDateString() === today
+            ).length;
 
             document.getElementById('total-dishes').textContent = totalDishes;
+            document.getElementById('today-orders').textContent = todayOrders;
             document.getElementById('approved-dishes').textContent = approvedDishes;
             document.getElementById('active-dishes').textContent = activeDishes;
         }
 
-        // Setup Real-time Listeners
-        function setupRealTimeListeners() {
-            if (!currentUser) return;
-
-            // Listen for dish updates
-            db.collection('dishes')
-                .where('restaurantId', '==', currentUser.uid)
-                .onSnapshot((snapshot) => {
-                    dishes = [];
-                    snapshot.forEach(doc => {
-                        dishes.push({
-                            id: doc.id,
-                            ...doc.data()
-                        });
-                    });
-                    renderDishes();
-                    updateStats();
-                });
-
-            // Listen for order updates
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            db.collection('orders')
-                .where('restaurantIds', 'array-contains', currentUser.uid)
-                .where('createdAt', '>=', today)
-                .onSnapshot((snapshot) => {
-                    document.getElementById('today-orders').textContent = snapshot.size;
-                });
-        }
-
-        // Demo Data for Testing
-        function loadDemoData() {
-            restaurantInfo = {
-                name: 'Demo Restaurant',
-                email: 'demo@restaurant.com',
-                zipCodes: ['90001', '90002'],
-                phone: '(555) 123-4567',
-                address: '123 Demo Street, Los Angeles, CA'
-            };
-            
-            updateRestaurantUI();
-            loadDemoDishes();
-        }
-
-        function loadDemoRestaurantInfo() {
-            restaurantInfo = {
-                name: 'Demo Restaurant',
-                email: 'demo@restaurant.com',
-                zipCodes: ['90001'],
-                phone: '',
-                address: ''
-            };
-            updateRestaurantUI();
-        }
-
-        function loadDemoDishes() {
-            dishes = [
-                {
-                    id: 'demo1',
-                    name: 'Spaghetti Carbonara',
-                    description: 'Classic Italian pasta with eggs, cheese, pancetta',
-                    price: 18.99,
-                    cuisine: 'Italian',
-                    calories: 650,
-                    imageUrl: '',
-                    status: 'approved',
-                    isActive: true,
-                    restaurantId: 'demo',
-                    restaurantName: 'Demo Restaurant'
-                },
-                {
-                    id: 'demo2',
-                    name: 'Grilled Salmon',
-                    description: 'Atlantic salmon with lemon butter sauce',
-                    price: 24.99,
-                    cuisine: 'American',
-                    calories: 480,
-                    imageUrl: '',
-                    status: 'approved',
-                    isActive: true,
-                    restaurantId: 'demo',
-                    restaurantName: 'Demo Restaurant'
-                },
-                {
-                    id: 'demo3',
-                    name: 'New Special Dish',
-                    description: 'Our new signature dish',
-                    price: 16.99,
-                    cuisine: 'American',
-                    calories: 420,
-                    imageUrl: '',
-                    status: 'pending',
-                    isActive: true,
-                    restaurantId: 'demo',
-                    restaurantName: 'Demo Restaurant'
-                }
-            ];
-            
-            renderDishes();
-            updateStats();
-            document.getElementById('today-orders').textContent = '3';
-        }
-
         // Utility Functions
+        function saveToStorage(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+                return true;
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+                return false;
+            }
+        }
+
+        function getFromStorage(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            } catch (error) {
+                console.error('Error reading from localStorage:', error);
+                return null;
+            }
+        }
+
         function showMessage(elementId, message, type) {
             const element = typeof elementId === 'string' ? document.getElementById(elementId) : elementId;
             if (!element) return;
