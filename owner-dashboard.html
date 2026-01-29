@@ -1,366 +1,1494 @@
-// Add these functions to your existing owner dashboard script
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍽️ MealMoment - Restaurant Owner Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Brand Colors */
+            --mm-orange: #FF6A00;
+            --mm-orange-2: #FF8A2A;
+            --mm-green: #2E7D32;
+            --mm-green-2: #4CAF50;
+            --mm-charcoal: #1F1F1F;
+            --mm-gray-900: #2B2B2B;
+            --mm-gray-700: #5B5B5B;
+            --mm-gray-200: #EAEAEA;
+            --mm-bg: #FFFFFF;
+            --mm-bg-soft: #F8FAFC;
+            --mm-gradient: linear-gradient(90deg, #FF6A00 0%, #2E7D32 100%);
+            
+            /* Typography */
+            --font-heading: 'Poppins', system-ui, -apple-system, sans-serif;
+            --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+            
+            /* Spacing */
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2rem;
+            --space-xl: 3rem;
+            --space-2xl: 4rem;
+            
+            /* Border Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+        }
 
-// 1. Enhanced Dish Filtering and Search
-function setupDishFilters() {
-    const searchInput = document.createElement('input');
-    searchInput.type = 'text';
-    searchInput.placeholder = 'Search dishes...';
-    searchInput.style.cssText = 'width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--mm-gray-200); border-radius: var(--radius-md); margin-bottom: var(--space-md);';
-    searchInput.onkeyup = filterDishes;
-    
-    const dishesSection = document.querySelector('.dishes-section');
-    dishesSection.insertBefore(searchInput, dishesSection.querySelector('#dishes-container'));
-    
-    // Add category filter
-    const filterContainer = document.createElement('div');
-    filterContainer.style.cssText = 'display: flex; gap: var(--space-sm); margin-bottom: var(--space-md);';
-    
-    const allBtn = createFilterButton('All', 'all', true);
-    const approvedBtn = createFilterButton('Approved', 'approved');
-    const pendingBtn = createFilterButton('Pending', 'pending');
-    const activeBtn = createFilterButton('Active', 'active');
-    const inactiveBtn = createFilterButton('Inactive', 'inactive');
-    
-    filterContainer.append(allBtn, approvedBtn, pendingBtn, activeBtn, inactiveBtn);
-    dishesSection.insertBefore(filterContainer, dishesSection.querySelector('#dishes-container'));
-}
+        /* ===== RESET & BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-function createFilterButton(text, filter, isActive = false) {
-    const button = document.createElement('button');
-    button.textContent = text;
-    button.className = 'filter-btn';
-    button.style.cssText = 'padding: 0.5rem 1rem; border: 2px solid var(--mm-gray-200); border-radius: var(--radius-md); background: white; cursor: pointer;';
-    if (isActive) button.style.borderColor = 'var(--mm-green)';
-    
-    button.onclick = () => {
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.style.borderColor = 'var(--mm-gray-200)';
-        });
-        button.style.borderColor = 'var(--mm-green)';
-        filterDishes();
-    };
-    
-    button.dataset.filter = filter;
-    return button;
-}
+        html {
+            scroll-behavior: smooth;
+        }
 
-// 2. Enhanced Form Validation
-function validateDishForm() {
-    const name = document.getElementById('dish-name').value.trim();
-    const price = document.getElementById('dish-price').value;
-    const cuisine = document.getElementById('dish-cuisine').value;
-    
-    const errors = [];
-    
-    if (!name) errors.push('Dish name is required');
-    if (!price || parseFloat(price) <= 0) errors.push('Valid price is required');
-    if (!cuisine) errors.push('Cuisine type is required');
-    
-    // Image validation (optional but with size check)
-    const imageFile = document.getElementById('dish-image').files[0];
-    if (imageFile && imageFile.size > 2 * 1024 * 1024) {
-        errors.push('Image size must be less than 2MB');
-    }
-    
-    if (errors.length > 0) {
-        showMessage(errors.join('<br>'), 'error');
-        return false;
-    }
-    
-    return true;
-}
+        body {
+            font-family: var(--font-body);
+            background-color: var(--mm-bg-soft);
+            color: var(--mm-charcoal);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
 
-// 3. Status Toggling (Active/Inactive)
-async function toggleDishStatus(dishId, currentStatus) {
-    try {
-        await db.collection('dishes').doc(dishId).update({
-            isActive: !currentStatus,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        await loadDishes();
-        showMessage(`Dish ${!currentStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
-    } catch (error) {
-        console.error('Error toggling dish status:', error);
-        showMessage('Error updating dish status', 'error');
-    }
-}
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: var(--space-md);
+        }
 
-// 4. Real-time Updates
-function setupRealTimeListeners() {
-    // Listen for dish updates
-    db.collection('dishes')
-        .where('restaurantId', '==', currentUser.uid)
-        .onSnapshot((snapshot) => {
-            dishes = [];
-            snapshot.forEach(doc => {
-                dishes.push({ id: doc.id, ...doc.data() });
-            });
-            renderDishes();
-            updateStats();
-        });
-    
-    // Listen for order updates
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    db.collection('orders')
-        .where('restaurantId', '==', currentUser.uid)
-        .where('createdAt', '>=', today)
-        .onSnapshot((snapshot) => {
-            document.getElementById('today-orders').textContent = snapshot.size;
-        });
-}
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
 
-// 5. Enhanced Dish Rendering with Edit functionality
-function renderDishes() {
-    const container = document.getElementById('dishes-container');
-    const searchTerm = document.querySelector('input[placeholder="Search dishes..."]')?.value.toLowerCase() || '';
-    const activeFilter = document.querySelector('.filter-btn[style*="border-color: var(--mm-green)"]')?.dataset.filter || 'all';
-    
-    if (dishes.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: var(--space-xl); grid-column: 1/-1;">
-                <i class="fas fa-utensils" style="font-size: 3rem; color: var(--mm-gray-200);"></i>
-                <p>No dishes added yet. Add your first dish!</p>
-            </div>
-        `;
-        return;
-    }
-    
-    // Filter dishes
-    let filteredDishes = dishes;
-    
-    if (searchTerm) {
-        filteredDishes = filteredDishes.filter(dish => 
-            dish.name.toLowerCase().includes(searchTerm) ||
-            (dish.description && dish.description.toLowerCase().includes(searchTerm)) ||
-            dish.cuisine.toLowerCase().includes(searchTerm)
-        );
-    }
-    
-    if (activeFilter !== 'all') {
-        filteredDishes = filteredDishes.filter(dish => {
-            if (activeFilter === 'approved') return dish.status === 'approved';
-            if (activeFilter === 'pending') return dish.status === 'pending';
-            if (activeFilter === 'active') return dish.isActive === true;
-            if (activeFilter === 'inactive') return dish.isActive === false;
-            return true;
-        });
-    }
-    
-    if (filteredDishes.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: var(--space-xl); grid-column: 1/-1;">
-                <i class="fas fa-search" style="font-size: 3rem; color: var(--mm-gray-200);"></i>
-                <p>No dishes match your criteria</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = filteredDishes.map(dish => `
-        <div class="dish-card ${dish.status === 'approved' ? 'approved' : 'pending'}">
-            <div class="status-badge ${dish.status === 'approved' ? 'status-approved' : 'status-pending'}">
-                ${dish.status === 'approved' ? 'APPROVED' : 'PENDING'}
-            </div>
-            <div style="position: absolute; top: 10px; left: 10px;">
-                <span class="status-badge ${dish.isActive ? 'status-approved' : 'status-pending'}" style="position: relative; top: 0; right: 0;">
-                    ${dish.isActive ? 'ACTIVE' : 'INACTIVE'}
-                </span>
-            </div>
-            <div class="dish-image">
-                ${dish.imageUrl ? 
-                    `<img src="${dish.imageUrl}" alt="${dish.name}">` :
-                    `<i class="fas fa-utensils" style="font-size: 3rem; color: var(--mm-gray-200);"></i>`
-                }
-            </div>
-            <h4>${dish.name}</h4>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">${dish.description || 'No description'}</p>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div>
-                    <strong style="color: var(--mm-green); font-size: 1.25rem;">$${dish.price?.toFixed(2) || '0.00'}</strong>
-                    <div style="font-size: 0.875rem; color: #666;">${dish.cuisine} • ${dish.calories || 'N/A'} cal</div>
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: var(--space-md);
+            color: var(--mm-gray-700);
+        }
+
+        a {
+            color: var(--mm-green);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--mm-orange);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+        }
+
+        /* ===== HEADER / NAVBAR ===== */
+        .navbar {
+            background-color: var(--mm-bg);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--mm-gradient);
+        }
+
+        .navbar-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-image {
+            height: 60px;
+            width: auto;
+            border-radius: var(--radius-md);
+            object-fit: contain;
+        }
+
+        .logo-text {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 1.75rem;
+            background: var(--mm-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo-tagline {
+            font-size: 0.75rem;
+            color: var(--mm-gray-700);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* ===== DASHBOARD LAYOUT ===== */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: var(--space-xl);
+            padding: var(--space-xl) 0;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Sidebar */
+        .dashboard-sidebar {
+            background: var(--mm-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-sm);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md);
+            color: var(--mm-charcoal);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--mm-bg-soft);
+            color: var(--mm-green);
+        }
+
+        .nav-item.active {
+            background: var(--mm-gradient);
+            color: white;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            background: var(--mm-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        .stat-card {
+            background: var(--mm-bg);
+            border: 1px solid var(--mm-gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--mm-green-2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--mm-green);
+            margin-bottom: var(--space-xs);
+        }
+
+        .stat-label {
+            color: var(--mm-gray-700);
+            font-size: 0.9rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--space-xs);
+            color: var(--mm-gray-900);
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--mm-charcoal);
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--mm-green);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+            padding: 0.875rem 1.75rem;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--mm-gradient);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--mm-bg);
+            color: var(--mm-charcoal);
+            border: 2px solid var(--mm-gray-200);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--mm-green);
+            color: var(--mm-green);
+            transform: translateY(-1px);
+        }
+
+        /* Dishes Grid */
+        .dishes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-lg);
+        }
+
+        .dish-card {
+            background: var(--mm-bg);
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .dish-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .dish-status {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-approved {
+            background: var(--mm-green);
+            color: white;
+        }
+
+        .status-pending {
+            background: var(--mm-orange);
+            color: white;
+        }
+
+        .status-inactive {
+            background: var(--mm-gray-700);
+            color: white;
+        }
+
+        .dish-image {
+            width: 100%;
+            height: 200px;
+            background: var(--mm-bg-soft);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .dish-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dish-actions {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+        }
+
+        /* Messages */
+        .message {
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin: var(--space-md) 0;
+            font-weight: 500;
+        }
+
+        .success-message {
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--mm-green);
+            border: 1px solid rgba(46, 125, 50, 0.2);
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .info-message {
+            background: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+        }
+
+        /* Login Form */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: var(--space-xl) 0;
+        }
+
+        .login-form {
+            background: var(--mm-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Hidden Class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 992px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-sidebar {
+                position: relative;
+                top: 0;
+            }
+            
+            .dishes-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                gap: var(--space-md);
+            }
+            
+            .logo-image {
+                height: 50px;
+            }
+            
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            .dishes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 0 var(--space-sm);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-content {
+                padding: var(--space-lg);
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* Filter Buttons */
+        .filter-buttons {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-lg);
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            background: var(--mm-bg);
+            color: var(--mm-charcoal);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--mm-green);
+        }
+
+        .filter-btn.active {
+            border-color: var(--mm-green);
+            background: var(--mm-green);
+            color: white;
+        }
+
+        /* Search Input */
+        .search-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            margin-bottom: var(--space-lg);
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--mm-green);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="/" class="logo-container">
+                    <img src="image/MealMomenetlogo.jpeg" alt="MealMoment Logo" class="logo-image">
+                    <div>
+                        <div class="logo-text">MealMoment</div>
+                        <div class="logo-tagline">Restaurant Owner Dashboard</div>
+                    </div>
+                </a>
+                <div style="display: flex; gap: var(--space-md); align-items: center;">
+                    <span id="restaurant-name">Welcome</span>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </div>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-secondary" onclick="editDish('${dish.id}')" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-secondary" onclick="toggleDishStatus('${dish.id}', ${dish.isActive})" style="flex: 1; padding: 0.5rem; font-size: 0.875rem;">
-                    <i class="fas fa-power-off"></i> ${dish.isActive ? 'Deactivate' : 'Activate'}
-                </button>
-                <button class="btn btn-secondary" onclick="deleteDish('${dish.id}')" style="padding: 0.5rem; font-size: 0.875rem;">
-                    <i class="fas fa-trash"></i>
-                </button>
+        </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="container">
+        <div class="dashboard-layout">
+            <!-- Sidebar -->
+            <aside class="dashboard-sidebar">
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="#" class="nav-item" onclick="showSection('dishes')" id="nav-dishes">
+                        <i class="fas fa-utensils"></i>
+                        My Dishes
+                    </a>
+                    <a href="#" class="nav-item" onclick="showSection('add-dish')" id="nav-add-dish">
+                        <i class="fas fa-plus-circle"></i>
+                        Add New Dish
+                    </a>
+                    <a href="#" class="nav-item" onclick="showSection('orders')" id="nav-orders">
+                        <i class="fas fa-shopping-cart"></i>
+                        Orders
+                    </a>
+                    <a href="#" class="nav-item" onclick="showSection('restaurant-info')" id="nav-restaurant">
+                        <i class="fas fa-store"></i>
+                        Restaurant Info
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="dashboard-content">
+                <!-- Login Section -->
+                <div id="login-section" class="login-container">
+                    <div class="login-form">
+                        <h2 style="text-align: center; margin-bottom: var(--space-xl);">
+                            <i class="fas fa-store"></i> Restaurant Login
+                        </h2>
+                        <div class="form-group">
+                            <label for="login-email"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="login-email" placeholder="owner@restaurant.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password"><i class="fas fa-lock"></i> Password</label>
+                            <input type="password" id="login-password" placeholder="Enter your password">
+                        </div>
+                        <div id="login-message" class="message hidden"></div>
+                        <button class="btn btn-primary" onclick="login()" style="width: 100%;">
+                            <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                        </button>
+                        <p style="text-align: center; margin-top: var(--space-md); color: var(--mm-gray-700);">
+                            Demo: Use email "demo@restaurant.com" and any password
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Dashboard Section -->
+                <div id="dashboard-section" class="hidden">
+                    <h1><i class="fas fa-tachometer-alt"></i> Restaurant Dashboard</h1>
+                    <p>Welcome back to your restaurant management dashboard. Here's your performance overview.</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-dishes">0</div>
+                            <div class="stat-label">Total Dishes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="today-orders">0</div>
+                            <div class="stat-label">Today's Orders</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="approved-dishes">0</div>
+                            <div class="stat-label">Approved Dishes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="active-dishes">0</div>
+                            <div class="stat-label">Active Dishes</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: var(--space-xl);">Quick Actions</h3>
+                    <div style="display: flex; gap: var(--space-md); margin-top: var(--space-md);">
+                        <button class="btn btn-primary" onclick="showSection('add-dish')">
+                            <i class="fas fa-plus"></i> Add New Dish
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('dishes')">
+                            <i class="fas fa-edit"></i> Manage Dishes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dishes Section -->
+                <div id="dishes-section" class="hidden">
+                    <h1><i class="fas fa-utensils"></i> Manage Your Dishes</h1>
+                    <p>View, edit, and manage all your restaurant dishes.</p>
+                    
+                    <!-- Search and Filters -->
+                    <input type="text" class="search-input" placeholder="Search dishes by name, cuisine, or description..." id="dish-search">
+                    
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All Dishes</button>
+                        <button class="filter-btn" data-filter="approved" onclick="setFilter('approved')">Approved</button>
+                        <button class="filter-btn" data-filter="pending" onclick="setFilter('pending')">Pending</button>
+                        <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Active</button>
+                        <button class="filter-btn" data-filter="inactive" onclick="setFilter('inactive')">Inactive</button>
+                    </div>
+                    
+                    <div id="dishes-container">
+                        <div class="message info-message">
+                            <i class="fas fa-utensils fa-spin"></i>
+                            Loading your dishes...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Dish Section -->
+                <div id="add-dish-section" class="hidden">
+                    <h1><i class="fas fa-plus-circle"></i> Add New Dish</h1>
+                    <p>Add a new dish to your restaurant menu. All dishes require admin approval.</p>
+                    
+                    <div class="form-group">
+                        <label for="dish-name"><i class="fas fa-utensils"></i> Dish Name *</label>
+                        <input type="text" id="dish-name" placeholder="e.g., Chicken Alfredo Pasta">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dish-description"><i class="fas fa-align-left"></i> Description</label>
+                        <textarea id="dish-description" rows="3" placeholder="Describe your dish..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dish-price"><i class="fas fa-dollar-sign"></i> Price *</label>
+                        <input type="number" id="dish-price" placeholder="e.g., 15.99" step="0.01" min="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dish-cuisine"><i class="fas fa-globe"></i> Cuisine Type *</label>
+                        <select id="dish-cuisine">
+                            <option value="">Select Cuisine</option>
+                            <option value="American">American</option>
+                            <option value="Italian">Italian</option>
+                            <option value="Mexican">Mexican</option>
+                            <option value="Chinese">Chinese</option>
+                            <option value="Indian">Indian</option>
+                            <option value="Japanese">Japanese</option>
+                            <option value="Mediterranean">Mediterranean</option>
+                            <option value="Thai">Thai</option>
+                            <option value="French">French</option>
+                            <option value="Greek">Greek</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dish-calories"><i class="fas fa-fire"></i> Calories (optional)</label>
+                        <input type="number" id="dish-calories" placeholder="e.g., 650" min="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dish-image"><i class="fas fa-image"></i> Dish Image (optional)</label>
+                        <input type="file" id="dish-image" accept="image/*">
+                        <small style="color: var(--mm-gray-700); display: block; margin-top: 0.5rem;">
+                            Recommended: 800x600px, max 2MB
+                        </small>
+                    </div>
+                    
+                    <div id="dish-form-message" class="message hidden"></div>
+                    
+                    <button class="btn btn-primary" onclick="addDish()" style="width: 100%;">
+                        <i class="fas fa-plus"></i> Add Dish to Menu
+                    </button>
+                </div>
+
+                <!-- Orders Section -->
+                <div id="orders-section" class="hidden">
+                    <h1><i class="fas fa-shopping-cart"></i> Recent Orders</h1>
+                    <p>View and manage customer orders for your restaurant.</p>
+                    
+                    <div id="orders-container">
+                        <div class="message info-message">
+                            <i class="fas fa-shopping-cart fa-spin"></i>
+                            Loading orders...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Restaurant Info Section -->
+                <div id="restaurant-info-section" class="hidden">
+                    <h1><i class="fas fa-store"></i> Restaurant Information</h1>
+                    <p>Update your restaurant details and settings.</p>
+                    
+                    <div class="form-group">
+                        <label for="restaurant-name-input"><i class="fas fa-store"></i> Restaurant Name *</label>
+                        <input type="text" id="restaurant-name-input" placeholder="Your Restaurant Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="restaurant-address"><i class="fas fa-map-marker-alt"></i> Address</label>
+                        <input type="text" id="restaurant-address" placeholder="123 Main Street">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="restaurant-phone"><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" id="restaurant-phone" placeholder="(123) 456-7890">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="restaurant-zip"><i class="fas fa-mail-bulk"></i> Service ZIP Codes *</label>
+                        <input type="text" id="restaurant-zip" placeholder="90001, 90002, 90003">
+                        <small style="color: var(--mm-gray-700); display: block; margin-top: 0.5rem;">
+                            Enter comma-separated ZIP codes you serve
+                        </small>
+                    </div>
+                    
+                    <div id="restaurant-info-message" class="message hidden"></div>
+                    
+                    <button class="btn btn-primary" onclick="updateRestaurantInfo()" style="width: 100%;">
+                        <i class="fas fa-save"></i> Save Restaurant Info
+                    </button>
+                </div>
             </div>
         </div>
-    `).join('');
-}
+    </main>
 
-// 6. Edit Dish Functionality
-async function editDish(dishId) {
-    try {
-        const dishDoc = await db.collection('dishes').doc(dishId).get();
-        const dish = dishDoc.data();
-        
-        // Populate form with dish data
-        document.getElementById('dish-name').value = dish.name;
-        document.getElementById('dish-price').value = dish.price;
-        document.getElementById('dish-cuisine').value = dish.cuisine;
-        document.getElementById('dish-calories').value = dish.calories || '';
-        document.getElementById('dish-description').value = dish.description || '';
-        
-        // Show image preview
-        if (dish.imageUrl) {
-            document.getElementById('image-preview').innerHTML = `
-                <img src="${dish.imageUrl}" style="max-width: 200px; border-radius: var(--radius-md);">
-                <p style="font-size: 0.875rem; color: #666;">Current image</p>
-            `;
-        }
-        
-        // Change button to update
-        const addButton = document.querySelector('.add-dish-form .btn-primary');
-        addButton.innerHTML = '<i class="fas fa-save"></i> Update Dish';
-        addButton.onclick = () => updateDish(dishId);
-        
-        // Add cancel button
-        if (!document.getElementById('cancel-edit-btn')) {
-            const cancelBtn = document.createElement('button');
-            cancelBtn.id = 'cancel-edit-btn';
-            cancelBtn.className = 'btn btn-secondary';
-            cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel';
-            cancelBtn.style.marginLeft = '1rem';
-            cancelBtn.onclick = cancelEdit;
-            addButton.parentNode.appendChild(cancelBtn);
-        }
-        
-        // Scroll to form
-        document.querySelector('.add-dish-form').scrollIntoView({ behavior: 'smooth' });
-        
-    } catch (error) {
-        console.error('Error loading dish for edit:', error);
-        showMessage('Error loading dish', 'error');
-    }
-}
-
-async function updateDish(dishId) {
-    if (!validateDishForm()) return;
-    
-    const name = document.getElementById('dish-name').value;
-    const price = parseFloat(document.getElementById('dish-price').value);
-    const cuisine = document.getElementById('dish-cuisine').value;
-    const calories = document.getElementById('dish-calories').value;
-    const description = document.getElementById('dish-description').value;
-    const imageFile = document.getElementById('dish-image').files[0];
-    
-    try {
-        const updateData = {
-            name,
-            price,
-            cuisine,
-            calories: parseInt(calories) || 0,
-            description,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    <script>
+        // ===== FIREBASE CONFIGURATION =====
+        // Replace with your actual Firebase config (same as in main app)
+        const firebaseConfig = {
+            apiKey: "AIzaSyYOUR_API_KEY_HERE",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "1:YOUR_APP_ID:web:YOUR_APP_ID"
         };
-        
-        // Upload new image if provided
-        if (imageFile) {
-            const storageRef = storage.ref(`dishes/${currentUser.uid}/${Date.now()}_${imageFile.name}`);
-            await storageRef.put(imageFile);
-            updateData.imageUrl = await storageRef.getDownloadURL();
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+
+        // Global Variables
+        let currentUser = null;
+        let restaurantInfo = null;
+        let dishes = [];
+        let currentFilter = 'all';
+
+        // Initialize Dashboard
+        function initDashboard() {
+            // Check if user is logged in
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    currentUser = user;
+                    showDashboard();
+                    loadRestaurantInfo();
+                    loadDishes();
+                    loadOrders();
+                    setupRealTimeListeners();
+                } else {
+                    showLogin();
+                }
+            });
+
+            // Setup search functionality
+            const searchInput = document.getElementById('dish-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', filterDishes);
+            }
+
+            // Demo login for testing
+            setupDemoLogin();
         }
-        
-        await db.collection('dishes').doc(dishId).update(updateData);
-        
-        // Reset form
-        cancelEdit();
-        showMessage('Dish updated successfully!', 'success');
-        
-    } catch (error) {
-        console.error('Error updating dish:', error);
-        showMessage('Error updating dish', 'error');
-    }
-}
 
-function cancelEdit() {
-    resetDishForm();
-    
-    const addButton = document.querySelector('.add-dish-form .btn-primary');
-    addButton.innerHTML = '<i class="fas fa-plus"></i> Add Dish';
-    addButton.onclick = addDish;
-    
-    const cancelBtn = document.getElementById('cancel-edit-btn');
-    if (cancelBtn) cancelBtn.remove();
-}
+        // Setup demo login for testing
+        function setupDemoLogin() {
+            // Pre-fill demo credentials
+            document.getElementById('login-email').value = 'demo@restaurant.com';
+            document.getElementById('login-password').value = 'demopassword';
+        }
 
-// 7. Initialize enhanced dashboard
-async function loadRestaurantData() {
-    if (!currentUser) return;
-    
-    try {
-        const restaurantDoc = await db.collection('restaurants')
-            .doc(currentUser.uid)
-            .get();
-        
-        if (restaurantDoc.exists) {
-            restaurantData = restaurantDoc.data();
-            updateRestaurantUI();
+        // Login Function
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const messageEl = document.getElementById('login-message');
+
+            if (!email || !password) {
+                showMessage(messageEl, 'Please enter email and password', 'error');
+                return;
+            }
+
+            showMessage(messageEl, 'Logging in...', 'info');
+
+            // For demo purposes, allow any password with demo email
+            if (email === 'demo@restaurant.com') {
+                // Create demo user session
+                currentUser = {
+                    uid: 'demo-user-123',
+                    email: 'demo@restaurant.com',
+                    displayName: 'Demo Restaurant'
+                };
+                
+                showDashboard();
+                loadDemoData();
+                showMessage(messageEl, 'Logged in successfully!', 'success');
+            } else {
+                // Real Firebase authentication
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        showMessage(messageEl, 'Logged in successfully!', 'success');
+                    })
+                    .catch((error) => {
+                        showMessage(messageEl, error.message, 'error');
+                    });
+            }
+        }
+
+        // Logout Function
+        function logout() {
+            auth.signOut()
+                .then(() => {
+                    currentUser = null;
+                    showLogin();
+                })
+                .catch((error) => {
+                    console.error('Logout error:', error);
+                });
+        }
+
+        // Show/Hide Sections
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info'];
+            sections.forEach(id => {
+                document.getElementById(`${id}-section`).classList.add('hidden');
+                document.getElementById(`nav-${id}`).classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(`${sectionId}-section`).classList.remove('hidden');
+            document.getElementById(`nav-${sectionId}`).classList.add('active');
+
+            // Load data for the section
+            if (sectionId === 'dishes') {
+                loadDishes();
+            } else if (sectionId === 'orders') {
+                loadOrders();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            showSection('dashboard');
+        }
+
+        // Load Restaurant Info
+        async function loadRestaurantInfo() {
+            if (!currentUser) return;
+
+            try {
+                const doc = await db.collection('restaurants').doc(currentUser.uid).get();
+                if (doc.exists) {
+                    restaurantInfo = doc.data();
+                    updateRestaurantUI();
+                } else {
+                    // Create default restaurant info
+                    restaurantInfo = {
+                        name: 'My Restaurant',
+                        email: currentUser.email,
+                        zipCodes: ['90001'],
+                        phone: '',
+                        address: ''
+                    };
+                    await db.collection('restaurants').doc(currentUser.uid).set(restaurantInfo);
+                    updateRestaurantUI();
+                }
+            } catch (error) {
+                console.error('Error loading restaurant info:', error);
+                loadDemoRestaurantInfo();
+            }
+        }
+
+        function updateRestaurantUI() {
+            if (!restaurantInfo) return;
+
+            // Update restaurant name in header
+            const restaurantNameEl = document.getElementById('restaurant-name');
+            if (restaurantNameEl) {
+                restaurantNameEl.textContent = restaurantInfo.name;
+            }
+
+            // Update restaurant info form
+            const nameInput = document.getElementById('restaurant-name-input');
+            const addressInput = document.getElementById('restaurant-address');
+            const phoneInput = document.getElementById('restaurant-phone');
+            const zipInput = document.getElementById('restaurant-zip');
+
+            if (nameInput) nameInput.value = restaurantInfo.name || '';
+            if (addressInput) addressInput.value = restaurantInfo.address || '';
+            if (phoneInput) phoneInput.value = restaurantInfo.phone || '';
+            if (zipInput) zipInput.value = restaurantInfo.zipCodes ? restaurantInfo.zipCodes.join(', ') : '';
+        }
+
+        // Update Restaurant Info
+        async function updateRestaurantInfo() {
+            if (!currentUser) return;
+
+            const name = document.getElementById('restaurant-name-input').value.trim();
+            const address = document.getElementById('restaurant-address').value.trim();
+            const phone = document.getElementById('restaurant-phone').value.trim();
+            const zipCodes = document.getElementById('restaurant-zip').value.trim();
+
+            if (!name) {
+                showMessage('restaurant-info-message', 'Restaurant name is required', 'error');
+                return;
+            }
+
+            const zipArray = zipCodes.split(',').map(zip => zip.trim()).filter(zip => zip.length === 5);
+
+            try {
+                await db.collection('restaurants').doc(currentUser.uid).update({
+                    name,
+                    address,
+                    phone,
+                    zipCodes: zipArray,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                restaurantInfo = { ...restaurantInfo, name, address, phone, zipCodes: zipArray };
+                updateRestaurantUI();
+                
+                showMessage('restaurant-info-message', 'Restaurant info updated successfully!', 'success');
+            } catch (error) {
+                console.error('Error updating restaurant info:', error);
+                showMessage('restaurant-info-message', 'Error updating restaurant info', 'error');
+            }
+        }
+
+        // Load Dishes
+        async function loadDishes() {
+            if (!currentUser) return;
+
+            const container = document.getElementById('dishes-container');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="message info-message">
+                    <i class="fas fa-utensils fa-spin"></i>
+                    Loading dishes...
+                </div>
+            `;
+
+            try {
+                const snapshot = await db.collection('dishes')
+                    .where('restaurantId', '==', currentUser.uid)
+                    .get();
+
+                dishes = [];
+                snapshot.forEach(doc => {
+                    dishes.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                renderDishes();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading dishes:', error);
+                loadDemoDishes();
+            }
+        }
+
+        // Render Dishes with Filtering
+        function renderDishes() {
+            const container = document.getElementById('dishes-container');
+            if (!container) return;
+
+            if (dishes.length === 0) {
+                container.innerHTML = `
+                    <div class="message info-message">
+                        <i class="fas fa-utensils"></i>
+                        No dishes added yet. <a href="#" onclick="showSection('add-dish')" style="color: var(--mm-green);">Add your first dish!</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Apply filters
+            let filteredDishes = dishes;
             
-            // Load dishes
-            await loadDishes();
+            // Search filter
+            const searchTerm = document.getElementById('dish-search')?.value.toLowerCase() || '';
+            if (searchTerm) {
+                filteredDishes = filteredDishes.filter(dish => 
+                    dish.name.toLowerCase().includes(searchTerm) ||
+                    (dish.description && dish.description.toLowerCase().includes(searchTerm)) ||
+                    dish.cuisine.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Status filter
+            if (currentFilter !== 'all') {
+                filteredDishes = filteredDishes.filter(dish => {
+                    if (currentFilter === 'approved') return dish.status === 'approved';
+                    if (currentFilter === 'pending') return dish.status === 'pending';
+                    if (currentFilter === 'active') return dish.isActive === true;
+                    if (currentFilter === 'inactive') return dish.isActive === false;
+                    return true;
+                });
+            }
+
+            if (filteredDishes.length === 0) {
+                container.innerHTML = `
+                    <div class="message info-message">
+                        <i class="fas fa-search"></i>
+                        No dishes match your search criteria
+                    </div>
+                `;
+                return;
+            }
+
+            // Render dishes
+            container.innerHTML = filteredDishes.map(dish => `
+                <div class="dish-card">
+                    <div class="dish-status status-${dish.status === 'approved' ? 'approved' : 'pending'}">
+                        ${dish.status === 'approved' ? 'APPROVED' : 'PENDING'}
+                    </div>
+                    <div class="dish-image">
+                        ${dish.imageUrl ? 
+                            `<img src="${dish.imageUrl}" alt="${dish.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                            `<i class="fas fa-utensils" style="font-size: 3rem; color: var(--mm-gray-700);"></i>`
+                        }
+                    </div>
+                    <h3>${dish.name}</h3>
+                    <p style="color: var(--mm-gray-700); font-size: 0.9rem; margin-bottom: var(--space-sm);">
+                        ${dish.description || 'No description'}
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 700; color: var(--mm-green); font-size: 1.25rem;">
+                                $${dish.price?.toFixed(2) || '0.00'}
+                            </div>
+                            <div style="color: var(--mm-gray-700); font-size: 0.875rem;">
+                                ${dish.cuisine || 'Various'} • ${dish.calories || 'N/A'} cal
+                            </div>
+                        </div>
+                        <div class="dish-actions">
+                            <button class="btn btn-secondary" onclick="toggleDishStatus('${dish.id}', ${dish.isActive || false})" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                                <i class="fas fa-${dish.isActive ? 'pause' : 'play'}"></i>
+                                ${dish.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Set Filter
+        function setFilter(filter) {
+            currentFilter = filter;
             
-            // Load stats
-            await loadStats();
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('active');
+                }
+            });
             
-            // Setup real-time listeners
-            setupRealTimeListeners();
+            renderDishes();
+        }
+
+        // Filter Dishes
+        function filterDishes() {
+            renderDishes();
+        }
+
+        // Add Dish
+        async function addDish() {
+            if (!currentUser || !restaurantInfo) {
+                showMessage('dish-form-message', 'Please login first', 'error');
+                return;
+            }
+
+            const name = document.getElementById('dish-name').value.trim();
+            const description = document.getElementById('dish-description').value.trim();
+            const price = parseFloat(document.getElementById('dish-price').value);
+            const cuisine = document.getElementById('dish-cuisine').value;
+            const calories = document.getElementById('dish-calories').value;
+            const imageFile = document.getElementById('dish-image').files[0];
+
+            // Validation
+            const errors = [];
+            if (!name) errors.push('Dish name is required');
+            if (!price || price <= 0) errors.push('Valid price is required');
+            if (!cuisine) errors.push('Cuisine type is required');
             
-            // Setup filters
-            setupDishFilters();
+            if (imageFile && imageFile.size > 2 * 1024 * 1024) {
+                errors.push('Image size must be less than 2MB');
+            }
+
+            if (errors.length > 0) {
+                showMessage('dish-form-message', errors.join('<br>'), 'error');
+                return;
+            }
+
+            showMessage('dish-form-message', 'Adding dish...', 'info');
+
+            try {
+                let imageUrl = '';
+                
+                // Upload image if provided
+                if (imageFile) {
+                    const storageRef = storage.ref(`dishes/${currentUser.uid}/${Date.now()}_${imageFile.name}`);
+                    await storageRef.put(imageFile);
+                    imageUrl = await storageRef.getDownloadURL();
+                }
+
+                // Add dish to Firestore
+                const dishData = {
+                    name,
+                    description,
+                    price,
+                    cuisine,
+                    calories: calories ? parseInt(calories) : null,
+                    imageUrl,
+                    restaurantId: currentUser.uid,
+                    restaurantName: restaurantInfo.name,
+                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001',
+                    status: 'pending', // Needs admin approval
+                    isActive: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('dishes').add(dishData);
+
+                // Clear form
+                document.getElementById('dish-name').value = '';
+                document.getElementById('dish-description').value = '';
+                document.getElementById('dish-price').value = '';
+                document.getElementById('dish-cuisine').value = '';
+                document.getElementById('dish-calories').value = '';
+                document.getElementById('dish-image').value = '';
+
+                showMessage('dish-form-message', 'Dish added successfully! It will appear after admin approval.', 'success');
+                
+                // Reload dishes
+                loadDishes();
+                showSection('dishes');
+                
+            } catch (error) {
+                console.error('Error adding dish:', error);
+                showMessage('dish-form-message', 'Error adding dish: ' + error.message, 'error');
+            }
+        }
+
+        // Toggle Dish Status
+        async function toggleDishStatus(dishId, currentStatus) {
+            try {
+                await db.collection('dishes').doc(dishId).update({
+                    isActive: !currentStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                await loadDishes();
+                showMessage('dish-form-message', `Dish ${!currentStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
+            } catch (error) {
+                console.error('Error toggling dish status:', error);
+                showMessage('dish-form-message', 'Error updating dish status', 'error');
+            }
+        }
+
+        // Load Orders
+        async function loadOrders() {
+            if (!currentUser) return;
+
+            const container = document.getElementById('orders-container');
+            if (!container) return;
+
+            try {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const snapshot = await db.collection('orders')
+                    .where('restaurantIds', 'array-contains', currentUser.uid)
+                    .where('createdAt', '>=', today)
+                    .orderBy('createdAt', 'desc')
+                    .limit(10)
+                    .get();
+
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                        <div class="message info-message">
+                            <i class="fas fa-shopping-cart"></i>
+                            No orders today
+                        </div>
+                    `;
+                    return;
+                }
+
+                const orders = [];
+                snapshot.forEach(doc => {
+                    orders.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                container.innerHTML = orders.map(order => `
+                    <div class="dish-card" style="margin-bottom: var(--space-md);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
+                            <h4 style="margin: 0;">Order #${order.orderNumber}</h4>
+                            <span style="color: var(--mm-green); font-weight: 600;">$${order.total?.toFixed(2) || '0.00'}</span>
+                        </div>
+                        <p style="color: var(--mm-gray-700); font-size: 0.9rem; margin-bottom: var(--space-sm);">
+                            <i class="fas fa-user"></i> ${order.customerName}<br>
+                            <i class="fas fa-clock"></i> ${order.createdAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        <div style="background: var(--mm-bg-soft); padding: var(--space-sm); border-radius: var(--radius-md);">
+                            <strong>Items:</strong>
+                            <ul style="margin-top: 0.5rem; padding-left: 1rem;">
+                                ${order.items?.map(item => `
+                                    <li>${item.quantity}x ${item.name} - $${(item.price * item.quantity).toFixed(2)}</li>
+                                `).join('') || '<li>No items</li>'}
+                            </ul>
+                        </div>
+                        <p style="color: var(--mm-gray-700); font-size: 0.875rem; margin-top: var(--space-sm);">
+                            <i class="fas fa-map-marker-alt"></i> ${order.deliveryAddress}
+                        </p>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                container.innerHTML = `
+                    <div class="message error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        Error loading orders
+                    </div>
+                `;
+            }
+        }
+
+        // Update Stats
+        function updateStats() {
+            if (!dishes) return;
+
+            const totalDishes = dishes.length;
+            const approvedDishes = dishes.filter(dish => dish.status === 'approved').length;
+            const activeDishes = dishes.filter(dish => dish.isActive).length;
+
+            document.getElementById('total-dishes').textContent = totalDishes;
+            document.getElementById('approved-dishes').textContent = approvedDishes;
+            document.getElementById('active-dishes').textContent = activeDishes;
+        }
+
+        // Setup Real-time Listeners
+        function setupRealTimeListeners() {
+            if (!currentUser) return;
+
+            // Listen for dish updates
+            db.collection('dishes')
+                .where('restaurantId', '==', currentUser.uid)
+                .onSnapshot((snapshot) => {
+                    dishes = [];
+                    snapshot.forEach(doc => {
+                        dishes.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderDishes();
+                    updateStats();
+                });
+
+            // Listen for order updates
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
             
-        } else {
-            // Create new restaurant document
-            restaurantData = {
-                name: 'My Restaurant',
-                zipCode: '',
-                cuisine: 'American',
-                ownerId: currentUser.uid,
-                ownerEmail: currentUser.email,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                approvedDishCount: 0,
-                totalDishCount: 0
+            db.collection('orders')
+                .where('restaurantIds', 'array-contains', currentUser.uid)
+                .where('createdAt', '>=', today)
+                .onSnapshot((snapshot) => {
+                    document.getElementById('today-orders').textContent = snapshot.size;
+                });
+        }
+
+        // Demo Data for Testing
+        function loadDemoData() {
+            restaurantInfo = {
+                name: 'Demo Restaurant',
+                email: 'demo@restaurant.com',
+                zipCodes: ['90001', '90002'],
+                phone: '(555) 123-4567',
+                address: '123 Demo Street, Los Angeles, CA'
             };
             
-            await db.collection('restaurants').doc(currentUser.uid).set(restaurantData);
+            updateRestaurantUI();
+            loadDemoDishes();
+        }
+
+        function loadDemoRestaurantInfo() {
+            restaurantInfo = {
+                name: 'Demo Restaurant',
+                email: 'demo@restaurant.com',
+                zipCodes: ['90001'],
+                phone: '',
+                address: ''
+            };
             updateRestaurantUI();
         }
-    } catch (error) {
-        console.error('Error loading restaurant data:', error);
-        showMessage('Error loading restaurant data', 'error');
-    }
-}
 
-// 8. Add CSS for filters
-const style = document.createElement('style');
-style.textContent = `
-    .filter-btn:hover {
-        background: var(--mm-bg-soft);
-    }
-    
-    .filter-btn.active {
-        border-color: var(--mm-green) !important;
-        background: var(--mm-bg-soft);
-    }
-    
-    .dish-actions {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
-    
-    .dish-actions button {
-        flex: 1;
-    }
-`;
-document.head.appendChild(style);
+        function loadDemoDishes() {
+            dishes = [
+                {
+                    id: 'demo1',
+                    name: 'Spaghetti Carbonara',
+                    description: 'Classic Italian pasta with eggs, cheese, pancetta',
+                    price: 18.99,
+                    cuisine: 'Italian',
+                    calories: 650,
+                    imageUrl: '',
+                    status: 'approved',
+                    isActive: true,
+                    restaurantId: 'demo',
+                    restaurantName: 'Demo Restaurant'
+                },
+                {
+                    id: 'demo2',
+                    name: 'Grilled Salmon',
+                    description: 'Atlantic salmon with lemon butter sauce',
+                    price: 24.99,
+                    cuisine: 'American',
+                    calories: 480,
+                    imageUrl: '',
+                    status: 'approved',
+                    isActive: true,
+                    restaurantId: 'demo',
+                    restaurantName: 'Demo Restaurant'
+                },
+                {
+                    id: 'demo3',
+                    name: 'New Special Dish',
+                    description: 'Our new signature dish',
+                    price: 16.99,
+                    cuisine: 'American',
+                    calories: 420,
+                    imageUrl: '',
+                    status: 'pending',
+                    isActive: true,
+                    restaurantId: 'demo',
+                    restaurantName: 'Demo Restaurant'
+                }
+            ];
+            
+            renderDishes();
+            updateStats();
+            document.getElementById('today-orders').textContent = '3';
+        }
+
+        // Utility Functions
+        function showMessage(elementId, message, type) {
+            const element = typeof elementId === 'string' ? document.getElementById(elementId) : elementId;
+            if (!element) return;
+
+            element.innerHTML = `
+                <div class="${type}-message">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+            element.classList.remove('hidden');
+
+            if (type !== 'info') {
+                setTimeout(() => {
+                    element.innerHTML = '';
+                    element.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Initialize on load
+        window.onload = initDashboard;
+    </script>
+</body>
+</html>
