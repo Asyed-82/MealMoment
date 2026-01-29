@@ -533,6 +533,97 @@
             max-width: 400px;
         }
 
+        /* Google Sign In Button */
+        .google-signin-btn {
+            background: white;
+            color: #757575;
+            border: 2px solid #ddd;
+            border-radius: var(--radius-md);
+            padding: 0.875rem 1.75rem;
+            font-family: var(--font-body);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .google-signin-btn:hover {
+            background: #f8f9fa;
+            border-color: #757575;
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: var(--space-lg) 0;
+            color: var(--mm-gray-700);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--mm-gray-200);
+        }
+
+        .divider span {
+            padding: 0 var(--space-sm);
+        }
+
+        /* Documents Upload Section */
+        .documents-section {
+            background: var(--mm-bg-soft);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-top: var(--space-lg);
+            border: 2px solid var(--mm-gray-200);
+        }
+
+        .document-item {
+            background: var(--mm-bg);
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .document-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: var(--space-sm);
+        }
+
+        .status-uploaded {
+            background: var(--mm-green);
+            color: white;
+        }
+
+        .status-pending {
+            background: var(--mm-orange);
+            color: white;
+        }
+
+        .status-required {
+            background: #dc3545;
+            color: white;
+        }
+
         /* Hidden Class */
         .hidden {
             display: none !important;
@@ -756,8 +847,25 @@
                 <div id="login-section" class="login-container">
                     <div class="login-form">
                         <h2 style="text-align: center; margin-bottom: var(--space-xl);">
-                            <i class="fas fa-store"></i> Restaurant Login
+                            <i class="fas fa-store"></i> Restaurant Owner Portal
                         </h2>
+                        
+                        <button id="google-signin-btn" class="google-signin-btn" onclick="signInWithGoogle()">
+                            <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                                <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                                    <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"/>
+                                    <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"/>
+                                    <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"/>
+                                    <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"/>
+                                </g>
+                            </svg>
+                            Sign in with Google
+                        </button>
+
+                        <div class="divider">
+                            <span>OR</span>
+                        </div>
+
                         <div class="form-group">
                             <label for="login-email"><i class="fas fa-envelope"></i> Email</label>
                             <input type="email" id="login-email" placeholder="owner@restaurant.com">
@@ -767,12 +875,50 @@
                             <input type="password" id="login-password" placeholder="Enter your password">
                         </div>
                         <div id="login-message" class="message hidden"></div>
-                        <button class="btn btn-primary" onclick="login()" style="width: 100%;">
-                            <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                        <button class="btn btn-primary" onclick="loginWithEmail()" style="width: 100%; margin-bottom: var(--space-sm);">
+                            <i class="fas fa-sign-in-alt"></i> Login
                         </button>
-                        <p style="text-align: center; margin-top: var(--space-md); color: var(--mm-gray-700);">
-                            Demo: Use any email and any password
-                        </p>
+                        <button class="btn btn-secondary" onclick="showRegisterForm()" style="width: 100%;">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Register Form Section -->
+                <div id="register-section" class="login-container hidden">
+                    <div class="login-form">
+                        <h2 style="text-align: center; margin-bottom: var(--space-xl);">
+                            <i class="fas fa-user-plus"></i> Create Restaurant Account
+                        </h2>
+                        
+                        <div class="form-group">
+                            <label for="register-name"><i class="fas fa-store"></i> Restaurant Name *</label>
+                            <input type="text" id="register-name" placeholder="Your Restaurant Name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="register-email"><i class="fas fa-envelope"></i> Email *</label>
+                            <input type="email" id="register-email" placeholder="owner@restaurant.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="register-password"><i class="fas fa-lock"></i> Password *</label>
+                            <input type="password" id="register-password" placeholder="Minimum 6 characters">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="register-confirm-password"><i class="fas fa-lock"></i> Confirm Password *</label>
+                            <input type="password" id="register-confirm-password" placeholder="Confirm your password">
+                        </div>
+                        
+                        <div id="register-message" class="message hidden"></div>
+                        
+                        <button class="btn btn-primary" onclick="registerWithEmail()" style="width: 100%; margin-bottom: var(--space-sm);">
+                            <i class="fas fa-check-circle"></i> Create Account
+                        </button>
+                        <button class="btn btn-secondary" onclick="showLoginForm()" style="width: 100%;">
+                            <i class="fas fa-arrow-left"></i> Back to Login
+                        </button>
                     </div>
                 </div>
 
@@ -878,7 +1024,7 @@
                         <input type="number" id="dish-calories" placeholder="e.g., 650" min="0">
                     </div>
                     
-                    <!-- FIXED: File Upload -->
+                    <!-- File Upload -->
                     <div class="form-group">
                         <label for="dish-image"><i class="fas fa-image"></i> Dish Image (optional)</label>
                         <div class="file-upload-container" id="file-upload-container" onclick="document.getElementById('dish-image-file').click()">
@@ -933,7 +1079,7 @@
                 <!-- Restaurant Info Section -->
                 <div id="restaurant-info-section" class="hidden">
                     <h1><i class="fas fa-store"></i> Restaurant Information</h1>
-                    <p>Update your restaurant details and settings.</p>
+                    <p>Update your restaurant details and required documents.</p>
                     
                     <div class="form-group">
                         <label for="restaurant-name-input"><i class="fas fa-store"></i> Restaurant Name *</label>
@@ -941,12 +1087,12 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="restaurant-address"><i class="fas fa-map-marker-alt"></i> Address</label>
+                        <label for="restaurant-address"><i class="fas fa-map-marker-alt"></i> Address *</label>
                         <input type="text" id="restaurant-address" placeholder="123 Main Street">
                     </div>
                     
                     <div class="form-group">
-                        <label for="restaurant-phone"><i class="fas fa-phone"></i> Phone Number</label>
+                        <label for="restaurant-phone"><i class="fas fa-phone"></i> Phone Number *</label>
                         <input type="tel" id="restaurant-phone" placeholder="(123) 456-7890">
                     </div>
                     
@@ -958,10 +1104,113 @@
                         </small>
                     </div>
                     
+                    <!-- Documents Upload Section -->
+                    <div class="documents-section">
+                        <h3><i class="fas fa-file-alt"></i> Required Business Documents</h3>
+                        <p style="font-size: 0.9rem; color: var(--mm-gray-700); margin-bottom: var(--space-lg);">
+                            Upload the following documents to operate your restaurant. All documents are required for verification.
+                        </p>
+                        
+                        <div class="document-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0;">Business License</h4>
+                                    <p style="font-size: 0.875rem; color: var(--mm-gray-700); margin: 0;">
+                                        Valid business license from your city/county
+                                    </p>
+                                </div>
+                                <span class="document-status status-required" id="license-status">REQUIRED</span>
+                            </div>
+                            <div style="margin-top: var(--space-md);">
+                                <input type="file" id="license-file" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="uploadDocument('license', this)">
+                                <button class="btn btn-secondary" onclick="document.getElementById('license-file').click()">
+                                    <i class="fas fa-upload"></i> Upload License
+                                </button>
+                                <div id="license-preview" style="margin-top: var(--space-sm);"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="document-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0;">Health Permit</h4>
+                                    <p style="font-size: 0.875rem; color: var(--mm-gray-700); margin: 0;">
+                                        Food service health permit
+                                    </p>
+                                </div>
+                                <span class="document-status status-required" id="health-permit-status">REQUIRED</span>
+                            </div>
+                            <div style="margin-top: var(--space-md);">
+                                <input type="file" id="health-permit-file" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="uploadDocument('health-permit', this)">
+                                <button class="btn btn-secondary" onclick="document.getElementById('health-permit-file').click()">
+                                    <i class="fas fa-upload"></i> Upload Health Permit
+                                </button>
+                                <div id="health-permit-preview" style="margin-top: var(--space-sm);"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="document-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0;">Tax ID (EIN)</h4>
+                                    <p style="font-size: 0.875rem; color: var(--mm-gray-700); margin: 0;">
+                                        Employer Identification Number
+                                    </p>
+                                </div>
+                                <span class="document-status status-required" id="tax-id-status">REQUIRED</span>
+                            </div>
+                            <div style="margin-top: var(--space-md);">
+                                <input type="file" id="tax-id-file" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="uploadDocument('tax-id', this)">
+                                <button class="btn btn-secondary" onclick="document.getElementById('tax-id-file').click()">
+                                    <i class="fas fa-upload"></i> Upload Tax ID
+                                </button>
+                                <div id="tax-id-preview" style="margin-top: var(--space-sm);"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="document-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0;">Insurance Certificate</h4>
+                                    <p style="font-size: 0.875rem; color: var(--mm-gray-700); margin: 0;">
+                                        Liability insurance certificate
+                                    </p>
+                                </div>
+                                <span class="document-status status-required" id="insurance-status">REQUIRED</span>
+                            </div>
+                            <div style="margin-top: var(--space-md);">
+                                <input type="file" id="insurance-file" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="uploadDocument('insurance', this)">
+                                <button class="btn btn-secondary" onclick="document.getElementById('insurance-file').click()">
+                                    <i class="fas fa-upload"></i> Upload Insurance
+                                </button>
+                                <div id="insurance-preview" style="margin-top: var(--space-sm);"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="document-item">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 style="margin: 0;">Food Handler Certificates</h4>
+                                    <p style="font-size: 0.875rem; color: var(--mm-gray-700); margin: 0;">
+                                        For all food handling staff
+                                    </p>
+                                </div>
+                                <span class="document-status status-required" id="food-handler-status">REQUIRED</span>
+                            </div>
+                            <div style="margin-top: var(--space-md);">
+                                <input type="file" id="food-handler-file" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="uploadDocument('food-handler', this)">
+                                <button class="btn btn-secondary" onclick="document.getElementById('food-handler-file').click()">
+                                    <i class="fas fa-upload"></i> Upload Certificates
+                                </button>
+                                <div id="food-handler-preview" style="margin-top: var(--space-sm);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div id="restaurant-info-message" class="message hidden"></div>
                     
                     <button class="btn btn-primary" onclick="updateRestaurantInfo()" style="width: 100%;">
-                        <i class="fas fa-save"></i> Save Restaurant Info
+                        <i class="fas fa-save"></i> Save Restaurant Info & Documents
                     </button>
                 </div>
             </div>
@@ -970,9 +1219,9 @@
 
     <script>
         // ===== FIREBASE CONFIGURATION =====
-        // Replace with your actual Firebase config (MUST MATCH index.html)
+        // MUST MATCH THE CONFIG IN index.html
         const firebaseConfig = {
-            apiKey: "AIzaSyYOUR_API_KEY_HERE",
+            apiKey: "YOUR_API_KEY_HERE",
             authDomain: "your-project-id.firebaseapp.com",
             projectId: "your-project-id",
             storageBucket: "your-project-id.appspot.com",
@@ -994,6 +1243,7 @@
         let currentFilter = 'all';
         let currentOrderFilter = 'all';
         let selectedImageFile = null;
+        let restaurantDocuments = {};
 
         // Initialize Dashboard
         function initDashboard() {
@@ -1019,9 +1269,6 @@
 
             // Setup file upload
             setupFileUpload();
-
-            // Demo login for testing
-            setupDemoLogin();
         }
 
         // Setup file upload with drag & drop
@@ -1116,15 +1363,60 @@
             showMessage('dish-form-message', 'Image removed', 'info');
         }
 
-        // Setup demo login for testing
-        function setupDemoLogin() {
-            // Pre-fill demo credentials
-            document.getElementById('login-email').value = 'demo@restaurant.com';
-            document.getElementById('login-password').value = 'demopassword';
+        // Show login form
+        function showLoginForm() {
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('register-section').classList.add('hidden');
         }
 
-        // Login Function
-        function login() {
+        // Show register form
+        function showRegisterForm() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('register-section').classList.remove('hidden');
+        }
+
+        // Sign in with Google
+        async function signInWithGoogle() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('email');
+                provider.addScope('profile');
+                
+                const result = await auth.signInWithPopup(provider);
+                currentUser = result.user;
+                
+                // Check if restaurant info exists
+                const restaurantDoc = await db.collection('restaurants').doc(currentUser.uid).get();
+                if (!restaurantDoc.exists) {
+                    // Create restaurant info for new Google user
+                    const restaurantData = {
+                        name: result.user.displayName || 'My Restaurant',
+                        email: result.user.email,
+                        zipCodes: ['90001'],
+                        phone: '',
+                        address: '',
+                        documents: {},
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    await db.collection('restaurants').doc(currentUser.uid).set(restaurantData);
+                    restaurantInfo = restaurantData;
+                }
+                
+                showDashboard();
+                loadRestaurantInfo();
+                loadDishes();
+                loadOrders();
+                
+                showMessage('login-message', 'Signed in with Google successfully!', 'success');
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                showMessage('login-message', 'Error signing in with Google: ' + error.message, 'error');
+            }
+        }
+
+        // Login with Email
+        async function loginWithEmail() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             const messageEl = document.getElementById('login-message');
@@ -1136,41 +1428,86 @@
 
             showMessage(messageEl, 'Logging in...', 'info');
 
-            // For demo purposes, allow any password with any email
-            // Create demo user session
-            currentUser = {
-                uid: 'demo-user-' + Date.now(),
-                email: email,
-                displayName: email.split('@')[0]
-            };
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                currentUser = userCredential.user;
+                
+                showDashboard();
+                loadRestaurantInfo();
+                loadDishes();
+                loadOrders();
+                showMessage(messageEl, 'Logged in successfully!', 'success');
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage(messageEl, error.message, 'error');
+            }
+        }
+
+        // Register with Email
+        async function registerWithEmail() {
+            const name = document.getElementById('register-name').value.trim();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            const messageEl = document.getElementById('register-message');
+
+            // Validation
+            if (!name) {
+                showMessage(messageEl, 'Restaurant name is required', 'error');
+                return;
+            }
             
-            // Sign in with custom token or create user in Firebase
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    showDashboard();
-                    loadRestaurantInfo();
-                    loadDishes();
-                    loadOrders();
-                    showMessage(messageEl, 'Logged in successfully!', 'success');
-                })
-                .catch((error) => {
-                    // If user doesn't exist, create one
-                    if (error.code === 'auth/user-not-found') {
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .then((userCredential) => {
-                                showDashboard();
-                                loadRestaurantInfo();
-                                loadDishes();
-                                loadOrders();
-                                showMessage(messageEl, 'Account created and logged in!', 'success');
-                            })
-                            .catch((createError) => {
-                                showMessage(messageEl, createError.message, 'error');
-                            });
-                    } else {
-                        showMessage(messageEl, error.message, 'error');
-                    }
-                });
+            if (!email) {
+                showMessage(messageEl, 'Email is required', 'error');
+                return;
+            }
+            
+            if (!password) {
+                showMessage(messageEl, 'Password is required', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage(messageEl, 'Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage(messageEl, 'Passwords do not match', 'error');
+                return;
+            }
+
+            showMessage(messageEl, 'Creating account...', 'info');
+
+            try {
+                // Create user account
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                currentUser = userCredential.user;
+                
+                // Create restaurant info
+                const restaurantData = {
+                    name: name,
+                    email: email,
+                    zipCodes: ['90001'],
+                    phone: '',
+                    address: '',
+                    documents: {},
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                await db.collection('restaurants').doc(currentUser.uid).set(restaurantData);
+                restaurantInfo = restaurantData;
+                
+                showDashboard();
+                loadRestaurantInfo();
+                loadDishes();
+                loadOrders();
+                
+                showMessage(messageEl, 'Account created successfully!', 'success');
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage(messageEl, error.message, 'error');
+            }
         }
 
         // Logout Function
@@ -1210,11 +1547,14 @@
                 loadOrders();
             } else if (sectionId === 'dashboard') {
                 updateStats();
+            } else if (sectionId === 'restaurant-info') {
+                loadRestaurantDocuments();
             }
         }
 
         function showLogin() {
             document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('register-section').classList.add('hidden');
             const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info'];
             sections.forEach(id => {
                 document.getElementById(`${id}-section`).classList.add('hidden');
@@ -1223,6 +1563,7 @@
 
         function showDashboard() {
             document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('register-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
             showSection('dashboard');
         }
@@ -1241,9 +1582,10 @@
                     restaurantInfo = {
                         name: 'My Restaurant',
                         email: currentUser.email,
-                        zipCodes: ['90001'], // Default ZIP code
+                        zipCodes: ['90001'],
                         phone: '',
                         address: '',
+                        documents: {},
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
                     await db.collection('restaurants').doc(currentUser.uid).set(restaurantInfo);
@@ -1253,13 +1595,141 @@
                 console.error('Error loading restaurant info:', error);
                 // Fallback to demo data
                 restaurantInfo = {
-                    name: 'Demo Restaurant',
+                    name: 'My Restaurant',
                     email: currentUser.email,
                     zipCodes: ['90001'],
                     phone: '',
-                    address: ''
+                    address: '',
+                    documents: {}
                 };
                 updateRestaurantUI();
+            }
+        }
+
+        // Load Restaurant Documents
+        async function loadRestaurantDocuments() {
+            if (!restaurantInfo || !restaurantInfo.documents) return;
+            
+            restaurantDocuments = restaurantInfo.documents || {};
+            
+            // Update document status
+            const documents = ['license', 'health-permit', 'tax-id', 'insurance', 'food-handler'];
+            documents.forEach(docType => {
+                const statusElement = document.getElementById(`${docType}-status`);
+                const previewElement = document.getElementById(`${docType}-preview`);
+                
+                if (restaurantDocuments[docType]) {
+                    if (statusElement) {
+                        statusElement.textContent = 'UPLOADED';
+                        statusElement.className = 'document-status status-uploaded';
+                    }
+                    if (previewElement) {
+                        previewElement.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: var(--space-sm); background: var(--mm-green); color: white; padding: var(--space-sm); border-radius: var(--radius-sm);">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Document uploaded: ${restaurantDocuments[docType].name}</span>
+                                <button onclick="removeDocument('${docType}')" style="margin-left: auto; background: none; border: none; color: white; cursor: pointer;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                } else {
+                    if (statusElement) {
+                        statusElement.textContent = 'REQUIRED';
+                        statusElement.className = 'document-status status-required';
+                    }
+                    if (previewElement) {
+                        previewElement.innerHTML = '';
+                    }
+                }
+            });
+        }
+
+        // Upload Document
+        async function uploadDocument(docType, fileInput) {
+            if (!currentUser) return;
+            
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            // Check file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showMessage('restaurant-info-message', 'File size must be less than 10MB', 'error');
+                return;
+            }
+            
+            // Check file type
+            const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            if (!validTypes.includes(file.type)) {
+                showMessage('restaurant-info-message', 'Please upload PDF, JPG, or PNG files only', 'error');
+                return;
+            }
+            
+            try {
+                // Upload to Firebase Storage
+                const storageRef = storage.ref(`restaurants/${currentUser.uid}/documents/${docType}_${Date.now()}_${file.name}`);
+                const uploadTask = storageRef.put(file);
+                
+                // Show progress
+                showMessage('restaurant-info-message', `Uploading ${file.name}...`, 'info');
+                
+                // Wait for upload to complete
+                await uploadTask;
+                
+                // Get download URL
+                const downloadURL = await storageRef.getDownloadURL();
+                
+                // Update restaurant documents
+                if (!restaurantInfo.documents) {
+                    restaurantInfo.documents = {};
+                }
+                
+                restaurantInfo.documents[docType] = {
+                    url: downloadURL,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    uploadedAt: new Date().toISOString()
+                };
+                
+                // Save to Firestore
+                await db.collection('restaurants').doc(currentUser.uid).update({
+                    [`documents.${docType}`]: restaurantInfo.documents[docType]
+                });
+                
+                // Update UI
+                loadRestaurantDocuments();
+                showMessage('restaurant-info-message', `${file.name} uploaded successfully!`, 'success');
+                
+            } catch (error) {
+                console.error('Error uploading document:', error);
+                showMessage('restaurant-info-message', 'Error uploading document: ' + error.message, 'error');
+            }
+        }
+
+        // Remove Document
+        async function removeDocument(docType) {
+            if (!currentUser || !restaurantInfo || !restaurantInfo.documents || !restaurantInfo.documents[docType]) return;
+            
+            if (!confirm('Are you sure you want to remove this document?')) return;
+            
+            try {
+                // Remove from restaurant info
+                delete restaurantInfo.documents[docType];
+                
+                // Update Firestore
+                await db.collection('restaurants').doc(currentUser.uid).update({
+                    [`documents.${docType}`]: firebase.firestore.FieldValue.delete()
+                });
+                
+                // Update UI
+                loadRestaurantDocuments();
+                showMessage('restaurant-info-message', 'Document removed successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error removing document:', error);
+                showMessage('restaurant-info-message', 'Error removing document', 'error');
             }
         }
 
@@ -1295,6 +1765,16 @@
 
             if (!name) {
                 showMessage('restaurant-info-message', 'Restaurant name is required', 'error');
+                return;
+            }
+            
+            if (!address) {
+                showMessage('restaurant-info-message', 'Address is required', 'error');
+                return;
+            }
+            
+            if (!phone) {
+                showMessage('restaurant-info-message', 'Phone number is required', 'error');
                 return;
             }
 
