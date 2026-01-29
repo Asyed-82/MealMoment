@@ -8,6 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <style>
         /* ===== CSS VARIABLES ===== */
         :root {
@@ -490,6 +495,13 @@
             justify-content: center;
             font-size: 3rem;
             color: var(--mm-gray-700);
+            overflow: hidden;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .item-name {
@@ -1250,7 +1262,23 @@
     </footer>
 
     <script>
-        // Database (simulated backend) - Menu items only
+        // ===== FIREBASE CONFIGURATION =====
+        // Replace with your actual Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyYOUR_API_KEY_HERE",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "1:YOUR_APP_ID:web:YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Database (simulated backend) - Menu items only (for fallback)
         const database = {
             menuItems: {
                 1: [
@@ -1337,6 +1365,25 @@
             
             // Prevent auto-focus on page load
             preventAutoFocus();
+            
+            // Check for owner dashboard link in URL
+            checkOwnerAccess();
+        }
+
+        // Add owner dashboard access function
+        function checkOwnerAccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('owner') === 'true') {
+                // Add owner login link to navbar
+                const navLinks = document.querySelector('.nav-links');
+                if (navLinks) {
+                    const ownerLink = document.createElement('a');
+                    ownerLink.href = 'owner-dashboard.html';
+                    ownerLink.className = 'nav-link';
+                    ownerLink.innerHTML = '<i class="fas fa-store"></i> Owner Dashboard';
+                    navLinks.insertBefore(ownerLink, navLinks.lastElementChild);
+                }
+            }
         }
 
         // Prevent auto-focus on page load
@@ -1699,13 +1746,154 @@
             return stateTimezones[stateAbbr.toUpperCase()] || 'America/New_York';
         }
 
-        // Load menu based on city and meal type
-        function loadMenu(cityId, mealType) {
+        // MODIFIED: Load menu based on city and meal type FROM FIREBASE
+        async function loadMenu(cityId, mealType) {
             const menuContainer = document.getElementById('menu-container');
             if (!menuContainer) {
                 console.error('Menu container not found');
                 return;
             }
+            
+            // Show loading state
+            menuContainer.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-utensils fa-spin"></i>
+                    <p>Loading restaurant specials from local restaurants...</p>
+                </div>
+            `;
+            
+            try {
+                // Get approved and active dishes from Firestore
+                const dishesSnapshot = await db.collection('dishes')
+                    .where('status', '==', 'approved')
+                    .where('isActive', '==', true)
+                    .get();
+                
+                if (dishesSnapshot.empty) {
+                    // Fallback to local database
+                    loadLocalMenu(cityId, mealType);
+                    return;
+                }
+                
+                const dishes = [];
+                dishesSnapshot.forEach(doc => {
+                    dishes.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                // Filter for current ZIP code area
+                const zipCode = document.getElementById('zip-code').value;
+                const localDishes = dishes.filter(dish => 
+                    dish.restaurantZip === zipCode
+                );
+                
+                if (localDishes.length === 0) {
+                    // No dishes for this ZIP code, show fallback
+                    loadLocalMenu(cityId, mealType);
+                    return;
+                }
+                
+                // Group dishes by cuisine
+                const dishesByCuisine = {};
+                localDishes.forEach(dish => {
+                    if (!dishesByCuisine[dish.cuisine]) {
+                        dishesByCuisine[dish.cuisine] = [];
+                    }
+                    dishesByCuisine[dish.cuisine].push(dish);
+                });
+                
+                // Build menu HTML
+                let html = '';
+                
+                // Display specials section
+                html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${localDishes.length} items)</h3>`;
+                html += '<div class="menu-grid">';
+                
+                localDishes.forEach(item => {
+                    const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
+                    const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
+                    
+                    html += `
+                        <div class="menu-item special">
+                            <div class="special-badge">FROM ${item.restaurantName}</div>
+                            <div class="item-image">
+                                ${item.imageUrl ? 
+                                    `<img src="${item.imageUrl}" alt="${item.name}">` :
+                                    `<i class="fas fa-utensils"></i>`
+                                }
+                            </div>
+                            <h3 class="item-name">${item.name}</h3>
+                            <p class="item-description">${item.description || ''}</p>
+                            <div class="item-footer">
+                                <div>
+                                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                                    <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
+                                </div>
+                                <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
+                                    <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
+                                    ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                // Display by cuisine sections
+                for (const [cuisine, cuisineItems] of Object.entries(dishesByCuisine)) {
+                    if (cuisineItems.length > 0) {
+                        html += `<h3 style="margin-top: 30px;"><i class="fas fa-utensil-spoon"></i> ${cuisine} Cuisine</h3>`;
+                        html += '<div class="menu-grid">';
+                        
+                        cuisineItems.forEach(item => {
+                            const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
+                            const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
+                            
+                            html += `
+                                <div class="menu-item">
+                                    <div class="item-image">
+                                        ${item.imageUrl ? 
+                                            `<img src="${item.imageUrl}" alt="${item.name}">` :
+                                            `<i class="fas fa-utensils"></i>`
+                                        }
+                                    </div>
+                                    <h3 class="item-name">${item.name}</h3>
+                                    <p class="item-description">${item.description || ''}</p>
+                                    <div class="item-footer">
+                                        <div>
+                                            <div class="item-price">$${item.price.toFixed(2)}</div>
+                                            <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
+                                        </div>
+                                        <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
+                                            <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
+                                            ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                    }
+                }
+                
+                menuContainer.innerHTML = html;
+                updateCheckoutButton();
+                
+            } catch (error) {
+                console.error('Error loading menu from Firebase:', error);
+                // Fallback to local database
+                loadLocalMenu(cityId, mealType);
+            }
+        }
+
+        // Fallback function for local database
+        function loadLocalMenu(cityId, mealType) {
+            const menuContainer = document.getElementById('menu-container');
+            if (!menuContainer) return;
             
             const items = database.menuItems[cityId] || [];
             
@@ -1734,7 +1922,7 @@
                 
                 html += `
                     <div class="menu-item ${item.isSpecial ? 'special' : ''}">
-                        ${item.isSpecial ? '<div class="special-badge">DISCOUNTED</div>' : ''}
+                        ${item.isSpecial ? '<div class="special-badge">DEMO SPECIAL</div>' : ''}
                         <div class="item-image">
                             ${item.emoji}
                         </div>
@@ -1767,7 +1955,7 @@
                     
                     html += `
                         <div class="menu-item ${item.isSpecial ? 'special' : ''}">
-                            ${item.isSpecial ? '<div class="special-badge">DISCOUNTED</div>' : ''}
+                            ${item.isSpecial ? '<div class="special-badge">DEMO</div>' : ''}
                             <div class="item-image">
                                 ${item.emoji}
                             </div>
@@ -1792,11 +1980,36 @@
             
             menuContainer.innerHTML = html;
             updateCheckoutButton();
+            
+            // Show notification that we're using demo data
+            if (specials.length > 0) {
+                showNotification('Using demo restaurant data. Restaurant owners can add their dishes!', 'info');
+            }
         }
 
-        // Add item to cart
-        function addToCart(itemId) {
-            const item = database.menuItems[1].find(i => i.id === itemId);
+        // MODIFIED: Add item to cart (works with both local and Firebase items)
+        async function addToCart(itemId) {
+            // First try to get from local database
+            let item = database.menuItems[1].find(i => i.id === itemId);
+            
+            // If not found locally, try Firebase
+            if (!item) {
+                try {
+                    const dishDoc = await db.collection('dishes').doc(itemId).get();
+                    if (dishDoc.exists) {
+                        item = dishDoc.data();
+                        item.id = itemId;
+                    } else {
+                        showNotification('Dish not found', 'error');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error fetching dish from Firebase:', error);
+                    showNotification('Error adding item to cart', 'error');
+                    return;
+                }
+            }
+            
             if (!item) return;
             
             const existingItem = currentCart.find(cartItem => cartItem.id === itemId);
@@ -1809,7 +2022,8 @@
                     name: item.name,
                     price: item.price,
                     quantity: 1,
-                    emoji: item.emoji
+                    emoji: item.emoji || '🍽️',
+                    restaurantName: item.restaurantName || 'Demo Restaurant'
                 });
             }
             
@@ -1886,13 +2100,14 @@
                         <div class="cart-item-info">
                             <h4>${item.name} ${item.emoji}</h4>
                             <div style="color: var(--mm-green); font-weight: 500;">$${item.price.toFixed(2)} each</div>
+                            ${item.restaurantName ? `<div style="font-size: 0.875rem; color: var(--mm-gray-700);">${item.restaurantName}</div>` : ''}
                         </div>
                         <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, -1)">
+                            <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', -1)">
                                 <i class="fas fa-minus"></i>
                             </button>
                             <span style="font-weight: 600; min-width: 30px; text-align: center;">${item.quantity}</span>
-                            <button class="quantity-btn" onclick="updateCartQuantity(${item.id}, 1)">
+                            <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', 1)">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -1948,7 +2163,8 @@
             }
         }
 
-        function processPayment() {
+        // MODIFIED: Process payment with Firebase order saving
+        async function processPayment() {
             const name = document.getElementById('name');
             const phone = document.getElementById('phone');
             const address = document.getElementById('address');
@@ -1969,23 +2185,41 @@
             
             showCheckoutMessage('Processing payment...', 'info');
             
-            setTimeout(() => {
+            try {
+                // Create order data
                 const orderNumber = 'MM-' + Date.now();
                 const deliveryTime = new Date(Date.now() + 45 * 60000);
                 
-                const currentOrder = {
-                    orderNumber,
+                const orderData = {
+                    orderNumber: orderNumber,
                     customerName: name.value.trim(),
+                    customerPhone: phone.value.trim(),
                     deliveryAddress: `${address.value.trim()}, ${city.value.trim()}, ${state.value.trim()} ${zip.value.trim()}`,
+                    specialInstructions: document.getElementById('instructions').value.trim() || '',
                     items: [...currentCart],
+                    subtotal: parseFloat(document.getElementById('subtotal').textContent.replace('$', '')),
+                    tax: parseFloat(document.getElementById('tax').textContent.replace('$', '')),
+                    deliveryFee: 2.99,
                     total: parseFloat(document.getElementById('total').textContent.replace('$', '')),
-                    deliveryTime: deliveryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    status: 'pending',
+                    createdAt: new Date(),
+                    estimatedDelivery: deliveryTime,
+                    restaurantIds: [...new Set(currentCart.map(item => item.restaurantId || 'demo'))]
                 };
                 
-                const orders = JSON.parse(localStorage.getItem('mealMomentOrders')) || [];
-                orders.push(currentOrder);
-                localStorage.setItem('mealMomentOrders', JSON.stringify(orders));
+                // Save order to Firebase (if connected)
+                try {
+                    await db.collection('orders').add(orderData);
+                    showCheckoutMessage('Order saved to database!', 'success');
+                } catch (firebaseError) {
+                    console.log('Firebase order save failed, using local storage:', firebaseError);
+                    // Fallback to local storage
+                    const orders = JSON.parse(localStorage.getItem('mealMomentOrders')) || [];
+                    orders.push(orderData);
+                    localStorage.setItem('mealMomentOrders', JSON.stringify(orders));
+                }
                 
+                // Clear cart and show confirmation
                 currentCart = [];
                 localStorage.setItem('mealMomentCart', JSON.stringify([]));
                 
@@ -2001,12 +2235,12 @@
                 if (orderDetails) {
                     orderDetails.innerHTML = `
                         Order #${orderNumber}<br>
-                        <small>${currentOrder.items.length} items • $${currentOrder.total.toFixed(2)}</small>
+                        <small>${orderData.items.length} items • $${orderData.total.toFixed(2)}</small>
                     `;
                 }
                 
                 if (deliveryTimeElement) {
-                    deliveryTimeElement.textContent = `Estimated delivery: ${currentOrder.deliveryTime}`;
+                    deliveryTimeElement.textContent = `Estimated delivery: ${deliveryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                 }
                 
                 updateCartDisplay();
@@ -2015,7 +2249,10 @@
                     orderConfirmation.scrollIntoView({ behavior: 'smooth' });
                 }
                 
-            }, 2000);
+            } catch (error) {
+                console.error('Error processing payment:', error);
+                showCheckoutMessage('Error processing payment. Please try again.', 'error');
+            }
         }
 
         function showCheckoutMessage(message, type) {
