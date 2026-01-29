@@ -1060,7 +1060,7 @@
                     <p>Choose payment method with branch delivery to receive discount.</p>
                 </div>
 
-                <!-- Location Selector - FIXED FOR ALL DEVICES -->
+                <!-- Location Selector -->
                 <div class="location-selector">
                     <h3><i class="fas fa-map-marker-alt"></i> Find Your Location</h3>
                     <div class="form-group">
@@ -1309,6 +1309,7 @@
         let currentCity = null;
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
         let currentStateTaxRate = 0.0825; // Default 8.25%
+        let mobileAutoFocusDisabled = true; // Prevents auto-focus on mobile
 
         // Initialize App
         function init() {
@@ -1334,15 +1335,33 @@
                     mobileOptions.style.display = 'block';
                 }
             }
+            
+            // Prevent auto-scroll on mobile when page loads
+            preventMobileAutoFocus();
+        }
+
+        // Prevent auto-focus on mobile
+        function preventMobileAutoFocus() {
+            if (window.innerWidth <= 768) {
+                // Don't focus on any input when page loads on mobile
+                mobileAutoFocusDisabled = true;
+                
+                // Add a slight delay to ensure page is fully loaded
+                setTimeout(() => {
+                    // Blur any focused elements
+                    if (document.activeElement) {
+                        document.activeElement.blur();
+                    }
+                    // Scroll to top to ensure user sees the hero section first
+                    window.scrollTo(0, 0);
+                }, 100);
+            }
         }
 
         // Setup ZIP code input handling
         function setupZipCodeInput() {
             const zipInput = document.getElementById('zip-code');
             if (!zipInput) return;
-            
-            // Focus on the input for better UX
-            zipInput.focus();
             
             // Add input event listener
             zipInput.addEventListener('input', function(e) {
@@ -1373,6 +1392,13 @@
             // Make sure input is visible and clickable
             zipInput.style.opacity = '1';
             zipInput.style.pointerEvents = 'auto';
+            
+            // Only auto-focus on desktop, not mobile
+            if (window.innerWidth > 768) {
+                setTimeout(() => {
+                    zipInput.focus();
+                }, 500);
+            }
         }
 
         // Set ZIP code value
