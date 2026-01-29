@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍽️ MealMoment - Restaurant Owner Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --mm-orange: #FF6A00;
+            --mm-green: #2E7D32;
+            --mm-gradient: linear-gradient(90deg, #FF6A00 0%, #2E7D32 100%);
+            --mm-charcoal: #1F1F1F;
+            --mm-gray-200: #EAEAEA;
+            --mm-bg: #FFFFFF;
+            --mm-bg-soft: #F8FAFC;
+            --font-heading: 'Poppins', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2rem;
+            --space-xl: 3rem;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--mm-bg-soft);
+            color: var(--mm-charcoal);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: var(--shadow-md);
+            padding: var(--space-md) 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-heading);
+            font-weight: 800;
+            font-size: 2rem;
+            background: var(--mm-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Auth Section */
+        .auth-section {
+            text-align: center;
+            padding: var(--space-xl) 0;
+            background: white;
+            border-radius: var(--radius-lg);
+            margin: var(--space-xl) 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .auth-form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: var(--space-lg);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-md);
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            font-family: var(--font-body);
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            width: 100%;
+            margin-top: var(--space-md);
+        }
+
+        .btn-primary {
+            background: var(--mm-gradient);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--mm-charcoal);
+            border: 2px solid var(--mm-gray-200);
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: var(--space-xl);
+            margin: var(--space-xl) 0;
+        }
+
+        /* Restaurant Info */
+        .restaurant-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .restaurant-info h3 {
+            color: var(--mm-orange);
+            margin-bottom: var(--space-sm);
+        }
+
+        /* Dish Management */
+        .dishes-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .dishes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--space-md);
+            margin: var(--space-lg) 0;
+        }
+
+        .dish-card {
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            background: var(--mm-bg-soft);
+            position: relative;
+        }
+
+        .dish-card.approved {
+            border-color: var(--mm-green);
+        }
+
+        .dish-card.pending {
+            border-color: var(--mm-orange);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-approved {
+            background: var(--mm-green);
+            color: white;
+        }
+
+        .status-pending {
+            background: var(--mm-orange);
+            color: white;
+        }
+
+        .dish-image {
+            width: 100%;
+            height: 200px;
+            background: var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .dish-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Add Dish Form */
+        .add-dish-form {
+            background: var(--mm-bg-soft);
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-xl);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+        }
+
+        .file-upload {
+            position: relative;
+            border: 2px dashed var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-upload input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+        }
+
+        /* Messages */
+        .message {
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            margin: var(--space-md) 0;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--mm-green);
+            border: 1px solid rgba(46, 125, 50, 0.2);
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            display: block;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+            margin: var(--space-lg) 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--mm-orange);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dishes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">MealMoment Owner</div>
+                <div id="user-info"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Auth Section -->
+    <section class="auth-section" id="auth-section">
+        <div class="container">
+            <div class="auth-form">
+                <h2>Restaurant Owner Login</h2>
+                <p>Manage your restaurant dishes and orders</p>
+                
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="owner@restaurant.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password">
+                </div>
+                
+                <button class="btn btn-primary" onclick="login()">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                
+                <p style="margin-top: var(--space-md); text-align: center;">
+                    Don't have an account? Contact admin for approval
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard (Hidden initially) -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="restaurant-card">
+                <h2 id="welcome-message">Welcome, Restaurant Owner</h2>
+                <p id="restaurant-info"></p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-dishes">0</div>
+                        <div>Total Dishes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="approved-dishes">0</div>
+                        <div>Approved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pending-dishes">0</div>
+                        <div>Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="today-orders">0</div>
+                        <div>Today's Orders</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Restaurant Info & Settings -->
+                <div>
+                    <div class="restaurant-card">
+                        <h3><i class="fas fa-store"></i> Restaurant Information</h3>
+                        <div class="form-group">
+                            <label>Restaurant Name</label>
+                            <input type="text" id="restaurant-name" placeholder="Your Restaurant Name">
+                        </div>
+                        <div class="form-group">
+                            <label>ZIP Code</label>
+                            <input type="text" id="restaurant-zip" placeholder="e.g., 90001" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label>Cuisine Type</label>
+                            <select id="restaurant-cuisine">
+                                <option value="American">American</option>
+                                <option value="Italian">Italian</option>
+                                <option value="Mexican">Mexican</option>
+                                <option value="Chinese">Chinese</option>
+                                <option value="Indian">Indian</option>
+                                <option value="Japanese">Japanese</option>
+                                <option value="Mediterranean">Mediterranean</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="updateRestaurantInfo()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="restaurant-card">
+                        <h3><i class="fas fa-chart-line"></i> Quick Stats</h3>
+                        <p>Max 2 dishes approved automatically. Additional dishes require admin approval.</p>
+                        <div id="limits-info"></div>
+                    </div>
+                </div>
+
+                <!-- Dish Management -->
+                <div class="dishes-section">
+                    <h2><i class="fas fa-utensils"></i> Manage Your Dishes</h2>
+                    
+                    <!-- Messages -->
+                    <div id="message" class="message"></div>
+                    
+                    <!-- Current Dishes -->
+                    <h3>Your Dishes</h3>
+                    <div class="dishes-grid" id="dishes-container">
+                        <!-- Dishes will be loaded here -->
+                    </div>
+
+                    <!-- Add New Dish Form -->
+                    <div class="add-dish-form">
+                        <h3><i class="fas fa-plus-circle"></i> Add New Dish</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="dish-name">Dish Name</label>
+                                <input type="text" id="dish-name" placeholder="e.g., Gourmet Burger">
+                            </div>
+                            <div class="form-group">
+                                <label for="dish-price">Price ($)</label>
+                                <input type="number" id="dish-price" placeholder="12.99" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="dish-cuisine">Cuisine</label>
+                                <select id="dish-cuisine">
+                                    <option value="American">American</option>
+                                    <option value="Italian">Italian</option>
+                                    <option value="Mexican">Mexican</option>
+                                    <option value="Chinese">Chinese</option>
+                                    <option value="Indian">Indian</option>
+                                    <option value="Japanese">Japanese</option>
+                                    <option value="Mediterranean">Mediterranean</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dish-calories">Calories</label>
+                                <input type="number" id="dish-calories" placeholder="450">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="dish-description">Description</label>
+                                <textarea id="dish-description" rows="3" placeholder="Describe your dish..."></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Dish Image</label>
+                                <div class="file-upload">
+                                    <input type="file" id="dish-image" accept="image/*">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--mm-gray-200);"></i>
+                                    <p>Click to upload dish photo</p>
+                                    <small>Max size: 2MB</small>
+                                </div>
+                                <div id="image-preview" style="margin-top: 1rem;"></div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="addDish()">
+                            <i class="fas fa-plus"></i> Add Dish
+                        </button>
+                        
+                        <p style="margin-top: 1rem; font-size: 0.875rem; color: #666;">
+                            Note: First 2 dishes are auto-approved. Additional dishes require admin approval.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <div style="text-align: center; margin: var(--space-xl) 0;">
+                <button class="btn btn-secondary" onclick="logout()" style="width: auto;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Global Variables
+        let currentUser = null;
+        let restaurantData = null;
+        let dishes = [];
+
+        // Auth State Listener
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadRestaurantData();
+                showDashboard();
+            } else {
+                showAuth();
+            }
+        });
+
+        // Login Function
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!email || !password) {
+                showMessage('Please enter email and password', 'error');
+                return;
+            }
+            
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                showMessage('Login successful!', 'success');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+
+        // Load Restaurant Data
+        async function loadRestaurantData() {
+            if (!currentUser) return;
+            
+            try {
+                // Get restaurant document
+                const restaurantDoc = await db.collection('restaurants')
+                    .doc(currentUser.uid)
+                    .get();
+                
+                if (restaurantDoc.exists) {
+                    restaurantData = restaurantDoc.data();
+                    updateRestaurantUI();
+                    
+                    // Load dishes
+                    await loadDishes();
+                    
+                    // Load stats
+                    await loadStats();
+                } else {
+                    // Create new restaurant document
+                    restaurantData = {
+                        name: 'My Restaurant',
+                        zipCode: '',
+                        cuisine: 'American',
+                        ownerId: currentUser.uid,
+                        ownerEmail: currentUser.email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        approvedDishCount: 0,
+                        totalDishCount: 0
+                    };
+                    
+                    await db.collection('restaurants').doc(currentUser.uid).set(restaurantData);
+                    updateRestaurantUI();
+                }
+            } catch (error) {
+                console.error('Error loading restaurant data:', error);
+                showMessage('Error loading restaurant data', 'error');
+            }
+        }
+
+        // Update Restaurant UI
+        function updateRestaurantUI() {
+            if (!restaurantData) return;
+            
+            document.getElementById('welcome-message').textContent = `Welcome, ${restaurantData.name}`;
+            document.getElementById('restaurant-info').innerHTML = `
+                <strong>ZIP Code:</strong> ${restaurantData.zipCode || 'Not set'} |
+                <strong>Cuisine:</strong> ${restaurantData.cuisine}
+            `;
+            
+            // Update form fields
+            document.getElementById('restaurant-name').value = restaurantData.name || '';
+            document.getElementById('restaurant-zip').value = restaurantData.zipCode || '';
+            document.getElementById('restaurant-cuisine').value = restaurantData.cuisine || 'American';
+            
+            // Update limits info
+            const approvedCount = restaurantData.approvedDishCount || 0;
+            const canAddAutoApproved = approvedCount < 2;
+            
+            document.getElementById('limits-info').innerHTML = `
+                <p><strong>Approved Dishes:</strong> ${approvedCount}/2</p>
+                <p style="color: ${canAddAutoApproved ? 'green' : 'orange'}">
+                    ${canAddAutoApproved ? 
+                        'You can add auto-approved dishes' : 
+                        'Additional dishes require admin approval'}
+                </p>
+            `;
+        }
+
+        // Update Restaurant Info
+        async function updateRestaurantInfo() {
+            const name = document.getElementById('restaurant-name').value;
+            const zipCode = document.getElementById('restaurant-zip').value;
+            const cuisine = document.getElementById('restaurant-cuisine').value;
+            
+            if (!name || !zipCode) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                await db.collection('restaurants').doc(currentUser.uid).update({
+                    name,
+                    zipCode,
+                    cuisine,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                restaurantData = { ...restaurantData, name, zipCode, cuisine };
+                updateRestaurantUI();
+                showMessage('Restaurant information updated successfully!', 'success');
+            } catch (error) {
+                showMessage('Error updating restaurant info', 'error');
+            }
+        }
+
+        // Load Dishes
+        async function loadDishes() {
+            try {
+                const dishesSnapshot = await db.collection('dishes')
+                    .where('restaurantId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                dishes = [];
+                dishesSnapshot.forEach(doc => {
+                    dishes.push({ id: doc.id, ...doc.data() });
+                });
+                
+                renderDishes();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading dishes:', error);
+            }
+        }
+
+        // Render Dishes
+        function renderDishes() {
+            const container = document.getElementById('dishes-container');
+            
+            if (dishes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: var(--space-xl); grid-column: 1/-1;">
+                        <i class="fas fa-utensils" style="font-size: 3rem; color: var(--mm-gray-200);"></i>
+                        <p>No dishes added yet. Add your first dish!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = dishes.map(dish => `
+                <div class="dish-card ${dish.status === 'approved' ? 'approved' : 'pending'}">
+                    <div class="status-badge ${dish.status === 'approved' ? 'status-approved' : 'status-pending'}">
+                        ${dish.status === 'approved' ? 'APPROVED' : 'PENDING'}
+                    </div>
+                    <div class="dish-image">
+                        ${dish.imageUrl ? 
+                            `<img src="${dish.imageUrl}" alt="${dish.name}">` :
+                            `<i class="fas fa-utensils" style="font-size: 3rem; color: var(--mm-gray-200);"></i>`
+                        }
+                    </div>
+                    <h4>${dish.name}</h4>
+                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">${dish.description || 'No description'}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: var(--mm-green); font-size: 1.25rem;">$${dish.price?.toFixed(2) || '0.00'}</strong>
+                            <div style="font-size: 0.875rem; color: #666;">${dish.cuisine} • ${dish.calories || 'N/A'} cal</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="deleteDish('${dish.id}')" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add Dish
+        async function addDish() {
+            const name = document.getElementById('dish-name').value;
+            const price = parseFloat(document.getElementById('dish-price').value);
+            const cuisine = document.getElementById('dish-cuisine').value;
+            const calories = document.getElementById('dish-calories').value;
+            const description = document.getElementById('dish-description').value;
+            const imageFile = document.getElementById('dish-image').files[0];
+            
+            if (!name || !price || !cuisine) {
+                showMessage('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            if (!restaurantData.zipCode) {
+                showMessage('Please set your restaurant ZIP code first', 'error');
+                return;
+            }
+            
+            try {
+                let imageUrl = '';
+                
+                // Upload image if provided
+                if (imageFile) {
+                    const storageRef = storage.ref(`dishes/${currentUser.uid}/${Date.now()}_${imageFile.name}`);
+                    await storageRef.put(imageFile);
+                    imageUrl = await storageRef.getDownloadURL();
+                }
+                
+                // Check if we can auto-approve
+                const approvedCount = restaurantData.approvedDishCount || 0;
+                const status = approvedCount < 2 ? 'approved' : 'pending';
+                
+                // Create dish document
+                const dishData = {
+                    name,
+                    price,
+                    cuisine,
+                    calories: parseInt(calories) || 0,
+                    description,
+                    imageUrl,
+                    status,
+                    restaurantId: currentUser.uid,
+                    restaurantName: restaurantData.name,
+                    restaurantZip: restaurantData.zipCode,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    isActive: true
+                };
+                
+                const dishRef = await db.collection('dishes').add(dishData);
+                
+                // Update restaurant stats
+                const updateData = {
+                    totalDishCount: firebase.firestore.FieldValue.increment(1)
+                };
+                
+                if (status === 'approved') {
+                    updateData.approvedDishCount = firebase.firestore.FieldValue.increment(1);
+                }
+                
+                await db.collection('restaurants').doc(currentUser.uid).update(updateData);
+                
+                // Reset form
+                resetDishForm();
+                
+                // Reload dishes
+                await loadRestaurantData();
+                
+                showMessage(`Dish added successfully! Status: ${status.toUpperCase()}`, 'success');
+                
+            } catch (error) {
+                console.error('Error adding dish:', error);
+                showMessage('Error adding dish', 'error');
+            }
+        }
+
+        // Delete Dish
+        async function deleteDish(dishId) {
+            if (!confirm('Are you sure you want to delete this dish?')) return;
+            
+            try {
+                // Get dish to check status
+                const dishDoc = await db.collection('dishes').doc(dishId).get();
+                const dish = dishDoc.data();
+                
+                // Delete dish
+                await db.collection('dishes').doc(dishId).delete();
+                
+                // Update restaurant stats
+                const updateData = {
+                    totalDishCount: firebase.firestore.FieldValue.increment(-1)
+                };
+                
+                if (dish.status === 'approved') {
+                    updateData.approvedDishCount = firebase.firestore.FieldValue.increment(-1);
+                }
+                
+                await db.collection('restaurants').doc(currentUser.uid).update(updateData);
+                
+                // Reload dishes
+                await loadRestaurantData();
+                
+                showMessage('Dish deleted successfully', 'success');
+                
+            } catch (error) {
+                console.error('Error deleting dish:', error);
+                showMessage('Error deleting dish', 'error');
+            }
+        }
+
+        // Reset Dish Form
+        function resetDishForm() {
+            document.getElementById('dish-name').value = '';
+            document.getElementById('dish-price').value = '';
+            document.getElementById('dish-calories').value = '';
+            document.getElementById('dish-description').value = '';
+            document.getElementById('dish-image').value = '';
+            document.getElementById('image-preview').innerHTML = '';
+        }
+
+        // Load Stats
+        async function loadStats() {
+            // Update dish counts
+            const approvedCount = dishes.filter(d => d.status === 'approved').length;
+            const pendingCount = dishes.filter(d => d.status === 'pending').length;
+            
+            document.getElementById('total-dishes').textContent = dishes.length;
+            document.getElementById('approved-dishes').textContent = approvedCount;
+            document.getElementById('pending-dishes').textContent = pendingCount;
+            
+            // Load today's orders
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const ordersSnapshot = await db.collection('orders')
+                .where('restaurantId', '==', currentUser.uid)
+                .where('createdAt', '>=', today)
+                .get();
+            
+            document.getElementById('today-orders').textContent = ordersSnapshot.size;
+        }
+
+        // Update Stats
+        function updateStats() {
+            const approvedCount = dishes.filter(d => d.status === 'approved').length;
+            const pendingCount = dishes.filter(d => d.status === 'pending').length;
+            
+            document.getElementById('total-dishes').textContent = dishes.length;
+            document.getElementById('approved-dishes').textContent = approvedCount;
+            document.getElementById('pending-dishes').textContent = pendingCount;
+        }
+
+        // Show/Hide Sections
+        function showDashboard() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            // Update user info in header
+            document.getElementById('user-info').innerHTML = `
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span>${restaurantData?.name || 'Restaurant'}</span>
+                    <button class="btn btn-secondary" onclick="logout()" style="padding: 0.5rem 1rem;">
+                        Logout
+                    </button>
+                </div>
+            `;
+        }
+
+        function showAuth() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('user-info').innerHTML = '';
+        }
+
+        // Show Message
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            
+            setTimeout(() => {
+                messageEl.className = 'message';
+            }, 5000);
+        }
+
+        // Logout
+        function logout() {
+            auth.signOut();
+        }
+
+        // Image Preview
+        document.getElementById('dish-image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('image-preview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" style="max-width: 200px; border-radius: var(--radius-md);">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '';
+            }
+        });
+
+        // Initialize
+        window.onload = function() {
+            // Check if user is already logged in
+            const user = auth.currentUser;
+            if (user) {
+                currentUser = user;
+                loadRestaurantData().then(() => {
+                    showDashboard();
+                });
+            }
+        };
+    </script>
+</body>
+</html>
