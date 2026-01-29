@@ -559,6 +559,14 @@
             box-shadow: var(--shadow-sm);
         }
 
+        /* Restaurant Info on Menu Items */
+        .restaurant-info {
+            font-size: 0.8rem;
+            color: var(--mm-gray-700);
+            margin-top: var(--space-xs);
+            font-style: italic;
+        }
+
         /* ===== CART SECTION ===== */
         .cart-section {
             background: var(--mm-bg);
@@ -1087,9 +1095,9 @@
                     <a href="#how-it-works" class="nav-link">How It Works</a>
                     <a href="#cart" class="nav-link">Cart</a>
                     <a href="#about" class="nav-link">About</a>
-                    <button class="btn btn-secondary">
-                        <i class="fas fa-user btn-icon"></i> Sign In
-                    </button>
+                    <a href="owner-dashboard.html" class="nav-link">
+                        <i class="fas fa-store"></i> Restaurant Owners
+                    </a>
                 </nav>
             </div>
         </div>
@@ -1130,7 +1138,7 @@
                 <div class="step">
                     <span class="step-number">1</span>
                     <h3>Enter ZIP Code</h3>
-                    <p>We'll find 20+ local restaurant specials in your city with discounted prices</p>
+                    <p>We'll find local restaurant specials in your city with discounted prices</p>
                 </div>
                 
                 <div class="step">
@@ -1142,7 +1150,7 @@
                 <div class="step">
                     <span class="step-number">3</span>
                     <h3>Add to Cart</h3>
-                    <p>Choose from 20+ daily restaurant specials at discounted prices</p>
+                    <p>Choose from daily restaurant specials at discounted prices</p>
                 </div>
                 
                 <div class="step">
@@ -1162,7 +1170,7 @@
                                 id="zip-code" 
                                 inputmode="numeric"
                                 pattern="[0-9]{5}"
-                                placeholder="e.g., 90001" 
+                                placeholder="e.g., 06320" 
                                 maxlength="5"
                                 style="flex: 1; font-size: 16px;"
                             >
@@ -1179,10 +1187,10 @@
                     <div class="mobile-zip-options" id="mobile-zip-options">
                         <p>Try these popular ZIP codes:</p>
                         <div class="zip-buttons">
-                            <button type="button" class="zip-button" onclick="setZipCode('10001')">10001 (NYC)</button>
+                            <button type="button" class="zip-button" onclick="setZipCode('06320')">06320 (New London)</button>
                             <button type="button" class="zip-button" onclick="setZipCode('90001')">90001 (LA)</button>
+                            <button type="button" class="zip-button" onclick="setZipCode('10001')">10001 (NYC)</button>
                             <button type="button" class="zip-button" onclick="setZipCode('60601')">60601 (Chicago)</button>
-                            <button type="button" class="zip-button" onclick="setZipCode('77001')">77001 (Houston)</button>
                         </div>
                     </div>
                 </div>
@@ -1202,6 +1210,10 @@
                     <div class="loading">
                         <i class="fas fa-utensils fa-spin"></i>
                         <p>Please enter your ZIP code to see restaurant specials</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">
+                            <strong>For Restaurant Owners:</strong> 
+                            <a href="owner-dashboard.html" style="color: var(--mm-orange);">Add your dishes here</a>
+                        </p>
                     </div>
                 </div>
             </section>
@@ -1336,13 +1348,16 @@
             <div class="footer-bottom">
                 <p>© 2024 MealMoment. All rights reserved.</p>
                 <p>Fresh • Timely • Delicious</p>
+                <p style="font-size: 0.875rem; margin-top: var(--space-sm);">
+                    <a href="owner-dashboard.html" style="color: var(--mm-orange-2);">Restaurant Owners: Add Your Menu</a>
+                </p>
             </div>
         </div>
     </footer>
 
     <script>
         // ===== FIREBASE CONFIGURATION =====
-        // Replace with your actual Firebase config
+        // MUST MATCH THE CONFIG IN owner-dashboard.html
         const firebaseConfig = {
             apiKey: "AIzaSyYOUR_API_KEY_HERE",
             authDomain: "your-project-id.firebaseapp.com",
@@ -1356,46 +1371,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-
-        // Database (simulated backend) - Menu items only (for fallback)
-        const database = {
-            menuItems: {
-                1: [
-                    // Breakfast Specials
-                    { id: 1, name: "Avocado Toast", description: "Smashed avocado on artisan bread with cherry tomatoes", price: 12.99, cuisine: "American", emoji: "🥑", isSpecial: true, calories: 450, prepTime: 15 },
-                    { id: 2, name: "Pancake Stack", description: "Three fluffy pancakes with maple syrup and butter", price: 14.99, cuisine: "American", emoji: "🥞", isSpecial: true, calories: 650, prepTime: 20 },
-                    { id: 3, name: "Eggs Benedict", description: "Poached eggs with ham on English muffin, hollandaise", price: 16.99, cuisine: "American", emoji: "🍳", isSpecial: true, calories: 520, prepTime: 25 },
-                    { id: 4, name: "Breakfast Burrito", description: "Scrambled eggs, sausage, cheese in flour tortilla", price: 13.99, cuisine: "Mexican", emoji: "🌯", isSpecial: true, calories: 780, prepTime: 15 },
-                    { id: 5, name: "Greek Yogurt Bowl", description: "Greek yogurt with honey, granola, and fresh berries", price: 10.99, cuisine: "Greek", emoji: "🥣", isSpecial: true, calories: 320, prepTime: 10 },
-                    { id: 6, name: "Belgian Waffles", description: "Crispy waffles with whipped cream and strawberries", price: 15.99, cuisine: "American", emoji: "🧇", isSpecial: false, calories: 580, prepTime: 20 },
-                    { id: 7, name: "Breakfast Sandwich", description: "Egg, cheese, and bacon on croissant", price: 11.99, cuisine: "American", emoji: "🥪", isSpecial: false, calories: 420, prepTime: 12 },
-                    
-                    // Lunch Combos
-                    { id: 8, name: "Chicken Caesar Salad", description: "Grilled chicken, romaine, parmesan, caesar dressing", price: 15.99, cuisine: "American", emoji: "🥗", isSpecial: true, calories: 380, prepTime: 15 },
-                    { id: 9, name: "Turkey Club Sandwich", description: "Triple decker with bacon, avocado, and fries", price: 17.99, cuisine: "American", emoji: "🥪", isSpecial: true, calories: 720, prepTime: 20 },
-                    { id: 10, name: "Vegetable Wrap", description: "Grilled vegetables with hummus in spinach wrap", price: 13.99, cuisine: "American", emoji: "🌯", isSpecial: true, calories: 290, prepTime: 15 },
-                    { id: 11, name: "BBQ Chicken Pizza", description: "Wood-fired pizza with BBQ sauce and chicken", price: 21.99, cuisine: "Italian", emoji: "🍕", isSpecial: true, calories: 850, prepTime: 25 },
-                    { id: 12, name: "Beef Burger", description: "1/2 lb beef patty with cheese and all fixings", price: 18.99, cuisine: "American", emoji: "🍔", isSpecial: true, calories: 920, prepTime: 20 },
-                    { id: 13, name: "Cobb Salad", description: "Mixed greens with chicken, avocado, egg, bacon", price: 16.99, cuisine: "American", emoji: "🥗", isSpecial: false, calories: 410, prepTime: 15 },
-                    { id: 14, name: "Fish Tacos", description: "Grilled fish with cabbage slaw and lime crema", price: 16.99, cuisine: "Mexican", emoji: "🌮", isSpecial: false, calories: 480, prepTime: 18 },
-                    { id: 15, name: "Chicken Quesadilla", description: "Grilled chicken and cheese in flour tortilla", price: 14.99, cuisine: "Mexican", emoji: "🧀", isSpecial: false, calories: 620, prepTime: 15 },
-                    
-                    // Italian Classics
-                    { id: 16, name: "Spaghetti Carbonara", description: "Pasta with eggs, cheese, pancetta, and black pepper", price: 18.99, cuisine: "Italian", emoji: "🍝", isSpecial: true, calories: 650, prepTime: 25 },
-                    { id: 17, name: "Margherita Pizza", description: "Classic pizza with tomato, mozzarella, and basil", price: 22.99, cuisine: "Italian", emoji: "🍕", isSpecial: true, calories: 820, prepTime: 30 },
-                    { id: 18, name: "Lasagna Bolognese", description: "Layers of pasta with meat sauce and cheese", price: 24.99, cuisine: "Italian", emoji: "🍝", isSpecial: true, calories: 780, prepTime: 35 },
-                    { id: 19, name: "Chicken Parmesan", description: "Breaded chicken with marinara and melted cheese", price: 26.99, cuisine: "Italian", emoji: "🍗", isSpecial: true, calories: 920, prepTime: 30 },
-                    { id: 20, name: "Fettuccine Alfredo", description: "Creamy pasta with parmesan cheese", price: 19.99, cuisine: "Italian", emoji: "🍝", isSpecial: true, calories: 720, prepTime: 25 },
-                    { id: 21, name: "Eggplant Parmesan", description: "Breaded eggplant with marinara and cheese", price: 22.99, cuisine: "Italian", emoji: "🍆", isSpecial: false, calories: 580, prepTime: 30 },
-                    { id: 22, name: "Minestrone Soup", description: "Traditional Italian vegetable soup", price: 9.99, cuisine: "Italian", emoji: "🍲", isSpecial: false, calories: 210, prepTime: 20 },
-                    
-                    // Additional specials
-                    { id: 23, name: "Grilled Salmon", description: "Atlantic salmon with lemon butter sauce", price: 28.99, cuisine: "American", emoji: "🐟", isSpecial: true, calories: 480, prepTime: 35 },
-                    { id: 24, name: "Filet Mignon", description: "8oz beef tenderloin with mashed potatoes", price: 39.99, cuisine: "American", emoji: "🥩", isSpecial: true, calories: 920, prepTime: 40 },
-                    { id: 25, name: "BBQ Ribs", description: "Pork ribs with house BBQ sauce", price: 32.99, cuisine: "American", emoji: "🍖", isSpecial: true, calories: 1120, prepTime: 45 }
-                ]
-            }
-        };
 
         // State sales tax rates (fallback if API fails)
         const stateTaxRates = {
@@ -1416,7 +1391,6 @@
         let currentCity = null;
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
         let currentStateTaxRate = 0.0825; // Default 8.25%
-        let isOwnerMode = false;
 
         // Initialize App
         function init() {
@@ -1445,34 +1419,6 @@
             
             // Prevent auto-focus on page load
             preventAutoFocus();
-            
-            // Check for owner dashboard link in URL
-            checkOwnerAccess();
-        }
-
-        // UPDATED: Improved owner dashboard access function
-        function checkOwnerAccess() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('owner') === 'true') {
-                isOwnerMode = true;
-                // Add owner login link to navbar
-                const navLinks = document.querySelector('.nav-links');
-                const signInButton = document.querySelector('.btn-secondary');
-                
-                if (navLinks && signInButton) {
-                    // Create owner link
-                    const ownerLink = document.createElement('a');
-                    ownerLink.href = 'owner-dashboard.html';
-                    ownerLink.className = 'nav-link';
-                    ownerLink.innerHTML = '<i class="fas fa-store"></i> Owner';
-                    
-                    // Insert before the sign in button
-                    navLinks.insertBefore(ownerLink, signInButton);
-                    
-                    // Update sign in button text to be shorter
-                    signInButton.innerHTML = '<i class="fas fa-user btn-icon"></i> Login';
-                }
-            }
         }
 
         // Prevent auto-focus on page load
@@ -1704,8 +1650,8 @@
                 mealTextElement.textContent = mealText;
                 mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
 
-                // Load the menu for this city
-                loadMenu(currentCity.cityId, mealText.toLowerCase());
+                // Load the menu for this ZIP code FROM FIREBASE
+                loadMenu(zipValue, mealText.toLowerCase());
 
                 // Update checkout form with city/state info
                 const cityInput = document.getElementById('city');
@@ -1717,7 +1663,7 @@
                 if (zipFormInput) zipFormInput.value = zipValue;
 
                 errorElement.classList.add('hidden');
-                showNotification(`Restaurant specials loaded for ${currentCity.city}, ${currentCity.state}! Sales tax: ${(currentStateTaxRate * 100).toFixed(2)}%`, 'success');
+                showNotification(`Restaurant specials loaded for ${currentCity.city}, ${currentCity.state}!`, 'success');
 
                 // On mobile, scroll to menu section to ensure visibility
                 if (window.innerWidth <= 992) {
@@ -1742,7 +1688,7 @@
                 if (mealTypeBadge) mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> Enter ZIP Code First`;
                 
                 // For demo purposes, load a default city if API fails
-                if (zipValue === '90001' || zipValue === '10001' || zipValue === '60601') {
+                if (zipValue === '06320' || zipValue === '90001' || zipValue === '10001') {
                     setTimeout(() => {
                         loadDemoCity(zipValue);
                     }, 500);
@@ -1753,6 +1699,7 @@
         // Load demo city for testing if API fails
         function loadDemoCity(zipCode) {
             const demoCities = {
+                '06320': { city: 'New London', state: 'CT' },
                 '90001': { city: 'Los Angeles', state: 'CA' },
                 '10001': { city: 'New York', state: 'NY' },
                 '60601': { city: 'Chicago', state: 'IL' }
@@ -1795,9 +1742,9 @@
                 if (mealTypeBadge) mealTypeBadge.innerHTML = `<i class="fas fa-utensils"></i> ${mealText} ${mealIcon}`;
 
                 // Load menu
-                loadMenu(currentCity.cityId, mealText.toLowerCase());
+                loadMenu(zipCode, mealText.toLowerCase());
                 
-                showNotification(`Demo mode: Restaurant specials loaded for ${demo.city}, ${demo.state}`, 'success');
+                showNotification(`Demo mode: Restaurant specials loaded for ${demo.city}, ${demo.state}`, 'info');
             }
         }
 
@@ -1835,8 +1782,8 @@
             return stateTimezones[stateAbbr.toUpperCase()] || 'America/New_York';
         }
 
-        // MODIFIED: Load menu based on city and meal type FROM FIREBASE
-        async function loadMenu(cityId, mealType) {
+        // Load menu from Firebase based on ZIP code
+        async function loadMenu(zipCode, mealType) {
             const menuContainer = document.getElementById('menu-container');
             if (!menuContainer) {
                 console.error('Menu container not found');
@@ -1847,20 +1794,33 @@
             menuContainer.innerHTML = `
                 <div class="loading">
                     <i class="fas fa-utensils fa-spin"></i>
-                    <p>Loading restaurant specials from local restaurants...</p>
+                    <p>Loading restaurant specials for ZIP ${zipCode}...</p>
                 </div>
             `;
             
             try {
-                // Get approved and active dishes from Firestore
+                // Get approved and active dishes from Firestore for this ZIP code
                 const dishesSnapshot = await db.collection('dishes')
+                    .where('restaurantZip', '==', zipCode)
                     .where('status', '==', 'approved')
                     .where('isActive', '==', true)
                     .get();
                 
                 if (dishesSnapshot.empty) {
-                    // Fallback to local database
-                    loadLocalMenu(cityId, mealType);
+                    // No dishes for this ZIP code, show message
+                    menuContainer.innerHTML = `
+                        <div class="message info-message">
+                            <i class="fas fa-utensils"></i>
+                            <h3>No restaurant specials found for ZIP ${zipCode}</h3>
+                            <p>Restaurant owners can add their dishes to this area.</p>
+                            <p>Try a different ZIP code or check back later.</p>
+                            <p style="margin-top: var(--space-md);">
+                                <a href="owner-dashboard.html" class="btn btn-primary">
+                                    <i class="fas fa-store"></i> Add Your Restaurant
+                                </a>
+                            </p>
+                        </div>
+                    `;
                     return;
                 }
                 
@@ -1872,21 +1832,9 @@
                     });
                 });
                 
-                // Filter for current ZIP code area
-                const zipCode = document.getElementById('zip-code').value;
-                const localDishes = dishes.filter(dish => 
-                    dish.restaurantZip === zipCode
-                );
-                
-                if (localDishes.length === 0) {
-                    // No dishes for this ZIP code, show fallback
-                    loadLocalMenu(cityId, mealType);
-                    return;
-                }
-                
                 // Group dishes by cuisine
                 const dishesByCuisine = {};
-                localDishes.forEach(dish => {
+                dishes.forEach(dish => {
                     if (!dishesByCuisine[dish.cuisine]) {
                         dishesByCuisine[dish.cuisine] = [];
                     }
@@ -1897,24 +1845,27 @@
                 let html = '';
                 
                 // Display specials section
-                html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${localDishes.length} items)</h3>`;
+                html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${dishes.length} items)</h3>`;
                 html += '<div class="menu-grid">';
                 
-                localDishes.forEach(item => {
+                dishes.forEach(item => {
                     const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
                     const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
                     
                     html += `
                         <div class="menu-item special">
-                            <div class="special-badge">FROM ${item.restaurantName}</div>
+                            <div class="special-badge">${item.restaurantName}</div>
                             <div class="item-image">
                                 ${item.imageUrl ? 
-                                    `<img src="${item.imageUrl}" alt="${item.name}">` :
+                                    `<img src="${item.imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${item.name.substring(0,10)}</text></svg>';">` :
                                     `<i class="fas fa-utensils"></i>`
                                 }
                             </div>
                             <h3 class="item-name">${item.name}</h3>
                             <p class="item-description">${item.description || ''}</p>
+                            <div class="restaurant-info">
+                                <i class="fas fa-store"></i> ${item.restaurantName}
+                            </div>
                             <div class="item-footer">
                                 <div>
                                     <div class="item-price">$${item.price.toFixed(2)}</div>
@@ -1945,12 +1896,15 @@
                                 <div class="menu-item">
                                     <div class="item-image">
                                         ${item.imageUrl ? 
-                                            `<img src="${item.imageUrl}" alt="${item.name}">` :
+                                            `<img src="${item.imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${item.name.substring(0,10)}</text></svg>';">` :
                                             `<i class="fas fa-utensils"></i>`
                                         }
                                     </div>
                                     <h3 class="item-name">${item.name}</h3>
                                     <p class="item-description">${item.description || ''}</p>
+                                    <div class="restaurant-info">
+                                        <i class="fas fa-store"></i> ${item.restaurantName}
+                                    </div>
                                     <div class="item-footer">
                                         <div>
                                             <div class="item-price">$${item.price.toFixed(2)}</div>
@@ -1972,154 +1926,69 @@
                 menuContainer.innerHTML = html;
                 updateCheckoutButton();
                 
+                // Show success message
+                showNotification(`Found ${dishes.length} restaurant specials in your area!`, 'success');
+                
             } catch (error) {
                 console.error('Error loading menu from Firebase:', error);
-                // Fallback to local database
-                loadLocalMenu(cityId, mealType);
-            }
-        }
-
-        // Fallback function for local database
-        function loadLocalMenu(cityId, mealType) {
-            const menuContainer = document.getElementById('menu-container');
-            if (!menuContainer) return;
-            
-            const items = database.menuItems[cityId] || [];
-            
-            // Filter special items (20 specials exactly)
-            const specials = items.filter(item => item.isSpecial).slice(0, 20);
-            
-            // Group items by cuisine for display
-            const itemsByCuisine = {};
-            items.forEach(item => {
-                if (!itemsByCuisine[item.cuisine]) {
-                    itemsByCuisine[item.cuisine] = [];
-                }
-                itemsByCuisine[item.cuisine].push(item);
-            });
-            
-            // Build menu HTML
-            let html = '';
-            
-            // Display specials section
-            html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${specials.length} discounted items)</h3>`;
-            html += '<div class="menu-grid">';
-            
-            specials.forEach(item => {
-                const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
-                const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
-                
-                html += `
-                    <div class="menu-item ${item.isSpecial ? 'special' : ''}">
-                        ${item.isSpecial ? '<div class="special-badge">DEMO SPECIAL</div>' : ''}
-                        <div class="item-image">
-                            ${item.emoji}
-                        </div>
-                        <h3 class="item-name">${item.name}</h3>
-                        <p class="item-description">${item.description}</p>
-                        <div class="item-footer">
-                            <div>
-                                <div class="item-price">$${item.price.toFixed(2)}</div>
-                                <div class="item-meta">${item.calories} cal • ${item.prepTime} min</div>
-                            </div>
-                            <button class="add-to-cart-btn" onclick="addToCart(${item.id})">
-                                <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
-                                ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
-                            </button>
-                        </div>
+                // Show error message
+                menuContainer.innerHTML = `
+                    <div class="message error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error loading menu</h3>
+                        <p>${error.message}</p>
+                        <p>Please try again or use a different ZIP code.</p>
                     </div>
                 `;
-            });
-            
-            html += '</div>';
-            
-            // Display by cuisine sections
-            for (const [cuisine, cuisineItems] of Object.entries(itemsByCuisine)) {
-                html += `<h3 style="margin-top: 30px;"><i class="fas fa-utensil-spoon"></i> ${cuisine} Cuisine</h3>`;
-                html += '<div class="menu-grid">';
-                
-                cuisineItems.forEach(item => {
-                    const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
-                    const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
-                    
-                    html += `
-                        <div class="menu-item ${item.isSpecial ? 'special' : ''}">
-                            ${item.isSpecial ? '<div class="special-badge">DEMO</div>' : ''}
-                            <div class="item-image">
-                                ${item.emoji}
-                            </div>
-                            <h3 class="item-name">${item.name}</h3>
-                            <p class="item-description">${item.description}</p>
-                            <div class="item-footer">
-                                <div>
-                                    <div class="item-price">$${item.price.toFixed(2)}</div>
-                                    <div class="item-meta">${item.calories} cal • ${item.prepTime} min</div>
-                                </div>
-                                <button class="add-to-cart-btn" onclick="addToCart(${item.id})">
-                                    <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
-                                    ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div>';
-            }
-            
-            menuContainer.innerHTML = html;
-            updateCheckoutButton();
-            
-            // Show notification that we're using demo data
-            if (specials.length > 0) {
-                showNotification('Using demo restaurant data. Restaurant owners can add their dishes!', 'info');
             }
         }
 
-        // MODIFIED: Add item to cart (works with both local and Firebase items)
+        // Add item to cart from Firebase
         async function addToCart(itemId) {
-            // First try to get from local database
-            let item = database.menuItems[1].find(i => i.id === itemId);
-            
-            // If not found locally, try Firebase
-            if (!item) {
-                try {
-                    const dishDoc = await db.collection('dishes').doc(itemId).get();
-                    if (dishDoc.exists) {
-                        item = dishDoc.data();
-                        item.id = itemId;
-                    } else {
-                        showNotification('Dish not found', 'error');
-                        return;
-                    }
-                } catch (error) {
-                    console.error('Error fetching dish from Firebase:', error);
-                    showNotification('Error adding item to cart', 'error');
+            try {
+                // Get dish from Firebase
+                const dishDoc = await db.collection('dishes').doc(itemId).get();
+                if (!dishDoc.exists) {
+                    showNotification('Dish not found', 'error');
                     return;
                 }
+                
+                const item = dishDoc.data();
+                item.id = itemId;
+                
+                const existingItem = currentCart.find(cartItem => cartItem.id === itemId);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    currentCart.push({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: 1,
+                        restaurantName: item.restaurantName,
+                        restaurantId: item.restaurantId
+                    });
+                }
+                
+                localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
+                updateCartDisplay();
+                
+                // Reload menu to update cart counts
+                const zipCode = document.getElementById('zip-code').value;
+                if (zipCode) {
+                    const currentHour = updateTime();
+                    let mealType = 'dinner';
+                    if (currentHour >= 5 && currentHour < 11) mealType = 'breakfast';
+                    else if (currentHour >= 11 && currentHour < 16) mealType = 'lunch';
+                    loadMenu(zipCode, mealType);
+                }
+                
+                showNotification(`${item.name} added to cart!`, 'success');
+            } catch (error) {
+                console.error('Error adding item to cart:', error);
+                showNotification('Error adding item to cart', 'error');
             }
-            
-            if (!item) return;
-            
-            const existingItem = currentCart.find(cartItem => cartItem.id === itemId);
-            
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                currentCart.push({
-                    id: item.id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: 1,
-                    emoji: item.emoji || '🍽️',
-                    restaurantName: item.restaurantName || 'Demo Restaurant'
-                });
-            }
-            
-            localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
-            updateCartDisplay();
-            loadMenu(currentCity?.cityId || 1, 'dinner');
-            showNotification(`${item.name} added to cart!`, 'success');
         }
 
         // Update cart quantity
@@ -2135,7 +2004,16 @@
             
             localStorage.setItem('mealMomentCart', JSON.stringify(currentCart));
             updateCartDisplay();
-            loadMenu(currentCity?.cityId || 1, 'dinner');
+            
+            // Reload menu to update cart counts
+            const zipCode = document.getElementById('zip-code').value;
+            if (zipCode) {
+                const currentHour = updateTime();
+                let mealType = 'dinner';
+                if (currentHour >= 5 && currentHour < 11) mealType = 'breakfast';
+                else if (currentHour >= 11 && currentHour < 16) mealType = 'lunch';
+                loadMenu(zipCode, mealType);
+            }
             
             showNotification('Cart updated');
         }
@@ -2187,7 +2065,7 @@
                 cartHTML += `
                     <div class="cart-item">
                         <div class="cart-item-info">
-                            <h4>${item.name} ${item.emoji}</h4>
+                            <h4>${item.name}</h4>
                             <div style="color: var(--mm-green); font-weight: 500;">$${item.price.toFixed(2)} each</div>
                             ${item.restaurantName ? `<div style="font-size: 0.875rem; color: var(--mm-gray-700);">${item.restaurantName}</div>` : ''}
                         </div>
@@ -2252,7 +2130,7 @@
             }
         }
 
-        // MODIFIED: Process payment with Firebase order saving
+        // Process payment and save order to Firebase
         async function processPayment() {
             const name = document.getElementById('name');
             const phone = document.getElementById('phone');
@@ -2276,8 +2154,11 @@
             
             try {
                 // Create order data
-                const orderNumber = 'MM-' + Date.now();
+                const orderNumber = 'MM-' + Date.now().toString().slice(-8);
                 const deliveryTime = new Date(Date.now() + 45 * 60000);
+                
+                // Get unique restaurant IDs from cart
+                const restaurantIds = [...new Set(currentCart.map(item => item.restaurantId).filter(id => id))];
                 
                 const orderData = {
                     orderNumber: orderNumber,
@@ -2285,28 +2166,25 @@
                     customerPhone: phone.value.trim(),
                     deliveryAddress: `${address.value.trim()}, ${city.value.trim()}, ${state.value.trim()} ${zip.value.trim()}`,
                     specialInstructions: document.getElementById('instructions').value.trim() || '',
-                    items: [...currentCart],
+                    items: currentCart.map(item => ({
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                        restaurantId: item.restaurantId,
+                        restaurantName: item.restaurantName
+                    })),
                     subtotal: parseFloat(document.getElementById('subtotal').textContent.replace('$', '')),
                     tax: parseFloat(document.getElementById('tax').textContent.replace('$', '')),
                     deliveryFee: 2.99,
                     total: parseFloat(document.getElementById('total').textContent.replace('$', '')),
                     status: 'pending',
-                    createdAt: new Date(),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     estimatedDelivery: deliveryTime,
-                    restaurantIds: [...new Set(currentCart.map(item => item.restaurantId || 'demo'))]
+                    restaurantIds: restaurantIds
                 };
                 
-                // Save order to Firebase (if connected)
-                try {
-                    await db.collection('orders').add(orderData);
-                    showCheckoutMessage('Order saved to database!', 'success');
-                } catch (firebaseError) {
-                    console.log('Firebase order save failed, using local storage:', firebaseError);
-                    // Fallback to local storage
-                    const orders = JSON.parse(localStorage.getItem('mealMomentOrders')) || [];
-                    orders.push(orderData);
-                    localStorage.setItem('mealMomentOrders', JSON.stringify(orders));
-                }
+                // Save order to Firebase
+                await db.collection('orders').add(orderData);
                 
                 // Clear cart and show confirmation
                 currentCart = [];
@@ -2337,6 +2215,8 @@
                 if (orderConfirmation) {
                     orderConfirmation.scrollIntoView({ behavior: 'smooth' });
                 }
+                
+                showCheckoutMessage('Order placed successfully! Restaurant owners have been notified.', 'success');
                 
             } catch (error) {
                 console.error('Error processing payment:', error);
