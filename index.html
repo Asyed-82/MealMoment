@@ -197,8 +197,9 @@
 
         .nav-links {
             display: flex;
-            gap: var(--space-xl);
+            gap: var(--space-md);
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .nav-link {
@@ -206,6 +207,8 @@
             color: var(--mm-charcoal);
             position: relative;
             padding: var(--space-xs) 0;
+            white-space: nowrap;
+            font-size: 0.95rem;
         }
 
         .nav-link:hover {
@@ -827,16 +830,34 @@
                 position: relative;
                 top: 0;
             }
+            
+            /* Improved navbar for mobile with owner link */
+            .navbar-content {
+                flex-wrap: wrap;
+                justify-content: center;
+                text-align: center;
+            }
+            
+            .nav-links {
+                justify-content: center;
+                margin-top: var(--space-sm);
+                gap: var(--space-sm);
+            }
+            
+            .nav-link {
+                font-size: 0.9rem;
+                padding: 0.25rem 0.5rem;
+            }
         }
 
         @media (max-width: 768px) {
             .navbar-content {
                 flex-direction: column;
-                gap: var(--space-md);
+                gap: var(--space-sm);
             }
             
             .nav-links {
-                gap: var(--space-lg);
+                gap: var(--space-sm);
                 flex-wrap: wrap;
                 justify-content: center;
             }
@@ -888,6 +909,17 @@
             .mobile-zip-options {
                 display: block !important;
             }
+            
+            /* Compact navbar for mobile */
+            .nav-link {
+                font-size: 0.85rem;
+                padding: 0.25rem;
+            }
+            
+            .btn-secondary {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
         }
 
         @media (max-width: 576px) {
@@ -924,6 +956,53 @@
             .menu-section {
                 margin-top: var(--space-xl);
                 padding: var(--space-lg);
+            }
+            
+            /* Ultra-compact navbar for small screens */
+            .nav-links {
+                gap: 0.5rem;
+            }
+            
+            .nav-link {
+                font-size: 0.8rem;
+            }
+            
+            .btn-secondary {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            
+            .navbar {
+                padding: 15px 0;
+            }
+        }
+
+        @media (max-width: 400px) {
+            /* Extra small screens */
+            .nav-links {
+                gap: 0.25rem;
+            }
+            
+            .nav-link {
+                font-size: 0.75rem;
+                padding: 0.125rem;
+            }
+            
+            .logo-image {
+                height: 70px;
+            }
+            
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            
+            .logo-container {
+                gap: 5px;
+            }
+            
+            .btn-secondary {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
             }
         }
 
@@ -1337,6 +1416,7 @@
         let currentCity = null;
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
         let currentStateTaxRate = 0.0825; // Default 8.25%
+        let isOwnerMode = false;
 
         // Initialize App
         function init() {
@@ -1370,18 +1450,27 @@
             checkOwnerAccess();
         }
 
-        // Add owner dashboard access function
+        // UPDATED: Improved owner dashboard access function
         function checkOwnerAccess() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('owner') === 'true') {
+                isOwnerMode = true;
                 // Add owner login link to navbar
                 const navLinks = document.querySelector('.nav-links');
-                if (navLinks) {
+                const signInButton = document.querySelector('.btn-secondary');
+                
+                if (navLinks && signInButton) {
+                    // Create owner link
                     const ownerLink = document.createElement('a');
                     ownerLink.href = 'owner-dashboard.html';
                     ownerLink.className = 'nav-link';
-                    ownerLink.innerHTML = '<i class="fas fa-store"></i> Owner Dashboard';
-                    navLinks.insertBefore(ownerLink, navLinks.lastElementChild);
+                    ownerLink.innerHTML = '<i class="fas fa-store"></i> Owner';
+                    
+                    // Insert before the sign in button
+                    navLinks.insertBefore(ownerLink, signInButton);
+                    
+                    // Update sign in button text to be shorter
+                    signInButton.innerHTML = '<i class="fas fa-user btn-icon"></i> Login';
                 }
             }
         }
