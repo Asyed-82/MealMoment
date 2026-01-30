@@ -804,8 +804,8 @@
                 </a>
                 <div style="display: flex; gap: var(--space-md); align-items: center;">
                     <span id="restaurant-name">Welcome</span>
-                    <button class="btn btn-secondary" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                    <button class="btn btn-secondary" id="auth-button" onclick="toggleAuth()">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
                     </button>
                 </div>
             </div>
@@ -1219,7 +1219,6 @@
 
     <script>
         // ===== FIREBASE CONFIGURATION =====
-        // USING YOUR ACTUAL FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDI8i9rZM9qRQzkqpVsg_VED3nesmoMdvY",
             authDomain: "mealmomentrestaurants.firebaseapp.com",
@@ -1251,12 +1250,15 @@
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     currentUser = user;
+                    updateAuthButton();
                     showDashboard();
                     loadRestaurantInfo();
                     loadDishes();
                     loadOrders();
                     setupRealTimeListeners();
                 } else {
+                    currentUser = null;
+                    updateAuthButton();
                     showLogin();
                 }
             });
@@ -1269,6 +1271,30 @@
 
             // Setup file upload
             setupFileUpload();
+        }
+
+        // Update auth button text
+        function updateAuthButton() {
+            const authButton = document.getElementById('auth-button');
+            if (authButton) {
+                if (currentUser) {
+                    authButton.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
+                    authButton.onclick = logout;
+                } else {
+                    authButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+                    authButton.onclick = toggleAuth;
+                }
+            }
+        }
+
+        // Toggle auth state
+        function toggleAuth() {
+            if (currentUser) {
+                logout();
+            } else {
+                showLogin();
+                showSection('dashboard');
+            }
         }
 
         // Setup file upload with drag & drop
@@ -1375,7 +1401,7 @@
             document.getElementById('register-section').classList.remove('hidden');
         }
 
-        // Sign in with Google - FIXED VERSION
+        // Sign in with Google
         async function signInWithGoogle() {
             try {
                 const provider = new firebase.auth.GoogleAuthProvider();
@@ -1398,7 +1424,8 @@
                         phone: '',
                         address: '',
                         documents: {},
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        userId: currentUser.uid
                     };
                     
                     await db.collection('restaurants').doc(currentUser.uid).set(restaurantData);
@@ -1409,6 +1436,7 @@
                     console.log('Loaded existing restaurant document');
                 }
                 
+                updateAuthButton();
                 showDashboard();
                 loadRestaurantInfo();
                 loadDishes();
@@ -1446,6 +1474,7 @@
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 currentUser = userCredential.user;
                 
+                updateAuthButton();
                 showDashboard();
                 loadRestaurantInfo();
                 loadDishes();
@@ -1506,12 +1535,14 @@
                     phone: '',
                     address: '',
                     documents: {},
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    userId: currentUser.uid
                 };
                 
                 await db.collection('restaurants').doc(currentUser.uid).set(restaurantData);
                 restaurantInfo = restaurantData;
                 
+                updateAuthButton();
                 showDashboard();
                 loadRestaurantInfo();
                 loadDishes();
@@ -1530,6 +1561,7 @@
                 .then(() => {
                     currentUser = null;
                     selectedImageFile = null;
+                    updateAuthButton();
                     showLogin();
                 })
                 .catch((error) => {
@@ -1582,7 +1614,7 @@
             showSection('dashboard');
         }
 
-        // Load Restaurant Info - FIXED VERSION
+        // Load Restaurant Info
         async function loadRestaurantInfo() {
             if (!currentUser) return;
 
@@ -1599,6 +1631,7 @@
                         phone: restaurantInfo.phone || '',
                         address: restaurantInfo.address || '',
                         documents: restaurantInfo.documents || {},
+                        userId: currentUser.uid,
                         ...restaurantInfo // Keep any existing data
                     };
                     
@@ -1612,6 +1645,7 @@
                         phone: '',
                         address: '',
                         documents: {},
+                        userId: currentUser.uid,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
                     await db.collection('restaurants').doc(currentUser.uid).set(restaurantInfo);
@@ -1721,7 +1755,8 @@
                 
                 // Save to Firestore
                 await db.collection('restaurants').doc(currentUser.uid).update({
-                    [`documents.${docType}`]: restaurantInfo.documents[docType]
+                    [`documents.${docType}`]: restaurantInfo.documents[docType],
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
                 // Update UI
@@ -1746,7 +1781,8 @@
                 
                 // Update Firestore
                 await db.collection('restaurants').doc(currentUser.uid).update({
-                    [`documents.${docType}`]: firebase.firestore.FieldValue.delete()
+                    [`documents.${docType}`]: firebase.firestore.FieldValue.delete(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
                 // Update UI
@@ -1780,7 +1816,7 @@
             if (zipInput) zipInput.value = restaurantInfo.zipCodes ? restaurantInfo.zipCodes.join(', ') : '';
         }
 
-        // Update Restaurant Info - FIXED VERSION
+        // Update Restaurant Info
         async function updateRestaurantInfo() {
             if (!currentUser) {
                 showMessage('restaurant-info-message', 'Please login first', 'error');
@@ -1842,9 +1878,8 @@
                 // Check if restaurant document exists
                 const restaurantRef = db.collection('restaurants').doc(currentUser.uid);
                 
-                // Always update - no need to check if exists since loadRestaurantInfo should have created it
+                // Update the document
                 await restaurantRef.update(updateData);
-                console.log('Updated restaurant document');
 
                 // Update local restaurantInfo
                 restaurantInfo = { 
@@ -1879,6 +1914,7 @@
                             zipCodes: zipArray,
                             email: currentUser.email,
                             documents: restaurantDocuments || {},
+                            userId: currentUser.uid,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                         };
@@ -2198,9 +2234,8 @@
 
                 const snapshot = await db.collection('orders')
                     .where('restaurantIds', 'array-contains', currentUser.uid)
-                    .where('createdAt', '>=', today)
                     .orderBy('createdAt', 'desc')
-                    .limit(10)
+                    .limit(50)
                     .get();
 
                 orders = [];
@@ -2350,12 +2385,8 @@
                 });
 
             // Listen for order updates
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
             db.collection('orders')
                 .where('restaurantIds', 'array-contains', currentUser.uid)
-                .where('createdAt', '>=', today)
                 .onSnapshot((snapshot) => {
                     orders = [];
                     snapshot.forEach(doc => {
