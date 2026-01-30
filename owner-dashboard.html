@@ -2078,7 +2078,7 @@
             renderDishes();
         }
 
-        // Add Dish with Image Upload
+        // Add Dish with Image Upload - FIXED VERSION
         async function addDish() {
             if (!currentUser || !restaurantInfo) {
                 showMessage('dish-form-message', 'Please login first', 'error');
@@ -2116,23 +2116,25 @@
                     imageUrl = await uploadImage(selectedImageFile);
                 }
 
-                // Add dish to Firestore
+                // Add dish to Firestore - FIXED: Ensure all required fields
                 const dishData = {
                     name,
-                    description,
-                    price,
-                    cuisine,
+                    description: description || '',
+                    price: price,
+                    cuisine: cuisine || 'Various',
                     calories: calories ? parseInt(calories) : null,
-                    imageUrl,
+                    imageUrl: imageUrl || '',
                     restaurantId: currentUser.uid,
-                    restaurantName: restaurantInfo.name,
-                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001',
+                    restaurantName: restaurantInfo.name || 'My Restaurant',
+                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001', // CRITICAL: This must match the ZIP code in the main app
                     status: 'pending', // Needs admin approval
                     isActive: true,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
+                console.log('Adding dish with data:', dishData);
+                
                 await db.collection('dishes').add(dishData);
 
                 // Clear form
