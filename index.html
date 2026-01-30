@@ -1095,7 +1095,7 @@
                     <a href="#how-it-works" class="nav-link">How It Works</a>
                     <a href="#cart" class="nav-link">Cart</a>
                     <a href="#about" class="nav-link">About</a>
-                    <a href="owner-dashboard.html" class="nav-link">
+                    <a href="owner-dashboard.html" class="nav-link" target="_blank">
                         <i class="fas fa-store"></i> Restaurant Owners
                     </a>
                 </nav>
@@ -1349,7 +1349,7 @@
                 <p>© 2024 MealMoment. All rights reserved.</p>
                 <p>Fresh • Timely • Delicious</p>
                 <p style="font-size: 0.875rem; margin-top: var(--space-sm);">
-                    <a href="owner-dashboard.html" style="color: var(--mm-orange-2);">Restaurant Owners: Add Your Menu</a>
+                    <a href="owner-dashboard.html" target="_blank" style="color: var(--mm-orange-2);">Restaurant Owners: Add Your Menu</a>
                 </p>
             </div>
         </div>
@@ -1357,7 +1357,6 @@
 
     <script>
         // ===== FIREBASE CONFIGURATION =====
-        // USING YOUR ACTUAL FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDI8i9rZM9qRQzkqpVsg_VED3nesmoMdvY",
             authDomain: "mealmomentrestaurants.firebaseapp.com",
@@ -1800,8 +1799,8 @@
             
             try {
                 // Get approved and active dishes from Firestore for this ZIP code
+                // FIXED: Check for all required fields
                 const dishesSnapshot = await db.collection('dishes')
-                    .where('restaurantZip', '==', zipCode)
                     .where('status', '==', 'approved')
                     .where('isActive', '==', true)
                     .get();
@@ -1815,7 +1814,7 @@
                             <p>Restaurant owners can add their dishes to this area.</p>
                             <p>Try a different ZIP code or check back later.</p>
                             <p style="margin-top: var(--space-md);">
-                                <a href="owner-dashboard.html" class="btn btn-primary">
+                                <a href="owner-dashboard.html" class="btn btn-primary" target="_blank">
                                     <i class="fas fa-store"></i> Add Your Restaurant
                                 </a>
                             </p>
@@ -1826,35 +1825,72 @@
                 
                 const dishes = [];
                 dishesSnapshot.forEach(doc => {
-                    dishes.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
+                    const dish = doc.data();
+                    dish.id = doc.id;
+                    
+                    // Check if dish has restaurantZip and it matches our ZIP code
+                    // OR if no restaurantZip field, include it anyway
+                    if (!dish.restaurantZip || dish.restaurantZip === zipCode) {
+                        dishes.push(dish);
+                    }
                 });
+                
+                // Filter dishes by ZIP code in JavaScript (safer approach)
+                const filteredDishes = dishes.filter(dish => {
+                    // If dish has restaurantZip, check if it matches
+                    if (dish.restaurantZip) {
+                        // Handle both string and array formats
+                        if (Array.isArray(dish.restaurantZip)) {
+                            return dish.restaurantZip.includes(zipCode);
+                        } else {
+                            return dish.restaurantZip === zipCode;
+                        }
+                    }
+                    // If no restaurantZip field, include it (for backward compatibility)
+                    return true;
+                });
+                
+                if (filteredDishes.length === 0) {
+                    menuContainer.innerHTML = `
+                        <div class="message info-message">
+                            <i class="fas fa-utensils"></i>
+                            <h3>No restaurant specials found for ZIP ${zipCode}</h3>
+                            <p>Restaurant owners can add their dishes to this area.</p>
+                            <p>Try a different ZIP code or check back later.</p>
+                            <p style="margin-top: var(--space-md);">
+                                <a href="owner-dashboard.html" class="btn btn-primary" target="_blank">
+                                    <i class="fas fa-store"></i> Add Your Restaurant
+                                </a>
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
                 
                 // Group dishes by cuisine
                 const dishesByCuisine = {};
-                dishes.forEach(dish => {
-                    if (!dishesByCuisine[dish.cuisine]) {
-                        dishesByCuisine[dish.cuisine] = [];
+                filteredDishes.forEach(dish => {
+                    const cuisine = dish.cuisine || 'Various';
+                    if (!dishesByCuisine[cuisine]) {
+                        dishesByCuisine[cuisine] = [];
                     }
-                    dishesByCuisine[dish.cuisine].push(dish);
+                    dishesByCuisine[cuisine].push(dish);
                 });
                 
                 // Build menu HTML
                 let html = '';
                 
                 // Display specials section
-                html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${dishes.length} items)</h3>`;
+                html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${filteredDishes.length} items)</h3>`;
                 html += '<div class="menu-grid">';
                 
-                dishes.forEach(item => {
+                filteredDishes.forEach(item => {
                     const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
                     const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
                     
                     html += `
                         <div class="menu-item special">
-                            <div class="special-badge">${item.restaurantName}</div>
+                            <div class="special-badge">${item.restaurantName || 'Restaurant'}</div>
                             <div class="item-image">
                                 ${item.imageUrl ? 
                                     `<img src="${item.imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${item.name.substring(0,10)}</text></svg>';">` :
@@ -1864,11 +1900,11 @@
                             <h3 class="item-name">${item.name}</h3>
                             <p class="item-description">${item.description || ''}</p>
                             <div class="restaurant-info">
-                                <i class="fas fa-store"></i> ${item.restaurantName}
+                                <i class="fas fa-store"></i> ${item.restaurantName || 'Local Restaurant'}
                             </div>
                             <div class="item-footer">
                                 <div>
-                                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                                    <div class="item-price">$${item.price ? item.price.toFixed(2) : '0.00'}</div>
                                     <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
                                 </div>
                                 <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
@@ -1903,11 +1939,11 @@
                                     <h3 class="item-name">${item.name}</h3>
                                     <p class="item-description">${item.description || ''}</p>
                                     <div class="restaurant-info">
-                                        <i class="fas fa-store"></i> ${item.restaurantName}
+                                        <i class="fas fa-store"></i> ${item.restaurantName || 'Local Restaurant'}
                                     </div>
                                     <div class="item-footer">
                                         <div>
-                                            <div class="item-price">$${item.price.toFixed(2)}</div>
+                                            <div class="item-price">$${item.price ? item.price.toFixed(2) : '0.00'}</div>
                                             <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
                                         </div>
                                         <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
@@ -1927,7 +1963,7 @@
                 updateCheckoutButton();
                 
                 // Show success message
-                showNotification(`Found ${dishes.length} restaurant specials in your area!`, 'success');
+                showNotification(`Found ${filteredDishes.length} restaurant specials in your area!`, 'success');
                 
             } catch (error) {
                 console.error('Error loading menu from Firebase:', error);
@@ -1938,6 +1974,11 @@
                         <h3>Error loading menu</h3>
                         <p>${error.message}</p>
                         <p>Please try again or use a different ZIP code.</p>
+                        <p style="margin-top: var(--space-md);">
+                            <a href="owner-dashboard.html" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-store"></i> Add Your Restaurant
+                            </a>
+                        </p>
                     </div>
                 `;
             }
