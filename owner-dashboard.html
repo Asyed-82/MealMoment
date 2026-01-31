@@ -655,6 +655,58 @@
             color: white;
         }
 
+        /* Dish Size Options */
+        .size-options-container {
+            background: var(--mm-bg-soft);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .size-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-sm);
+            border: 1px solid var(--mm-gray-200);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-sm);
+            background: white;
+        }
+
+        .size-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-sm);
+            margin-top: var(--space-sm);
+        }
+
+        .size-inputs input {
+            width: 100%;
+        }
+
+        .add-size-btn {
+            width: 100%;
+            margin-top: var(--space-sm);
+        }
+
+        .dish-size-tag {
+            display: inline-block;
+            background: var(--mm-green);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: var(--space-xs);
+            margin-bottom: var(--space-xs);
+        }
+
+        .dish-size-price {
+            font-weight: 600;
+            color: var(--mm-green);
+        }
+
         /* ===== RESPONSIVE DESIGN ===== */
         @media (max-width: 992px) {
             .dashboard-layout {
@@ -699,6 +751,10 @@
             
             .dish-actions .btn {
                 width: 100%;
+            }
+            
+            .size-inputs {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -857,52 +913,6 @@
             font-family: var(--font-body);
             font-size: 1rem;
             color: var(--mm-charcoal);
-        }
-
-        /* Payment Modal */
-        .payment-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .payment-modal.active {
-            display: flex;
-        }
-
-        .payment-content {
-            background: var(--mm-bg);
-            border-radius: var(--radius-lg);
-            padding: var(--space-xl);
-            width: 90%;
-            max-width: 500px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .payment-option {
-            border: 2px solid var(--mm-gray-200);
-            border-radius: var(--radius-md);
-            padding: var(--space-lg);
-            margin-bottom: var(--space-md);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .payment-option:hover {
-            border-color: var(--mm-green);
-            transform: translateY(-2px);
-        }
-
-        .payment-option.selected {
-            border-color: var(--mm-green);
-            background: rgba(76, 175, 80, 0.05);
         }
     </style>
 </head>
@@ -1117,8 +1127,24 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="dish-price"><i class="fas fa-dollar-sign"></i> Price *</label>
+                        <label for="dish-price"><i class="fas fa-dollar-sign"></i> Base Price *</label>
                         <input type="number" id="dish-price" placeholder="e.g., 15.99" step="0.01" min="0">
+                    </div>
+                    
+                    <!-- Dish Size Options -->
+                    <div class="form-group">
+                        <label><i class="fas fa-expand-alt"></i> Dish Sizes/Portions (Optional)</label>
+                        <div class="size-options-container">
+                            <p style="font-size: 0.9rem; color: var(--mm-gray-700); margin-bottom: var(--space-md);">
+                                Add different sizes for this dish (e.g., Small, Medium, Large, Family Size)
+                            </p>
+                            <div id="size-options-container">
+                                <!-- Size options will be added here dynamically -->
+                            </div>
+                            <button type="button" class="btn btn-secondary add-size-btn" onclick="addSizeOption()">
+                                <i class="fas fa-plus"></i> Add Size Option
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- NEW: Dish Category by Time (Breakfast/Lunch/Dinner) -->
@@ -1472,6 +1498,7 @@
         let selectedImageFile = null;
         let restaurantDocuments = {};
         let businessHours = null;
+        let sizeOptions = []; // Store dish size options
 
         // ===== 1. INITIALIZE DASHBOARD =====
         function initDashboard() {
@@ -1501,6 +1528,9 @@
 
             // Setup file upload
             setupFileUpload();
+            
+            // Initialize size options
+            updateSizeOptionsUI();
         }
 
         // ===== 2. AUTHENTICATION FUNCTIONS =====
@@ -1682,6 +1712,7 @@
                 .then(() => {
                     currentUser = null;
                     selectedImageFile = null;
+                    sizeOptions = [];
                     updateAuthButton();
                     showLogin();
                 })
@@ -1718,6 +1749,9 @@
                 loadRestaurantDocuments();
             } else if (sectionId === 'business-hours') {
                 displayBusinessHours();
+            } else if (sectionId === 'add-dish') {
+                // Reset form when showing add dish section
+                resetAddDishForm();
             }
         }
 
@@ -1866,7 +1900,8 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                await db.collection('restaurants').doc(currentUser.uid).update(updateData);
+                // FIXED: Use set with merge option instead of update
+                await db.collection('restaurants').doc(currentUser.uid).set(updateData, { merge: true });
 
                 // Update local restaurantInfo
                 restaurantInfo = { 
@@ -1890,7 +1925,85 @@
             }
         }
 
-        // ===== 5. DISH MANAGEMENT FUNCTIONS =====
+        // ===== 5. DISH SIZE FUNCTIONS =====
+        function addSizeOption() {
+            const sizeId = Date.now().toString();
+            sizeOptions.push({
+                id: sizeId,
+                name: '',
+                price: ''
+            });
+            updateSizeOptionsUI();
+        }
+
+        function removeSizeOption(sizeId) {
+            sizeOptions = sizeOptions.filter(option => option.id !== sizeId);
+            updateSizeOptionsUI();
+        }
+
+        function updateSizeOptionsUI() {
+            const container = document.getElementById('size-options-container');
+            if (!container) return;
+
+            if (sizeOptions.length === 0) {
+                container.innerHTML = `
+                    <div class="message info-message" style="margin-bottom: var(--space-md);">
+                        <i class="fas fa-info-circle"></i>
+                        No size options added yet. The base price will be used.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sizeOptions.map(option => `
+                <div class="size-option" data-id="${option.id}">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; margin-bottom: var(--space-xs);">Size Option</div>
+                        <div class="size-inputs">
+                            <input type="text" 
+                                   placeholder="Size name (e.g., Small, Medium)" 
+                                   value="${option.name}"
+                                   onchange="updateSizeOption('${option.id}', 'name', this.value)">
+                            <input type="number" 
+                                   placeholder="Price" 
+                                   step="0.01" 
+                                   min="0" 
+                                   value="${option.price}"
+                                   onchange="updateSizeOption('${option.id}', 'price', this.value)">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="removeSizeOption('${option.id}')" style="margin-left: var(--space-sm);">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateSizeOption(sizeId, field, value) {
+            const option = sizeOptions.find(opt => opt.id === sizeId);
+            if (option) {
+                option[field] = value;
+            }
+        }
+
+        function resetAddDishForm() {
+            // Reset form fields
+            document.getElementById('dish-name').value = '';
+            document.getElementById('dish-description').value = '';
+            document.getElementById('dish-price').value = '';
+            document.getElementById('dish-category').value = '';
+            document.getElementById('dish-cuisine').value = '';
+            document.getElementById('dish-calories').value = '';
+            
+            // Reset size options
+            sizeOptions = [];
+            updateSizeOptionsUI();
+            
+            // Clear image
+            clearImage();
+        }
+
+        // ===== 6. DISH MANAGEMENT FUNCTIONS =====
         async function loadDishes() {
             if (!currentUser) return [];
 
@@ -1964,8 +2077,11 @@
                 return;
             }
 
-            // Render dishes
-            container.innerHTML = filteredDishes.map(dish => `
+            // Render dishes with size information
+            container.innerHTML = filteredDishes.map(dish => {
+                const hasSizes = dish.sizes && dish.sizes.length > 0;
+                
+                return `
                 <div class="dish-card">
                     <div class="dish-status status-${dish.status === 'approved' ? 'approved' : 'pending'}">
                         ${dish.status === 'approved' ? 'APPROVED' : 'PENDING'}
@@ -1980,14 +2096,22 @@
                     <p style="color: var(--mm-gray-700); font-size: 0.9rem; margin-bottom: var(--space-sm);">
                         ${dish.description || 'No description'}
                     </p>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-weight: 700; color: var(--mm-green); font-size: 1.25rem;">
+                    
+                    <!-- Display Size Information -->
+                    <div style="margin-bottom: var(--space-sm);">
+                        ${hasSizes ? 
+                            dish.sizes.map(size => `
+                                <span class="dish-size-tag">${size.name}: <span class="dish-size-price">$${parseFloat(size.price).toFixed(2)}</span></span>
+                            `).join('') : 
+                            `<div style="font-weight: 700; color: var(--mm-green); font-size: 1.25rem;">
                                 $${dish.price?.toFixed(2) || '0.00'}
-                            </div>
-                            <div style="color: var(--mm-gray-700); font-size: 0.875rem;">
-                                ${dish.cuisine || 'Various'} • ${dish.calories || 'N/A'} cal • ${dish.category || 'all-day'}
-                            </div>
+                            </div>`
+                        }
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="color: var(--mm-gray-700); font-size: 0.875rem;">
+                            ${dish.cuisine || 'Various'} • ${dish.calories || 'N/A'} cal • ${dish.category || 'all-day'}
                         </div>
                         <div class="dish-actions">
                             <button class="btn btn-secondary" onclick="toggleDishStatus('${dish.id}', ${dish.isActive || false})" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
@@ -2001,7 +2125,7 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function setFilter(filter) {
@@ -2022,7 +2146,7 @@
             renderDishes();
         }
 
-        // ===== 6. IMAGE UPLOAD FUNCTIONS =====
+        // ===== 7. IMAGE UPLOAD FUNCTIONS =====
         function setupFileUpload() {
             const fileInput = document.getElementById('dish-image-file');
             const uploadContainer = document.getElementById('file-upload-container');
@@ -2160,7 +2284,7 @@
             }
         }
 
-        // ===== 7. ADD DISH FUNCTIONS =====
+        // ===== 8. ADD DISH FUNCTIONS =====
         async function addNewDish() {
             if (!currentUser || !restaurantInfo) {
                 showMessage('dish-form-message', 'Please login first', 'error');
@@ -2182,7 +2306,7 @@
             }
             
             if (!price || price <= 0) {
-                showMessage('dish-form-message', 'Valid price is required', 'error');
+                showMessage('dish-form-message', 'Valid base price is required', 'error');
                 return;
             }
             
@@ -2209,11 +2333,21 @@
                     }
                 }
 
+                // Process size options - filter out empty ones
+                const validSizes = sizeOptions.filter(size => 
+                    size.name && size.name.trim() && 
+                    size.price && parseFloat(size.price) > 0
+                ).map(size => ({
+                    name: size.name.trim(),
+                    price: parseFloat(size.price)
+                }));
+
                 // Add dish to Firestore with PENDING status
                 const dishDoc = {
                     name: name,
                     description: description || '',
                     price: price,
+                    sizes: validSizes.length > 0 ? validSizes : [],
                     category: category,
                     cuisine: cuisine || 'Various',
                     calories: calories,
@@ -2229,14 +2363,8 @@
 
                 await db.collection('dishes').add(dishDoc);
 
-                // Clear form
-                document.getElementById('dish-name').value = '';
-                document.getElementById('dish-description').value = '';
-                document.getElementById('dish-price').value = '';
-                document.getElementById('dish-category').value = '';
-                document.getElementById('dish-cuisine').value = '';
-                document.getElementById('dish-calories').value = '';
-                clearImage();
+                // Reset form
+                resetAddDishForm();
 
                 showMessage('dish-form-message', 'Dish added successfully! It will appear in the main app after admin approval.', 'success');
                 
@@ -2278,7 +2406,7 @@
             }
         }
 
-        // ===== 8. BUSINESS HOURS FUNCTIONS =====
+        // ===== 9. BUSINESS HOURS FUNCTIONS =====
         async function loadBusinessHours() {
             if (!currentUser) return null;
             
@@ -2313,9 +2441,9 @@
                 const openingMinute = openingParts[1];
                 
                 const openingHour12 = openingHour > 12 ? openingHour - 12 : openingHour;
-                if (openingHour12 === 0) openingHour12 = 12;
+                const displayOpeningHour = openingHour12 === 0 ? '12' : openingHour12.toString();
                 
-                document.getElementById('opening-hour').value = openingHour12.toString();
+                document.getElementById('opening-hour').value = displayOpeningHour;
                 document.getElementById('opening-minute').value = openingMinute;
                 document.getElementById('opening-period').value = openingHour >= 12 ? 'PM' : 'AM';
                 
@@ -2326,9 +2454,9 @@
                 const closingMinute = closingParts[1];
                 
                 const closingHour12 = closingHour > 12 ? closingHour - 12 : closingHour;
-                if (closingHour12 === 0) closingHour12 = 12;
+                const displayClosingHour = closingHour12 === 0 ? '12' : closingHour12.toString();
                 
-                document.getElementById('closing-hour').value = closingHour12.toString();
+                document.getElementById('closing-hour').value = displayClosingHour;
                 document.getElementById('closing-minute').value = closingMinute;
                 document.getElementById('closing-period').value = closingHour >= 12 ? 'PM' : 'AM';
             }
@@ -2391,7 +2519,7 @@
                     hoursData.closingTime = closingTime;
                 }
                 
-                // FIXED: Use set with merge option instead of update
+                // FIXED: Use set with merge option to avoid permissions error
                 await db.collection('businessHours').doc(currentUser.uid).set(hoursData, { merge: true });
                 businessHours = hoursData;
                 
@@ -2415,7 +2543,7 @@
             }
         }
 
-        // ===== 9. DOCUMENT UPLOAD FUNCTIONS =====
+        // ===== 10. DOCUMENT UPLOAD FUNCTIONS =====
         async function loadRestaurantDocuments() {
             if (!restaurantInfo || !restaurantInfo.documents) return;
             
@@ -2504,7 +2632,7 @@
                 
                 restaurantInfo.documents[docType] = documentData;
                 
-                // Save to Firestore using set with merge option (FIXED PERMISSIONS ISSUE)
+                // FIXED: Use set with merge option instead of update
                 await db.collection('restaurants').doc(currentUser.uid).set({
                     documents: restaurantInfo.documents,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2529,7 +2657,7 @@
                 // Remove from restaurant info
                 delete restaurantInfo.documents[docType];
                 
-                // Update Firestore using set with merge option (FIXED PERMISSIONS ISSUE)
+                // FIXED: Use set with merge option instead of update
                 await db.collection('restaurants').doc(currentUser.uid).set({
                     documents: restaurantInfo.documents,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2545,7 +2673,7 @@
             }
         }
 
-        // ===== 10. ORDER FUNCTIONS =====
+        // ===== 11. ORDER FUNCTIONS =====
         async function loadOrders() {
             if (!currentUser) return;
 
@@ -2686,7 +2814,7 @@
             }
         }
 
-        // ===== 11. REAL-TIME LISTENERS =====
+        // ===== 12. REAL-TIME LISTENERS =====
         function setupRealTimeListeners() {
             if (!currentUser) return;
 
@@ -2718,7 +2846,7 @@
                 });
         }
 
-        // ===== 12. STATS FUNCTIONS =====
+        // ===== 13. STATS FUNCTIONS =====
         function updateStats() {
             if (!dishes || !orders) return;
 
@@ -2740,7 +2868,7 @@
             document.getElementById('active-dishes').textContent = activeDishes;
         }
 
-        // ===== 13. UTILITY FUNCTIONS =====
+        // ===== 14. UTILITY FUNCTIONS =====
         function showMessage(elementId, message, type) {
             const element = typeof elementId === 'string' ? document.getElementById(elementId) : elementId;
             if (!element) return;
@@ -2761,7 +2889,7 @@
             }
         }
 
-        // ===== 14. INITIALIZE ON LOAD =====
+        // ===== 15. INITIALIZE ON LOAD =====
         window.onload = initDashboard;
     </script>
 </body>
