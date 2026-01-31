@@ -2391,6 +2391,7 @@
                     hoursData.closingTime = closingTime;
                 }
                 
+                // FIXED: Use set with merge option instead of update
                 await db.collection('businessHours').doc(currentUser.uid).set(hoursData, { merge: true });
                 businessHours = hoursData;
                 
@@ -2503,11 +2504,11 @@
                 
                 restaurantInfo.documents[docType] = documentData;
                 
-                // Save to Firestore
-                await db.collection('restaurants').doc(currentUser.uid).update({
-                    [`documents.${docType}`]: restaurantInfo.documents[docType],
+                // Save to Firestore using set with merge option (FIXED PERMISSIONS ISSUE)
+                await db.collection('restaurants').doc(currentUser.uid).set({
+                    documents: restaurantInfo.documents,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                }, { merge: true });
                 
                 // Update UI
                 loadRestaurantDocuments();
@@ -2528,11 +2529,11 @@
                 // Remove from restaurant info
                 delete restaurantInfo.documents[docType];
                 
-                // Update Firestore
-                await db.collection('restaurants').doc(currentUser.uid).update({
-                    [`documents.${docType}`]: firebase.firestore.FieldValue.delete(),
+                // Update Firestore using set with merge option (FIXED PERMISSIONS ISSUE)
+                await db.collection('restaurants').doc(currentUser.uid).set({
+                    documents: restaurantInfo.documents,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                }, { merge: true });
                 
                 // Update UI
                 loadRestaurantDocuments();
