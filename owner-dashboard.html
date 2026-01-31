@@ -2874,10 +2874,10 @@
             if (!element) return;
 
             element.innerHTML = `
-                <div class="${type}-message">
-                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i>
-                    ${message}
-                </div>
+               <div class="${type}-message">
+    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i>
+    ${message}
+</div>
             `;
             element.classList.remove('hidden');
 
