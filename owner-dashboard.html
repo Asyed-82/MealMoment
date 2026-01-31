@@ -858,6 +858,52 @@
             font-size: 1rem;
             color: var(--mm-charcoal);
         }
+
+        /* Payment Modal */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-modal.active {
+            display: flex;
+        }
+
+        .payment-content {
+            background: var(--mm-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .payment-option {
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-option:hover {
+            border-color: var(--mm-green);
+            transform: translateY(-2px);
+        }
+
+        .payment-option.selected {
+            border-color: var(--mm-green);
+            background: rgba(76, 175, 80, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -1140,7 +1186,7 @@
                     
                     <div id="dish-form-message" class="message hidden"></div>
                     
-                    <button class="btn btn-primary" onclick="addDish()" style="width: 100%;">
+                    <button class="btn btn-primary" onclick="checkExtraDishFee()" style="width: 100%;">
                         <i class="fas fa-plus"></i> Add Dish to Menu
                     </button>
                 </div>
@@ -1303,7 +1349,7 @@
                     </button>
                 </div>
 
-                <!-- NEW: Business Hours Section -->
+                <!-- Business Hours Section -->
                 <div id="business-hours-section" class="hidden">
                     <h1><i class="fas fa-clock"></i> Business Hours</h1>
                     <p>Set your restaurant's opening and closing hours. The menu will only appear in the main app when you're open.</p>
@@ -1329,7 +1375,18 @@
                             <div class="hours-row">
                                 <select id="opening-hour" class="time-select">
                                     <option value="">Hour</option>
-                                    ${Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
                                 </select>
                                 <select id="opening-minute" class="time-select">
                                     <option value="">Minute</option>
@@ -1350,7 +1407,18 @@
                             <div class="hours-row">
                                 <select id="closing-hour" class="time-select">
                                     <option value="">Hour</option>
-                                    ${Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
                                 </select>
                                 <select id="closing-minute" class="time-select">
                                     <option value="">Minute</option>
@@ -1376,6 +1444,49 @@
             </div>
         </div>
     </main>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="payment-modal">
+        <div class="payment-content">
+            <h2><i class="fas fa-credit-card"></i> Extra Dish Fee</h2>
+            <p>You currently have 2 dishes. The 3rd dish requires an additional fee of $5 per day.</p>
+            
+            <div class="form-group">
+                <label for="days-count"><i class="fas fa-calendar-alt"></i> How many days would you like to add this dish for? *</label>
+                <input type="number" id="days-count" min="1" max="30" value="1" style="text-align: center;">
+                <small style="color: var(--mm-gray-700); display: block; margin-top: 0.5rem;">
+                    Minimum 1 day, maximum 30 days
+                </small>
+            </div>
+            
+            <div style="background: var(--mm-bg-soft); padding: var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+                <h4 style="margin-bottom: var(--space-sm);">Payment Summary</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-xs);">
+                    <span>Extra dish fee per day:</span>
+                    <span>$5.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-xs);">
+                    <span>Number of days:</span>
+                    <span id="days-display">1</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; color: var(--mm-green); font-size: 1.2rem; padding-top: var(--space-xs); border-top: 2px solid var(--mm-gray-200);">
+                    <span>Total Amount:</span>
+                    <span id="total-amount">$5.00</span>
+                </div>
+            </div>
+            
+            <div id="payment-message" class="message hidden"></div>
+            
+            <div style="display: flex; gap: var(--space-sm);">
+                <button class="btn btn-secondary" onclick="closePaymentModal()" style="flex: 1;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary" onclick="processPayment()" style="flex: 1;">
+                    <i class="fas fa-credit-card"></i> Pay & Add Dish
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ===== FIREBASE CONFIGURATION =====
@@ -1404,6 +1515,7 @@
         let selectedImageFile = null;
         let restaurantDocuments = {};
         let businessHours = null;
+        let pendingDishData = null;
 
         // ===== 1. DISH CATEGORY BY TIME FUNCTIONS =====
         function getCurrentMealCategory() {
@@ -1599,7 +1711,7 @@
             }
         }
 
-        // ===== 4. DISH IMAGE HANDLING FUNCTIONS =====
+        // ===== 4. DISH IMAGE HANDLING FUNCTIONS - FIXED =====
         async function optimizeAndUploadImage(file) {
             return new Promise((resolve, reject) => {
                 if (!file || !file.type.startsWith('image/')) {
@@ -1663,6 +1775,7 @@
                     };
                     img.src = e.target.result;
                 };
+                reader.onerror = reject;
                 reader.readAsDataURL(file);
             });
         }
@@ -1730,18 +1843,255 @@
             }
         }
 
-        // ===== 7. CART PRE-SELECTED ITEM BUG FIX =====
-        function clearPreSelectedCartItems() {
-            // Clear cart from localStorage
-            localStorage.removeItem('mealMomentCart');
+        // ===== 7. PAYMENT FOR EXTRA DISHES =====
+        function checkExtraDishFee() {
+            if (!currentUser || !restaurantInfo) {
+                showMessage('dish-form-message', 'Please login first', 'error');
+                return;
+            }
+
+            // Validate form first
+            const name = document.getElementById('dish-name').value.trim();
+            const price = parseFloat(document.getElementById('dish-price').value);
+            const category = document.getElementById('dish-category').value;
+            const cuisine = document.getElementById('dish-cuisine').value;
+
+            if (!name || !price || price <= 0 || !category || !cuisine) {
+                showMessage('dish-form-message', 'Please fill all required fields with valid data', 'error');
+                return;
+            }
+
+            // Count active dishes
+            const activeDishes = dishes.filter(dish => dish.isActive === true).length;
             
-            // Clear any Firebase cart data if exists
-            if (currentUser) {
-                db.collection('carts').doc(currentUser.uid).delete().catch(() => {});
+            // If user has less than 2 dishes, no payment required
+            if (activeDishes < 2) {
+                addDishDirect();
+                return;
+            }
+            
+            // Store dish data for later
+            pendingDishData = {
+                name: name,
+                description: document.getElementById('dish-description').value.trim(),
+                price: price,
+                category: category,
+                cuisine: cuisine,
+                calories: document.getElementById('dish-calories').value ? parseInt(document.getElementById('dish-calories').value) : null,
+                imageFile: selectedImageFile
+            };
+            
+            // Show payment modal
+            showPaymentModal();
+        }
+
+        function showPaymentModal() {
+            const modal = document.getElementById('payment-modal');
+            const daysCount = document.getElementById('days-count');
+            const daysDisplay = document.getElementById('days-display');
+            const totalAmount = document.getElementById('total-amount');
+            
+            // Set up event listeners for real-time calculation
+            daysCount.addEventListener('input', updatePaymentSummary);
+            
+            // Initial calculation
+            updatePaymentSummary();
+            
+            modal.classList.add('active');
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('payment-modal');
+            modal.classList.remove('active');
+            pendingDishData = null;
+        }
+
+        function updatePaymentSummary() {
+            const daysCount = parseInt(document.getElementById('days-count').value) || 1;
+            const total = daysCount * 5;
+            
+            document.getElementById('days-display').textContent = daysCount;
+            document.getElementById('total-amount').textContent = `$${total.toFixed(2)}`;
+        }
+
+        async function processPayment() {
+            const daysCount = parseInt(document.getElementById('days-count').value) || 1;
+            const totalAmount = daysCount * 5;
+            
+            showMessage('payment-message', `Processing payment of $${totalAmount.toFixed(2)} for ${daysCount} day(s)...`, 'info');
+            
+            try {
+                // Simulate payment processing
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Record payment in Firestore
+                const paymentData = {
+                    restaurantId: currentUser.uid,
+                    restaurantName: restaurantInfo.name,
+                    amount: totalAmount,
+                    days: daysCount,
+                    dishName: pendingDishData.name,
+                    dishPrice: pendingDishData.price,
+                    paymentDate: new Date().toISOString(),
+                    status: 'completed',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                await db.collection('extraDishPayments').add(paymentData);
+                
+                // Update restaurant's extra dish allowance
+                const allowanceData = {
+                    extraDishesAllowed: true,
+                    extraDishExpiry: new Date(Date.now() + (daysCount * 24 * 60 * 60 * 1000)).toISOString(),
+                    lastPaymentDate: new Date().toISOString(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                await db.collection('restaurants').doc(currentUser.uid).update(allowanceData);
+                
+                // Now add the dish
+                await addDishDirect(pendingDishData);
+                
+                showMessage('payment-message', 'Payment successful! Dish added to your menu.', 'success');
+                
+                setTimeout(() => {
+                    closePaymentModal();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Payment processing error:', error);
+                showMessage('payment-message', 'Payment failed: ' + error.message, 'error');
             }
         }
 
-        // ===== INITIALIZE DASHBOARD =====
+        async function addDishDirect(preparedData = null) {
+            if (!currentUser || !restaurantInfo) {
+                showMessage('dish-form-message', 'Please login first', 'error');
+                return;
+            }
+
+            let name, description, price, category, cuisine, calories, imageFile;
+            
+            if (preparedData) {
+                // Use data from payment flow
+                name = preparedData.name;
+                description = preparedData.description;
+                price = preparedData.price;
+                category = preparedData.category;
+                cuisine = preparedData.cuisine;
+                calories = preparedData.calories;
+                imageFile = preparedData.imageFile;
+            } else {
+                // Get data from form
+                name = document.getElementById('dish-name').value.trim();
+                description = document.getElementById('dish-description').value.trim();
+                price = parseFloat(document.getElementById('dish-price').value);
+                category = document.getElementById('dish-category').value;
+                cuisine = document.getElementById('dish-cuisine').value;
+                calories = document.getElementById('dish-calories').value ? parseInt(document.getElementById('dish-calories').value) : null;
+                imageFile = selectedImageFile;
+                
+                // Validation
+                if (!name || !price || price <= 0 || !category || !cuisine) {
+                    showMessage('dish-form-message', 'Please fill all required fields with valid data', 'error');
+                    return;
+                }
+            }
+
+            showMessage('dish-form-message', 'Adding dish...', 'info');
+
+            try {
+                let imageUrl = '';
+                
+                // Upload and optimize image if provided
+                if (imageFile) {
+                    try {
+                        // Show upload progress
+                        document.getElementById('upload-progress').classList.remove('hidden');
+                        imageUrl = await optimizeAndUploadImage(imageFile);
+                        document.getElementById('upload-progress').classList.add('hidden');
+                    } catch (uploadError) {
+                        console.error('Image upload error:', uploadError);
+                        // Continue without image
+                        imageUrl = '';
+                    }
+                }
+
+                // Add dish to Firestore
+                const dishData = {
+                    name,
+                    description: description || '',
+                    price: price,
+                    category: category,
+                    cuisine: cuisine || 'Various',
+                    calories: calories,
+                    imageUrl: imageUrl,
+                    restaurantId: currentUser.uid,
+                    restaurantName: restaurantInfo.name || 'My Restaurant',
+                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001',
+                    status: 'pending',
+                    isActive: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('dishes').add(dishData);
+
+                // Clear form if not from payment flow
+                if (!preparedData) {
+                    document.getElementById('dish-name').value = '';
+                    document.getElementById('dish-description').value = '';
+                    document.getElementById('dish-price').value = '';
+                    document.getElementById('dish-category').value = '';
+                    document.getElementById('dish-cuisine').value = '';
+                    document.getElementById('dish-calories').value = '';
+                    clearImage();
+                }
+
+                showMessage('dish-form-message', 'Dish added successfully! It will appear in the main app after admin approval.', 'success');
+                
+                // Reload dishes
+                await loadDishes();
+                showSection('dishes');
+                
+            } catch (error) {
+                console.error('Error adding dish:', error);
+                showMessage('dish-form-message', 'Error adding dish: ' + error.message, 'error');
+            }
+        }
+
+        // ===== 8. DISH VISIBILITY IN MAIN APP FIX =====
+        async function checkDishVisibility() {
+            // This function would be called from the main app to ensure dishes are visible
+            // It's included here for reference
+            if (!currentUser) return;
+            
+            try {
+                const snapshot = await db.collection('dishes')
+                    .where('restaurantId', '==', currentUser.uid)
+                    .where('isActive', '==', true)
+                    .get();
+                
+                const visibleDishes = [];
+                snapshot.forEach(doc => {
+                    const dish = { id: doc.id, ...doc.data() };
+                    if (dish.status === 'approved') {
+                        visibleDishes.push(dish);
+                    }
+                });
+                
+                console.log('Visible dishes:', visibleDishes.length);
+                return visibleDishes;
+            } catch (error) {
+                console.error('Error checking dish visibility:', error);
+                return [];
+            }
+        }
+
+        // ===== 9. FIX FOR ${i+1} TEMPLATE LITERAL IN BUSINESS HOURS =====
+        // Note: The hardcoded option values are now in the HTML template above
+
+        // ===== 10. INITIALIZE DASHBOARD =====
         function initDashboard() {
             // Check if user is logged in
             auth.onAuthStateChanged(async (user) => {
@@ -1754,9 +2104,6 @@
                     dishes = await loadDishesWithoutDuplicates();
                     await loadOrders();
                     setupRealTimeListeners();
-                    
-                    // Clear any pre-selected cart items
-                    clearPreSelectedCartItems();
                 } else {
                     currentUser = null;
                     updateAuthButton();
@@ -1772,6 +2119,13 @@
 
             // Setup file upload
             setupFileUpload();
+            
+            // Setup days count change listener
+            const daysCount = document.getElementById('days-count');
+            if (daysCount) {
+                daysCount.addEventListener('change', updatePaymentSummary);
+                daysCount.addEventListener('input', updatePaymentSummary);
+            }
         }
 
         // Update auth button text
@@ -2065,6 +2419,7 @@
                 .then(() => {
                     currentUser = null;
                     selectedImageFile = null;
+                    pendingDishData = null;
                     updateAuthButton();
                     showLogin();
                 })
@@ -2554,89 +2909,6 @@
         // Filter Dishes
         function filterDishes() {
             renderDishes();
-        }
-
-        // Add Dish with Image Upload - FIXED VERSION
-        async function addDish() {
-            if (!currentUser || !restaurantInfo) {
-                showMessage('dish-form-message', 'Please login first', 'error');
-                return;
-            }
-
-            const name = document.getElementById('dish-name').value.trim();
-            const description = document.getElementById('dish-description').value.trim();
-            const price = parseFloat(document.getElementById('dish-price').value);
-            const category = document.getElementById('dish-category').value;
-            const cuisine = document.getElementById('dish-cuisine').value;
-            const calories = document.getElementById('dish-calories').value;
-
-            // Validation
-            const errors = [];
-            if (!name) errors.push('Dish name is required');
-            if (!price || price <= 0) errors.push('Valid price is required');
-            if (!category) errors.push('Meal time category is required');
-            if (!cuisine) errors.push('Cuisine type is required');
-            
-            if (selectedImageFile && selectedImageFile.size > 5 * 1024 * 1024) {
-                errors.push('Image size must be less than 5MB');
-            }
-
-            if (errors.length > 0) {
-                showMessage('dish-form-message', errors.join('<br>'), 'error');
-                return;
-            }
-
-            showMessage('dish-form-message', 'Adding dish...', 'info');
-
-            try {
-                let imageUrl = '';
-                
-                // Upload and optimize image if provided
-                if (selectedImageFile) {
-                    imageUrl = await optimizeAndUploadImage(selectedImageFile);
-                }
-
-                // Add dish to Firestore
-                const dishData = {
-                    name,
-                    description: description || '',
-                    price: price,
-                    category: category,
-                    cuisine: cuisine || 'Various',
-                    calories: calories ? parseInt(calories) : null,
-                    imageUrl: imageUrl || '',
-                    restaurantId: currentUser.uid,
-                    restaurantName: restaurantInfo.name || 'My Restaurant',
-                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001',
-                    status: 'pending',
-                    isActive: true,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                console.log('Adding dish with data:', dishData);
-                
-                await db.collection('dishes').add(dishData);
-
-                // Clear form
-                document.getElementById('dish-name').value = '';
-                document.getElementById('dish-description').value = '';
-                document.getElementById('dish-price').value = '';
-                document.getElementById('dish-category').value = '';
-                document.getElementById('dish-cuisine').value = '';
-                document.getElementById('dish-calories').value = '';
-                clearImage();
-
-                showMessage('dish-form-message', 'Dish added successfully! It will appear in the main app after admin approval.', 'success');
-                
-                // Reload dishes
-                await loadDishes();
-                showSection('dishes');
-                
-            } catch (error) {
-                console.error('Error adding dish:', error);
-                showMessage('dish-form-message', 'Error adding dish: ' + error.message, 'error');
-            }
         }
 
         // Toggle Dish Status
