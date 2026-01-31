@@ -788,6 +788,76 @@
             width: 0%;
             transition: width 0.3s ease;
         }
+
+        /* Opening Hours Toggle */
+        .hours-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--mm-gray-200);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--mm-green);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .hours-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .time-select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            color: var(--mm-charcoal);
+        }
     </style>
 </head>
 <body>
@@ -837,6 +907,10 @@
                     <a href="#" class="nav-item" onclick="showSection('restaurant-info')" id="nav-restaurant">
                         <i class="fas fa-store"></i>
                         Restaurant Info
+                    </a>
+                    <a href="#" class="nav-item" onclick="showSection('business-hours')" id="nav-hours">
+                        <i class="fas fa-clock"></i>
+                        Business Hours
                     </a>
                 </nav>
             </aside>
@@ -1001,6 +1075,21 @@
                         <input type="number" id="dish-price" placeholder="e.g., 15.99" step="0.01" min="0">
                     </div>
                     
+                    <!-- NEW: Dish Category by Time (Breakfast/Lunch/Dinner) -->
+                    <div class="form-group">
+                        <label for="dish-category"><i class="fas fa-clock"></i> Meal Time *</label>
+                        <select id="dish-category" required>
+                            <option value="">Select Meal Time</option>
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="dinner">Dinner</option>
+                            <option value="all-day">All Day</option>
+                        </select>
+                        <small style="color: var(--mm-gray-700); display: block; margin-top: 0.5rem;">
+                            When will this dish be available? It will only appear during selected meal time.
+                        </small>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="dish-cuisine"><i class="fas fa-globe"></i> Cuisine Type *</label>
                         <select id="dish-cuisine">
@@ -1032,7 +1121,7 @@
                                 <i class="fas fa-cloud-upload-alt"></i>
                             </div>
                             <div class="upload-text">Click to upload or drag & drop</div>
-                            <div class="upload-hint">PNG, JPG or WebP up to 5MB</div>
+                            <div class="upload-hint">PNG, JPG or WebP up to 5MB (will be auto-optimized)</div>
                             <input type="file" id="dish-image-file" accept="image/*" style="display: none;">
                         </div>
                         <div id="image-preview" class="image-preview">
@@ -1213,6 +1302,77 @@
                         <i class="fas fa-save"></i> Save Restaurant Info & Documents
                     </button>
                 </div>
+
+                <!-- NEW: Business Hours Section -->
+                <div id="business-hours-section" class="hidden">
+                    <h1><i class="fas fa-clock"></i> Business Hours</h1>
+                    <p>Set your restaurant's opening and closing hours. The menu will only appear in the main app when you're open.</p>
+                    
+                    <div class="form-group">
+                        <div class="hours-toggle">
+                            <label for="24-hours-toggle" style="font-weight: 500;">
+                                <i class="fas fa-store"></i> 24-Hour Operation
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="24-hours-toggle" onchange="toggle24Hours()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <small style="color: var(--mm-gray-700); display: block; margin-top: 0.5rem;">
+                            When enabled, your menu will always be available in the main app.
+                        </small>
+                    </div>
+                    
+                    <div id="hours-container">
+                        <div class="form-group">
+                            <label for="opening-time"><i class="fas fa-door-open"></i> Opening Time *</label>
+                            <div class="hours-row">
+                                <select id="opening-hour" class="time-select">
+                                    <option value="">Hour</option>
+                                    ${Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                                </select>
+                                <select id="opening-minute" class="time-select">
+                                    <option value="">Minute</option>
+                                    <option value="00">00</option>
+                                    <option value="15">15</option>
+                                    <option value="30">30</option>
+                                    <option value="45">45</option>
+                                </select>
+                                <select id="opening-period" class="time-select">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="closing-time"><i class="fas fa-door-closed"></i> Closing Time *</label>
+                            <div class="hours-row">
+                                <select id="closing-hour" class="time-select">
+                                    <option value="">Hour</option>
+                                    ${Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
+                                </select>
+                                <select id="closing-minute" class="time-select">
+                                    <option value="">Minute</option>
+                                    <option value="00">00</option>
+                                    <option value="15">15</option>
+                                    <option value="30">30</option>
+                                    <option value="45">45</option>
+                                </select>
+                                <select id="closing-period" class="time-select">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="hours-message" class="message hidden"></div>
+                    
+                    <button class="btn btn-primary" onclick="saveBusinessHours()" style="width: 100%;">
+                        <i class="fas fa-save"></i> Save Business Hours
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -1243,19 +1403,360 @@
         let currentOrderFilter = 'all';
         let selectedImageFile = null;
         let restaurantDocuments = {};
+        let businessHours = null;
 
-        // Initialize Dashboard
+        // ===== 1. DISH CATEGORY BY TIME FUNCTIONS =====
+        function getCurrentMealCategory() {
+            const currentHour = new Date().getHours();
+            if (currentHour >= 5 && currentHour < 11) return 'breakfast';
+            if (currentHour >= 11 && currentHour < 16) return 'lunch';
+            return 'dinner';
+        }
+
+        function filterDishesByMealTime(dishesArray) {
+            const currentCategory = getCurrentMealCategory();
+            return dishesArray.filter(dish => {
+                const dishCategory = dish.category || 'all-day';
+                return dishCategory === currentCategory || dishCategory === 'all-day';
+            });
+        }
+
+        // ===== 2. RESTAURANT OPEN & CLOSE HOURS FUNCTIONS =====
+        async function loadBusinessHours() {
+            if (!currentUser) return null;
+            
+            try {
+                const doc = await db.collection('businessHours').doc(currentUser.uid).get();
+                if (doc.exists) {
+                    businessHours = doc.data();
+                    displayBusinessHours();
+                    return businessHours;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error loading business hours:', error);
+                return null;
+            }
+        }
+
+        function displayBusinessHours() {
+            if (!businessHours) return;
+            
+            const hoursToggle = document.getElementById('24-hours-toggle');
+            if (hoursToggle) {
+                hoursToggle.checked = businessHours.is24Hours || false;
+            }
+            
+            const hoursContainer = document.getElementById('hours-container');
+            if (hoursContainer) {
+                hoursContainer.style.display = businessHours.is24Hours ? 'none' : 'block';
+            }
+            
+            if (!businessHours.is24Hours && businessHours.openingTime && businessHours.closingTime) {
+                // Parse and display opening time
+                const openingTime = businessHours.openingTime;
+                const openingParts = openingTime.split(':');
+                const openingHour = parseInt(openingParts[0]);
+                const openingMinute = openingParts[1];
+                
+                document.getElementById('opening-hour').value = openingHour > 12 ? openingHour - 12 : openingHour;
+                document.getElementById('opening-minute').value = openingMinute;
+                document.getElementById('opening-period').value = openingHour >= 12 ? 'PM' : 'AM';
+                
+                // Parse and display closing time
+                const closingTime = businessHours.closingTime;
+                const closingParts = closingTime.split(':');
+                const closingHour = parseInt(closingParts[0]);
+                const closingMinute = closingParts[1];
+                
+                document.getElementById('closing-hour').value = closingHour > 12 ? closingHour - 12 : closingHour;
+                document.getElementById('closing-minute').value = closingMinute;
+                document.getElementById('closing-period').value = closingHour >= 12 ? 'PM' : 'AM';
+            }
+        }
+
+        function toggle24Hours() {
+            const is24Hours = document.getElementById('24-hours-toggle').checked;
+            const hoursContainer = document.getElementById('hours-container');
+            if (hoursContainer) {
+                hoursContainer.style.display = is24Hours ? 'none' : 'block';
+            }
+        }
+
+        async function saveBusinessHours() {
+            if (!currentUser) {
+                showMessage('hours-message', 'Please login first', 'error');
+                return;
+            }
+
+            const is24Hours = document.getElementById('24-hours-toggle').checked;
+            
+            let openingTime = '';
+            let closingTime = '';
+            
+            if (!is24Hours) {
+                const openingHour = document.getElementById('opening-hour').value;
+                const openingMinute = document.getElementById('opening-minute').value;
+                const openingPeriod = document.getElementById('opening-period').value;
+                
+                const closingHour = document.getElementById('closing-hour').value;
+                const closingMinute = document.getElementById('closing-minute').value;
+                const closingPeriod = document.getElementById('closing-period').value;
+                
+                // Validation
+                if (!openingHour || !openingMinute || !closingHour || !closingMinute) {
+                    showMessage('hours-message', 'Please select valid opening and closing times', 'error');
+                    return;
+                }
+                
+                // Convert to 24-hour format
+                openingTime = convertTo24Hour(openingHour, openingMinute, openingPeriod);
+                closingTime = convertTo24Hour(closingHour, closingMinute, closingPeriod);
+                
+                if (!openingTime || !closingTime) {
+                    showMessage('hours-message', 'Invalid time format', 'error');
+                    return;
+                }
+            }
+
+            try {
+                const hoursData = {
+                    is24Hours: is24Hours,
+                    openingTime: openingTime,
+                    closingTime: closingTime,
+                    restaurantId: currentUser.uid,
+                    restaurantName: restaurantInfo?.name || 'My Restaurant',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (!is24Hours) {
+                    hoursData.openingTime = openingTime;
+                    hoursData.closingTime = closingTime;
+                }
+                
+                await db.collection('businessHours').doc(currentUser.uid).set(hoursData, { merge: true });
+                businessHours = hoursData;
+                
+                showMessage('hours-message', 'Business hours saved successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error saving business hours:', error);
+                showMessage('hours-message', 'Error saving business hours: ' + error.message, 'error');
+            }
+        }
+
+        function convertTo24Hour(hour, minute, period) {
+            try {
+                let hour24 = parseInt(hour);
+                if (period === 'PM' && hour24 < 12) hour24 += 12;
+                if (period === 'AM' && hour24 === 12) hour24 = 0;
+                
+                return `${hour24.toString().padStart(2, '0')}:${minute}`;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function isRestaurantOpenNow(businessHoursData) {
+            if (!businessHoursData) return true; // Default to open if no hours set
+            
+            if (businessHoursData.is24Hours) return true;
+            
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime24 = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+            
+            const openingTime = businessHoursData.openingTime || '09:00';
+            const closingTime = businessHoursData.closingTime || '21:00';
+            
+            return currentTime24 >= openingTime && currentTime24 <= closingTime;
+        }
+
+        // ===== 3. TIME-BASED MENU VISIBILITY FUNCTIONS =====
+        function getMealTimeRules() {
+            return {
+                breakfast: { start: 5, end: 11 },
+                lunch: { start: 11, end: 16 },
+                dinner: { start: 16, end: 24 },
+                allDay: { start: 0, end: 24 }
+            };
+        }
+
+        function shouldShowDishBasedOnTime(dishCategory) {
+            const rules = getMealTimeRules();
+            const currentHour = new Date().getHours();
+            
+            if (dishCategory === 'all-day') return true;
+            
+            const rule = rules[dishCategory];
+            if (!rule) return false;
+            
+            if (rule.start <= rule.end) {
+                return currentHour >= rule.start && currentHour < rule.end;
+            } else {
+                return currentHour >= rule.start || currentHour < rule.end;
+            }
+        }
+
+        // ===== 4. DISH IMAGE HANDLING FUNCTIONS =====
+        async function optimizeAndUploadImage(file) {
+            return new Promise((resolve, reject) => {
+                if (!file || !file.type.startsWith('image/')) {
+                    reject(new Error('Invalid image file'));
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Create canvas for resizing
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Calculate new dimensions (max 800px)
+                        let width = img.width;
+                        let height = img.height;
+                        const maxSize = 800;
+                        
+                        if (width > height && width > maxSize) {
+                            height = (height * maxSize) / width;
+                            width = maxSize;
+                        } else if (height > maxSize) {
+                            width = (width * maxSize) / height;
+                            height = maxSize;
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw and compress image
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convert to WebP format with 80% quality
+                        canvas.toBlob(async (blob) => {
+                            try {
+                                const storageRef = storage.ref(`dishes/${currentUser.uid}/${Date.now()}_optimized.webp`);
+                                const uploadTask = storageRef.put(blob);
+                                
+                                uploadTask.on('state_changed',
+                                    (snapshot) => {
+                                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                        const progressBar = document.getElementById('progress-fill');
+                                        const progressText = document.getElementById('progress-text');
+                                        if (progressBar) progressBar.style.width = progress + '%';
+                                        if (progressText) progressText.textContent = `Optimizing and uploading: ${Math.round(progress)}%`;
+                                    },
+                                    (error) => {
+                                        reject(error);
+                                    },
+                                    async () => {
+                                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                                        resolve(downloadURL);
+                                    }
+                                );
+                            } catch (error) {
+                                reject(error);
+                            }
+                        }, 'image/webp', 0.8);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ===== 5. RESTAURANT DOCUMENT UPLOAD FIX =====
+        async function uploadDocumentWithFix(docType, file) {
+            if (!currentUser || !file) return null;
+            
+            try {
+                // Generate unique filename
+                const timestamp = Date.now();
+                const fileName = `${docType}_${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                const filePath = `restaurants/${currentUser.uid}/documents/${fileName}`;
+                
+                // Upload to Firebase Storage
+                const storageRef = storage.ref(filePath);
+                const uploadTask = storageRef.put(file);
+                
+                // Wait for upload to complete
+                await uploadTask;
+                
+                // Get download URL
+                const downloadURL = await storageRef.getDownloadURL();
+                
+                // Get file metadata
+                const metadata = await storageRef.getMetadata();
+                
+                return {
+                    url: downloadURL,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    path: filePath,
+                    uploadedAt: new Date().toISOString(),
+                    storagePath: filePath
+                };
+                
+            } catch (error) {
+                console.error('Error uploading document:', error);
+                throw error;
+            }
+        }
+
+        // ===== 6. DUPLICATE DISH DISPLAY BUG FIX =====
+        async function loadDishesWithoutDuplicates() {
+            if (!currentUser) return [];
+            
+            try {
+                const snapshot = await db.collection('dishes')
+                    .where('restaurantId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                const dishesMap = new Map();
+                snapshot.forEach(doc => {
+                    const dish = { id: doc.id, ...doc.data() };
+                    // Use dish ID as key to prevent duplicates
+                    dishesMap.set(doc.id, dish);
+                });
+                
+                return Array.from(dishesMap.values());
+            } catch (error) {
+                console.error('Error loading dishes without duplicates:', error);
+                return [];
+            }
+        }
+
+        // ===== 7. CART PRE-SELECTED ITEM BUG FIX =====
+        function clearPreSelectedCartItems() {
+            // Clear cart from localStorage
+            localStorage.removeItem('mealMomentCart');
+            
+            // Clear any Firebase cart data if exists
+            if (currentUser) {
+                db.collection('carts').doc(currentUser.uid).delete().catch(() => {});
+            }
+        }
+
+        // ===== INITIALIZE DASHBOARD =====
         function initDashboard() {
             // Check if user is logged in
-            auth.onAuthStateChanged((user) => {
+            auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     currentUser = user;
                     updateAuthButton();
                     showDashboard();
-                    loadRestaurantInfo();
-                    loadDishes();
-                    loadOrders();
+                    await loadRestaurantInfo();
+                    await loadBusinessHours();
+                    dishes = await loadDishesWithoutDuplicates();
+                    await loadOrders();
                     setupRealTimeListeners();
+                    
+                    // Clear any pre-selected cart items
+                    clearPreSelectedCartItems();
                 } else {
                     currentUser = null;
                     updateAuthButton();
@@ -1372,7 +1873,7 @@
             };
             reader.readAsDataURL(file);
             
-            showMessage('dish-form-message', 'Image selected. Ready to upload!', 'success');
+            showMessage('dish-form-message', 'Image selected. It will be optimized during upload.', 'success');
         }
 
         // Clear selected image
@@ -1438,9 +1939,10 @@
                 
                 updateAuthButton();
                 showDashboard();
-                loadRestaurantInfo();
-                loadDishes();
-                loadOrders();
+                await loadRestaurantInfo();
+                await loadBusinessHours();
+                dishes = await loadDishesWithoutDuplicates();
+                await loadOrders();
                 
                 showMessage('login-message', 'Signed in with Google successfully!', 'success');
             } catch (error) {
@@ -1476,9 +1978,10 @@
                 
                 updateAuthButton();
                 showDashboard();
-                loadRestaurantInfo();
-                loadDishes();
-                loadOrders();
+                await loadRestaurantInfo();
+                await loadBusinessHours();
+                dishes = await loadDishesWithoutDuplicates();
+                await loadOrders();
                 showMessage(messageEl, 'Logged in successfully!', 'success');
             } catch (error) {
                 console.error('Login error:', error);
@@ -1544,9 +2047,10 @@
                 
                 updateAuthButton();
                 showDashboard();
-                loadRestaurantInfo();
-                loadDishes();
-                loadOrders();
+                await loadRestaurantInfo();
+                await loadBusinessHours();
+                dishes = await loadDishesWithoutDuplicates();
+                await loadOrders();
                 
                 showMessage(messageEl, 'Account created successfully!', 'success');
             } catch (error) {
@@ -1572,7 +2076,7 @@
         // Show/Hide Sections
         function showSection(sectionId) {
             // Hide all sections
-            const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info'];
+            const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info', 'business-hours'];
             sections.forEach(id => {
                 const section = document.getElementById(`${id}-section`);
                 const nav = document.getElementById(`nav-${id}`);
@@ -1595,13 +2099,15 @@
                 updateStats();
             } else if (sectionId === 'restaurant-info') {
                 loadRestaurantDocuments();
+            } else if (sectionId === 'business-hours') {
+                displayBusinessHours();
             }
         }
 
         function showLogin() {
             document.getElementById('login-section').classList.remove('hidden');
             document.getElementById('register-section').classList.add('hidden');
-            const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info'];
+            const sections = ['dashboard', 'dishes', 'add-dish', 'orders', 'restaurant-info', 'business-hours'];
             sections.forEach(id => {
                 document.getElementById(`${id}-section`).classList.add('hidden');
             });
@@ -1727,31 +2233,15 @@
             }
             
             try {
-                // Upload to Firebase Storage
-                const storageRef = storage.ref(`restaurants/${currentUser.uid}/documents/${docType}_${Date.now()}_${file.name}`);
-                const uploadTask = storageRef.put(file);
-                
-                // Show progress
-                showMessage('restaurant-info-message', `Uploading ${file.name}...`, 'info');
-                
-                // Wait for upload to complete
-                await uploadTask;
-                
-                // Get download URL
-                const downloadURL = await storageRef.getDownloadURL();
+                // Upload document using fixed function
+                const documentData = await uploadDocumentWithFix(docType, file);
                 
                 // Update restaurant documents
                 if (!restaurantInfo.documents) {
                     restaurantInfo.documents = {};
                 }
                 
-                restaurantInfo.documents[docType] = {
-                    url: downloadURL,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    uploadedAt: new Date().toISOString()
-                };
+                restaurantInfo.documents[docType] = documentData;
                 
                 // Save to Firestore
                 await db.collection('restaurants').doc(currentUser.uid).update({
@@ -1948,19 +2438,7 @@
             `;
 
             try {
-                const snapshot = await db.collection('dishes')
-                    .where('restaurantId', '==', currentUser.uid)
-                    .orderBy('createdAt', 'desc')
-                    .get();
-
-                dishes = [];
-                snapshot.forEach(doc => {
-                    dishes.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-
+                dishes = await loadDishesWithoutDuplicates();
                 renderDishes();
                 updateStats();
             } catch (error) {
@@ -2026,7 +2504,7 @@
                     </div>
                     <div class="dish-image">
                         ${dish.imageUrl ? 
-                            `<img src="${dish.imageUrl}" alt="${dish.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                            `<img src="${dish.imageUrl}" alt="${dish.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${dish.name.substring(0,10)}</text></svg>'">` :
                             `<i class="fas fa-utensils" style="font-size: 3rem; color: var(--mm-gray-700);"></i>`
                         }
                     </div>
@@ -2040,7 +2518,7 @@
                                 $${dish.price?.toFixed(2) || '0.00'}
                             </div>
                             <div style="color: var(--mm-gray-700); font-size: 0.875rem;">
-                                ${dish.cuisine || 'Various'} • ${dish.calories || 'N/A'} cal
+                                ${dish.cuisine || 'Various'} • ${dish.calories || 'N/A'} cal • ${dish.category || 'all-day'}
                             </div>
                         </div>
                         <div class="dish-actions">
@@ -2088,6 +2566,7 @@
             const name = document.getElementById('dish-name').value.trim();
             const description = document.getElementById('dish-description').value.trim();
             const price = parseFloat(document.getElementById('dish-price').value);
+            const category = document.getElementById('dish-category').value;
             const cuisine = document.getElementById('dish-cuisine').value;
             const calories = document.getElementById('dish-calories').value;
 
@@ -2095,6 +2574,7 @@
             const errors = [];
             if (!name) errors.push('Dish name is required');
             if (!price || price <= 0) errors.push('Valid price is required');
+            if (!category) errors.push('Meal time category is required');
             if (!cuisine) errors.push('Cuisine type is required');
             
             if (selectedImageFile && selectedImageFile.size > 5 * 1024 * 1024) {
@@ -2111,23 +2591,24 @@
             try {
                 let imageUrl = '';
                 
-                // Upload image if provided
+                // Upload and optimize image if provided
                 if (selectedImageFile) {
-                    imageUrl = await uploadImage(selectedImageFile);
+                    imageUrl = await optimizeAndUploadImage(selectedImageFile);
                 }
 
-                // Add dish to Firestore - FIXED: Ensure all required fields
+                // Add dish to Firestore
                 const dishData = {
                     name,
                     description: description || '',
                     price: price,
+                    category: category,
                     cuisine: cuisine || 'Various',
                     calories: calories ? parseInt(calories) : null,
                     imageUrl: imageUrl || '',
                     restaurantId: currentUser.uid,
                     restaurantName: restaurantInfo.name || 'My Restaurant',
-                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001', // CRITICAL: This must match the ZIP code in the main app
-                    status: 'pending', // Needs admin approval
+                    restaurantZip: restaurantInfo.zipCodes?.[0] || '90001',
+                    status: 'pending',
                     isActive: true,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2141,6 +2622,7 @@
                 document.getElementById('dish-name').value = '';
                 document.getElementById('dish-description').value = '';
                 document.getElementById('dish-price').value = '';
+                document.getElementById('dish-category').value = '';
                 document.getElementById('dish-cuisine').value = '';
                 document.getElementById('dish-calories').value = '';
                 clearImage();
@@ -2148,49 +2630,13 @@
                 showMessage('dish-form-message', 'Dish added successfully! It will appear in the main app after admin approval.', 'success');
                 
                 // Reload dishes
-                loadDishes();
+                await loadDishes();
                 showSection('dishes');
                 
             } catch (error) {
                 console.error('Error adding dish:', error);
                 showMessage('dish-form-message', 'Error adding dish: ' + error.message, 'error');
             }
-        }
-
-        // Upload image to Firebase Storage
-        async function uploadImage(file) {
-            return new Promise((resolve, reject) => {
-                const storageRef = storage.ref(`dishes/${currentUser.uid}/${Date.now()}_${file.name}`);
-                const uploadTask = storageRef.put(file);
-                
-                // Show progress
-                const progressBar = document.getElementById('progress-fill');
-                const progressText = document.getElementById('progress-text');
-                const uploadProgress = document.getElementById('upload-progress');
-                
-                if (uploadProgress) uploadProgress.classList.remove('hidden');
-                
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        // Progress tracking
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        if (progressBar) progressBar.style.width = progress + '%';
-                        if (progressText) progressText.textContent = `Uploading: ${Math.round(progress)}%`;
-                    },
-                    (error) => {
-                        // Handle errors
-                        if (uploadProgress) uploadProgress.classList.add('hidden');
-                        reject(error);
-                    },
-                    () => {
-                        // Upload complete
-                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                            if (uploadProgress) uploadProgress.classList.add('hidden');
-                            resolve(downloadURL);
-                        }).catch(reject);
-                    }
-                );
-            });
         }
 
         // Toggle Dish Status
@@ -2375,13 +2821,11 @@
             db.collection('dishes')
                 .where('restaurantId', '==', currentUser.uid)
                 .onSnapshot((snapshot) => {
-                    dishes = [];
+                    const dishesMap = new Map();
                     snapshot.forEach(doc => {
-                        dishes.push({
-                            id: doc.id,
-                            ...doc.data()
-                        });
+                        dishesMap.set(doc.id, { id: doc.id, ...doc.data() });
                     });
+                    dishes = Array.from(dishesMap.values());
                     renderDishes();
                     updateStats();
                 });
