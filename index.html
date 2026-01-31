@@ -567,6 +567,47 @@
             font-style: italic;
         }
 
+        /* Restaurant Card */
+        .restaurant-card {
+            border: 2px solid var(--mm-gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-xl);
+            background: var(--mm-bg-soft);
+        }
+
+        .restaurant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 2px solid var(--mm-gray-200);
+        }
+
+        .restaurant-status {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-open {
+            background: var(--mm-green);
+            color: white;
+        }
+
+        .status-closed {
+            background: #dc3545;
+            color: white;
+        }
+
+        .restaurant-dishes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--space-md);
+        }
+
         /* ===== CART SECTION ===== */
         .cart-section {
             background: var(--mm-bg);
@@ -1391,11 +1432,158 @@
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
         let currentStateTaxRate = 0.0825; // Default 8.25%
 
-        // Initialize App
+        // ===== 1. DISH CATEGORY BY TIME FUNCTIONS =====
+        function getCurrentMealCategory() {
+            const currentHour = new Date().getHours();
+            if (currentHour >= 5 && currentHour < 11) return 'breakfast';
+            if (currentHour >= 11 && currentHour < 16) return 'lunch';
+            return 'dinner';
+        }
+
+        function filterDishesByMealTime(dishesArray) {
+            const currentCategory = getCurrentMealCategory();
+            return dishesArray.filter(dish => {
+                const dishCategory = dish.category || 'all-day';
+                return dishCategory === currentCategory || dishCategory === 'all-day';
+            });
+        }
+
+        // ===== 2. RESTAURANT OPEN & CLOSE HOURS FUNCTIONS =====
+        async function loadRestaurantBusinessHours(restaurantId) {
+            try {
+                const doc = await db.collection('businessHours').doc(restaurantId).get();
+                if (doc.exists) {
+                    return doc.data();
+                }
+                return null;
+            } catch (error) {
+                console.error('Error loading business hours:', error);
+                return null;
+            }
+        }
+
+        function isRestaurantOpenNow(businessHoursData) {
+            if (!businessHoursData) return true; // Default to open if no hours set
+            
+            if (businessHoursData.is24Hours) return true;
+            
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime24 = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+            
+            const openingTime = businessHoursData.openingTime || '09:00';
+            const closingTime = businessHoursData.closingTime || '21:00';
+            
+            return currentTime24 >= openingTime && currentTime24 <= closingTime;
+        }
+
+        // ===== 3. TIME-BASED MENU VISIBILITY FUNCTIONS =====
+        function getMealTimeRules() {
+            return {
+                breakfast: { start: 5, end: 11 },
+                lunch: { start: 11, end: 16 },
+                dinner: { start: 16, end: 24 },
+                allDay: { start: 0, end: 24 }
+            };
+        }
+
+        function shouldShowDishBasedOnTime(dishCategory) {
+            const rules = getMealTimeRules();
+            const currentHour = new Date().getHours();
+            
+            if (dishCategory === 'all-day') return true;
+            
+            const rule = rules[dishCategory];
+            if (!rule) return false;
+            
+            if (rule.start <= rule.end) {
+                return currentHour >= rule.start && currentHour < rule.end;
+            } else {
+                return currentHour >= rule.start || currentHour < rule.end;
+            }
+        }
+
+        // ===== 6. DUPLICATE DISH DISPLAY BUG FIX =====
+        async function loadDishesWithoutDuplicates(zipCode, mealType) {
+            try {
+                // Get all approved and active dishes
+                const dishesSnapshot = await db.collection('dishes')
+                    .where('status', '==', 'approved')
+                    .where('isActive', '==', true)
+                    .get();
+                
+                if (dishesSnapshot.empty) {
+                    return [];
+                }
+                
+                const dishesMap = new Map();
+                const restaurantMap = new Map();
+                
+                dishesSnapshot.forEach(doc => {
+                    const dish = { id: doc.id, ...doc.data() };
+                    
+                    // Check if dish matches ZIP code
+                    const matchesZip = checkDishMatchesZip(dish, zipCode);
+                    
+                    if (matchesZip) {
+                        // Use dish ID as key to prevent duplicates
+                        dishesMap.set(doc.id, dish);
+                        
+                        // Group by restaurant for restaurant cards
+                        const restaurantId = dish.restaurantId;
+                        if (!restaurantMap.has(restaurantId)) {
+                            restaurantMap.set(restaurantId, {
+                                id: restaurantId,
+                                name: dish.restaurantName || 'Unknown Restaurant',
+                                dishes: []
+                            });
+                        }
+                        restaurantMap.get(restaurantId).dishes.push(dish);
+                    }
+                });
+                
+                return {
+                    allDishes: Array.from(dishesMap.values()),
+                    restaurants: Array.from(restaurantMap.values())
+                };
+            } catch (error) {
+                console.error('Error loading dishes without duplicates:', error);
+                return { allDishes: [], restaurants: [] };
+            }
+        }
+
+        function checkDishMatchesZip(dish, zipCode) {
+            if (!dish.restaurantZip) return true;
+            
+            if (Array.isArray(dish.restaurantZip)) {
+                return dish.restaurantZip.includes(zipCode);
+            } else {
+                return dish.restaurantZip === zipCode;
+            }
+        }
+
+        // ===== 7. CART PRE-SELECTED ITEM BUG FIX =====
+        function clearPreSelectedCartItems() {
+            // Clear cart from localStorage
+            localStorage.removeItem('mealMomentCart');
+            currentCart = [];
+            
+            // Update cart display
+            updateCartDisplay();
+            
+            // Show notification
+            showNotification('Cart cleared successfully', 'success');
+        }
+
+        // ===== INITIALIZE APP =====
         function init() {
             updateTime();
             setInterval(updateTime, 60000);
             updateCartDisplay();
+            
+            // Clear any pre-selected items on init
+            clearPreSelectedCartItems();
             
             // Setup ZIP code input event listeners
             setupZipCodeInput();
@@ -1624,7 +1812,7 @@
                     state: stateCode,
                     stateFull: primaryPlace.state,
                     timezone: getTimezoneFromState(stateCode),
-                    cityId: 1, // Default city ID for menu lookup
+                    cityId: 1,
                     taxRate: currentStateTaxRate
                 };
 
@@ -1798,14 +1986,10 @@
             `;
             
             try {
-                // Get approved and active dishes from Firestore for this ZIP code
-                // FIXED: Check for all required fields
-                const dishesSnapshot = await db.collection('dishes')
-                    .where('status', '==', 'approved')
-                    .where('isActive', '==', true)
-                    .get();
+                // Load dishes without duplicates and grouped by restaurant
+                const { allDishes, restaurants } = await loadDishesWithoutDuplicates(zipCode, mealType);
                 
-                if (dishesSnapshot.empty) {
+                if (allDishes.length === 0) {
                     // No dishes for this ZIP code, show message
                     menuContainer.innerHTML = `
                         <div class="message info-message">
@@ -1823,147 +2007,127 @@
                     return;
                 }
                 
-                const dishes = [];
-                dishesSnapshot.forEach(doc => {
-                    const dish = doc.data();
-                    dish.id = doc.id;
-                    
-                    // Check if dish has restaurantZip and it matches our ZIP code
-                    // OR if no restaurantZip field, include it anyway
-                    if (!dish.restaurantZip || dish.restaurantZip === zipCode) {
-                        dishes.push(dish);
-                    }
-                });
-                
-                // Filter dishes by ZIP code in JavaScript (safer approach)
-                const filteredDishes = dishes.filter(dish => {
-                    // If dish has restaurantZip, check if it matches
-                    if (dish.restaurantZip) {
-                        // Handle both string and array formats
-                        if (Array.isArray(dish.restaurantZip)) {
-                            return dish.restaurantZip.includes(zipCode);
-                        } else {
-                            return dish.restaurantZip === zipCode;
-                        }
-                    }
-                    // If no restaurantZip field, include it (for backward compatibility)
-                    return true;
-                });
+                // Filter dishes by current meal time
+                const currentMealCategory = getCurrentMealCategory();
+                const filteredDishes = filterDishesByMealTime(allDishes);
                 
                 if (filteredDishes.length === 0) {
                     menuContainer.innerHTML = `
                         <div class="message info-message">
-                            <i class="fas fa-utensils"></i>
-                            <h3>No restaurant specials found for ZIP ${zipCode}</h3>
-                            <p>Restaurant owners can add their dishes to this area.</p>
-                            <p>Try a different ZIP code or check back later.</p>
-                            <p style="margin-top: var(--space-md);">
-                                <a href="owner-dashboard.html" class="btn btn-primary" target="_blank">
-                                    <i class="fas fa-store"></i> Add Your Restaurant
-                                </a>
-                            </p>
+                            <i class="fas fa-clock"></i>
+                            <h3>No ${currentMealCategory} items available</h3>
+                            <p>Restaurants haven't added ${currentMealCategory} dishes for this ZIP code yet.</p>
+                            <p>Check back during ${currentMealCategory} hours or try a different ZIP code.</p>
                         </div>
                     `;
                     return;
                 }
                 
-                // Group dishes by cuisine
-                const dishesByCuisine = {};
-                filteredDishes.forEach(dish => {
-                    const cuisine = dish.cuisine || 'Various';
-                    if (!dishesByCuisine[cuisine]) {
-                        dishesByCuisine[cuisine] = [];
-                    }
-                    dishesByCuisine[cuisine].push(dish);
-                });
-                
-                // Build menu HTML
+                // Build menu HTML with restaurant cards
                 let html = '';
                 
-                // Display specials section
-                html += `<h3><i class="fas fa-star" style="color: var(--mm-orange);"></i> Restaurant Specials (${filteredDishes.length} items)</h3>`;
-                html += '<div class="menu-grid">';
+                // Display time-based menu header
+                html += `<h3><i class="fas fa-clock" style="color: var(--mm-orange);"></i> ${currentMealCategory.toUpperCase()} Menu (${filteredDishes.length} items)</h3>`;
                 
-                filteredDishes.forEach(item => {
-                    const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
-                    const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
+                // Group filtered dishes by restaurant
+                const filteredRestaurants = [];
+                restaurants.forEach(restaurant => {
+                    const restaurantFilteredDishes = restaurant.dishes.filter(dish => 
+                        filteredDishes.some(filteredDish => filteredDish.id === dish.id)
+                    );
+                    
+                    if (restaurantFilteredDishes.length > 0) {
+                        filteredRestaurants.push({
+                            ...restaurant,
+                            dishes: restaurantFilteredDishes
+                        });
+                    }
+                });
+                
+                // Display restaurant cards
+                for (const restaurant of filteredRestaurants) {
+                    // Load business hours for this restaurant
+                    const businessHours = await loadRestaurantBusinessHours(restaurant.id);
+                    const isOpen = isRestaurantOpenNow(businessHours);
+                    
+                    // Skip restaurant if it's closed
+                    if (!isOpen && businessHours) continue;
                     
                     html += `
-                        <div class="menu-item special">
-                            <div class="special-badge">${item.restaurantName || 'Restaurant'}</div>
-                            <div class="item-image">
-                                ${item.imageUrl ? 
-                                    `<img src="${item.imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${item.name.substring(0,10)}</text></svg>';">` :
-                                    `<i class="fas fa-utensils"></i>`
+                        <div class="restaurant-card">
+                            <div class="restaurant-header">
+                                <h4 style="margin: 0;">
+                                    <i class="fas fa-store"></i> ${restaurant.name}
+                                    ${businessHours ? 
+                                        `<span class="restaurant-status ${isOpen ? 'status-open' : 'status-closed'}">
+                                            ${isOpen ? 'OPEN NOW' : 'CLOSED'}
+                                        </span>` : 
+                                        '<span class="restaurant-status status-open">OPEN</span>'
+                                    }
+                                </h4>
+                                ${businessHours && !businessHours.is24Hours ? 
+                                    `<small style="color: var(--mm-gray-700);">
+                                        Hours: ${businessHours.openingTime || '9:00'} - ${businessHours.closingTime || '21:00'}
+                                    </small>` : 
+                                    ''
                                 }
                             </div>
-                            <h3 class="item-name">${item.name}</h3>
-                            <p class="item-description">${item.description || ''}</p>
-                            <div class="restaurant-info">
-                                <i class="fas fa-store"></i> ${item.restaurantName || 'Local Restaurant'}
-                            </div>
-                            <div class="item-footer">
-                                <div>
-                                    <div class="item-price">$${item.price ? item.price.toFixed(2) : '0.00'}</div>
-                                    <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
+                            <div class="restaurant-dishes-grid">
+                    `;
+                    
+                    // Display restaurant's dishes
+                    restaurant.dishes.forEach(item => {
+                        const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
+                        const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
+                        
+                        html += `
+                            <div class="menu-item">
+                                <div class="item-image">
+                                    ${item.imageUrl ? 
+                                        `<img src="${item.imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${item.name.substring(0,10)}</text></svg>';">` :
+                                        `<i class="fas fa-utensils"></i>`
+                                    }
                                 </div>
-                                <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
-                                    <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
-                                    ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
-                                </button>
+                                <h3 class="item-name">${item.name}</h3>
+                                <p class="item-description">${item.description || ''}</p>
+                                <div class="item-footer">
+                                    <div>
+                                        <div class="item-price">$${item.price ? item.price.toFixed(2) : '0.00'}</div>
+                                        <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
+                                    </div>
+                                    <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
+                                        <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
+                                        ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
                             </div>
                         </div>
                     `;
-                });
+                }
                 
-                html += '</div>';
-                
-                // Display by cuisine sections
-                for (const [cuisine, cuisineItems] of Object.entries(dishesByCuisine)) {
-                    if (cuisineItems.length > 0) {
-                        html += `<h3 style="margin-top: 30px;"><i class="fas fa-utensil-spoon"></i> ${cuisine} Cuisine</h3>`;
-                        html += '<div class="menu-grid">';
-                        
-                        cuisineItems.forEach(item => {
-                            const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
-                            const cartQuantity = isInCart ? currentCart.find(cartItem => cartItem.id === item.id).quantity : 0;
-                            
-                            html += `
-                                <div class="menu-item">
-                                    <div class="item-image">
-                                        ${item.imageUrl ? 
-                                            `<img src="${item.imageUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${item.name.substring(0,10)}</text></svg>';">` :
-                                            `<i class="fas fa-utensils"></i>`
-                                        }
-                                    </div>
-                                    <h3 class="item-name">${item.name}</h3>
-                                    <p class="item-description">${item.description || ''}</p>
-                                    <div class="restaurant-info">
-                                        <i class="fas fa-store"></i> ${item.restaurantName || 'Local Restaurant'}
-                                    </div>
-                                    <div class="item-footer">
-                                        <div>
-                                            <div class="item-price">$${item.price ? item.price.toFixed(2) : '0.00'}</div>
-                                            <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
-                                        </div>
-                                        <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
-                                            <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
-                                            ${isInCart ? `${cartQuantity} in cart` : 'Add to cart'}
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        
-                        html += '</div>';
-                    }
+                // If no restaurants are open, show message
+                if (!html.includes('menu-item')) {
+                    menuContainer.innerHTML = `
+                        <div class="message info-message">
+                            <i class="fas fa-clock"></i>
+                            <h3>All restaurants are currently closed</h3>
+                            <p>No restaurants are open at this time. Please check back during regular business hours.</p>
+                            <p>Most restaurants open between 9:00 AM and 9:00 PM.</p>
+                        </div>
+                    `;
+                    return;
                 }
                 
                 menuContainer.innerHTML = html;
                 updateCheckoutButton();
                 
                 // Show success message
-                showNotification(`Found ${filteredDishes.length} restaurant specials in your area!`, 'success');
+                showNotification(`Found ${filteredDishes.length} ${currentMealCategory} items from ${filteredRestaurants.length} restaurants!`, 'success');
                 
             } catch (error) {
                 console.error('Error loading menu from Firebase:', error);
