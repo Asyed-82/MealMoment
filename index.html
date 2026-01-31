@@ -487,24 +487,47 @@
             box-shadow: var(--shadow-sm);
         }
 
+        /* UPDATED: Item Image Styling to match your design */
         .item-image {
             width: 100%;
-            height: 200px;
-            background: var(--mm-bg-soft);
-            border-radius: var(--radius-md);
+            height: 220px;
+            background: linear-gradient(135deg, var(--mm-orange) 0%, var(--mm-green) 100%);
+            border-radius: var(--radius-lg);
             margin-bottom: var(--space-md);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 3rem;
-            color: var(--mm-gray-700);
+            color: white;
             overflow: hidden;
+            position: relative;
         }
 
         .item-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: var(--radius-lg);
+        }
+
+        /* NEW: Popular Badge */
+        .popular-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--mm-gradient);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow-md);
+            border: 3px solid white;
+            z-index: 2;
         }
 
         .item-name {
@@ -540,11 +563,12 @@
             border-radius: var(--radius-sm);
         }
 
+        /* UPDATED: Add to Cart Button with circle plus */
         .add-to-cart-btn {
             background: var(--mm-gradient);
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1.5rem 0.75rem 3rem;
             border-radius: var(--radius-md);
             font-weight: 600;
             cursor: pointer;
@@ -552,6 +576,26 @@
             align-items: center;
             gap: var(--space-xs);
             transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-to-cart-btn::before {
+            content: '+';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            color: var(--mm-green);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
         }
 
         .add-to-cart-btn:hover {
@@ -1856,15 +1900,17 @@
                 errorElement.classList.add('hidden');
                 showNotification(`Restaurant specials loaded for ${currentCity.city}, ${currentCity.state}!`, 'success');
 
-                // On mobile, scroll to menu section to ensure visibility
-                if (window.innerWidth <= 992) {
+                // NEW: Scroll to menu section when ZIP code is entered
+                setTimeout(() => {
                     const menuSection = document.getElementById('menu');
                     if (menuSection) {
-                        setTimeout(() => {
-                            menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 300);
+                        const menuOffset = menuSection.offsetTop - 100;
+                        window.scrollTo({
+                            top: menuOffset,
+                            behavior: 'smooth'
+                        });
                     }
-                }
+                }, 500);
 
             } catch (error) {
                 // Handle errors
@@ -2115,7 +2161,7 @@
                     `;
                     
                     // Display restaurant's dishes
-                    restaurant.dishes.forEach(item => {
+                    restaurant.dishes.forEach((item, index) => {
                         if (!item) return;
                         
                         const isInCart = currentCart.some(cartItem => cartItem.id === item.id);
@@ -2125,9 +2171,17 @@
                             <div class="menu-item">
                                 <div class="item-image">
                                     ${item.imageUrl ? 
-                                        `<img src="${item.imageUrl}" alt="${item.name || 'Dish'}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${(item.name || 'Dish').substring(0,10)}</text></svg>';">` :
-                                        `<i class="fas fa-utensils"></i>`
+                                        `<img src="${item.imageUrl}" alt="${item.name || 'Dish'}" 
+                                             style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-lg);"
+                                             onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${(item.name || 'Dish').substring(0,10)}</text></svg>';">` :
+                                        `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--mm-orange) 0%, var(--mm-green) 100%); color: white; border-radius: var(--radius-lg);">
+                                            <i class="fas fa-utensils" style="font-size: 3rem;"></i>
+                                        </div>`
                                     }
+                                    <!-- Popular Badge -->
+                                    <div class="popular-badge">
+                                        #${index + 1}
+                                    </div>
                                 </div>
                                 <h3 class="item-name">${item.name || 'Unnamed Dish'}</h3>
                                 <p class="item-description">${item.description || ''}</p>
