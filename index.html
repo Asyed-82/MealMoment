@@ -1130,6 +1130,31 @@
         .menu-scroll-target {
             scroll-margin-top: 100px;
         }
+        
+        /* Image error fallback */
+        .image-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--mm-bg-soft);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .image-fallback i {
+            font-size: 2rem;
+            color: var(--mm-gray-700);
+            margin-bottom: 8px;
+        }
+        
+        .image-fallback span {
+            font-size: 0.8rem;
+            color: var(--mm-gray-700);
+        }
     </style>
 </head>
 <body>
@@ -1445,6 +1470,19 @@
         let currentCart = JSON.parse(localStorage.getItem('mealMomentCart')) || [];
         let currentStateTaxRate = 0.0825; // Default 8.25%
 
+        // ===== IMAGE ERROR HANDLER =====
+        function handleImageError(img, dishName) {
+            console.log('Image failed to load:', img.src);
+            img.style.display = 'none';
+            const container = img.parentElement;
+            container.innerHTML = `
+                <div class="image-fallback">
+                    <i class="fas fa-utensils"></i>
+                    <span>${dishName.substring(0, 15)}</span>
+                </div>
+            `;
+        }
+
         // ===== 1. DISH CATEGORY BY TIME FUNCTIONS =====
         function getCurrentMealCategory() {
             const currentHour = new Date().getHours();
@@ -1494,32 +1532,6 @@
             return currentTime24 >= openingTime && currentTime24 <= closingTime;
         }
 
-        // ===== 3. TIME-BASED MENU VISIBILITY FUNCTIONS =====
-        function getMealTimeRules() {
-            return {
-                breakfast: { start: 5, end: 11 },
-                lunch: { start: 11, end: 16 },
-                dinner: { start: 16, end: 24 },
-                allDay: { start: 0, end: 24 }
-            };
-        }
-
-        function shouldShowDishBasedOnTime(dishCategory) {
-            const rules = getMealTimeRules();
-            const currentHour = new Date().getHours();
-            
-            if (dishCategory === 'all-day') return true;
-            
-            const rule = rules[dishCategory];
-            if (!rule) return false;
-            
-            if (rule.start <= rule.end) {
-                return currentHour >= rule.start && currentHour < rule.end;
-            } else {
-                return currentHour >= rule.start || currentHour < rule.end;
-            }
-        }
-
         // ===== 6. DUPLICATE DISH DISPLAY BUG FIX =====
         async function loadDishesWithoutDuplicates(zipCode, mealType) {
             try {
@@ -1543,6 +1555,14 @@
                     const matchesZip = checkDishMatchesZip(dish, zipCode);
                     
                     if (matchesZip) {
+                        // Log dish info for debugging
+                        console.log('Dish loaded:', {
+                            name: dish.name,
+                            hasImage: !!dish.imageUrl,
+                            imageUrl: dish.imageUrl,
+                            restaurantName: dish.restaurantName
+                        });
+                        
                         // Use dish ID as key to prevent duplicates
                         dishesMap.set(doc.id, dish);
                         
@@ -2139,8 +2159,13 @@
                             <div class="menu-item">
                                 <div class="item-image">
                                     ${item.imageUrl ? 
-                                        `<img src="${item.imageUrl}" alt="${item.name || 'Dish'}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${(item.name || 'Dish').substring(0,10)}</text></svg>';">` :
-                                        `<i class="fas fa-utensils"></i>`
+                                        `<img src="${item.imageUrl}" alt="${item.name || 'Dish'}" 
+                                              onerror="handleImageError(this, '${item.name || 'Dish'}')"
+                                              style="width: 100%; height: 100%; object-fit: cover;">` :
+                                        `<div class="image-fallback">
+                                            <i class="fas fa-utensils"></i>
+                                            <span>${(item.name || 'Dish').substring(0, 15)}</span>
+                                        </div>`
                                     }
                                 </div>
                                 <h3 class="item-name">${item.name || 'Unnamed Dish'}</h3>
@@ -2148,7 +2173,7 @@
                                 <div class="item-footer">
                                     <div>
                                         <div class="item-price">$${item.price ? item.price.toFixed(2) : '0.00'}</div>
-                                        <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'}</div>
+                                        <div class="item-meta">${item.calories || 'N/A'} cal • ${item.cuisine || 'Various'} • ${item.category || 'all-day'}</div>
                                     </div>
                                     <button class="add-to-cart-btn" onclick="addToCart('${item.id}')">
                                         <i class="fas fa-${isInCart ? 'check' : 'plus'}"></i>
