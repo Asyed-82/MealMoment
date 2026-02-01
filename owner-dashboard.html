@@ -762,6 +762,32 @@
             .size-inputs {
                 grid-template-columns: 1fr;
             }
+
+            /* FIX FOR MOBILE IMAGES - Make dish images smaller like mv.jpeg and mv1.jpeg */
+            .dish-image {
+                height: 150px !important; /* Reduced height for mobile */
+                max-height: 150px;
+                margin-bottom: var(--space-sm);
+            }
+
+            .dish-card {
+                padding: var(--space-md);
+            }
+
+            .dish-card h3 {
+                font-size: 1.25rem;
+                margin-bottom: var(--space-xs);
+            }
+
+            .dish-card p {
+                font-size: 0.875rem;
+                margin-bottom: var(--space-xs);
+            }
+
+            /* Adjust dish layout for mobile to be more compact */
+            .dish-card > div {
+                margin-bottom: var(--space-sm) !important;
+            }
         }
 
         @media (max-width: 576px) {
@@ -783,6 +809,25 @@
             
             h2 {
                 font-size: 1.75rem;
+            }
+
+            /* Further adjustments for very small screens */
+            .dish-image {
+                height: 120px !important; /* Even smaller for very small screens */
+                max-height: 120px;
+            }
+
+            .dish-card {
+                padding: var(--space-sm);
+            }
+
+            .dish-actions {
+                margin-top: var(--space-sm);
+            }
+
+            .dish-actions .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
             }
         }
 
@@ -919,6 +964,91 @@
             font-family: var(--font-body);
             font-size: 1rem;
             color: var(--mm-charcoal);
+        }
+
+        /* ===== MOBILE-OPTIMIZED DISH CARD LAYOUT ===== */
+        /* This will make dish cards look more like mv.jpeg and mv1.jpeg on mobile */
+        @media (max-width: 768px) {
+            .dish-card {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .dish-image {
+                order: 1;
+            }
+
+            .dish-card h3 {
+                order: 2;
+                margin-top: var(--space-sm);
+            }
+
+            .dish-card > p {
+                order: 3;
+            }
+
+            .dish-card > div:nth-of-type(2) { /* Price/size container */
+                order: 4;
+            }
+
+            .dish-card > div:nth-of-type(3) { /* Cuisine/calories info */
+                order: 5;
+                display: flex;
+                flex-wrap: wrap;
+                gap: var(--space-xs);
+                font-size: 0.75rem;
+                margin-bottom: var(--space-sm);
+            }
+
+            .dish-actions {
+                order: 6;
+                margin-top: 0;
+            }
+
+            /* Make dish cards more compact on mobile */
+            .dish-card {
+                gap: var(--space-xs);
+            }
+
+            /* Adjust spacing for better mobile layout */
+            .dish-status {
+                top: 8px;
+                right: 8px;
+                font-size: 0.7rem;
+                padding: 0.2rem 0.5rem;
+            }
+        }
+
+        /* Extra small screens (like mv.jpeg style) */
+        @media (max-width: 480px) {
+            .dish-image {
+                height: 100px !important;
+                max-height: 100px;
+            }
+
+            .dish-card {
+                padding: var(--space-sm);
+                margin-bottom: var(--space-sm);
+            }
+
+            .dish-card h3 {
+                font-size: 1.1rem;
+            }
+
+            /* Make the layout even more compact */
+            .dish-card > *:not(.dish-image):not(.dish-status):not(.dish-actions) {
+                padding: 0 var(--space-xs);
+            }
+
+            .dish-actions {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .dish-actions .btn {
+                flex: 1;
+                min-width: 120px;
+            }
         }
     </style>
 </head>
