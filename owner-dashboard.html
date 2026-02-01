@@ -515,6 +515,12 @@
             border: 1px solid rgba(13, 110, 253, 0.2);
         }
 
+        .warning-message {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.2);
+        }
+
         /* Login Form */
         .login-container {
             display: flex;
@@ -1194,7 +1200,7 @@
                             </div>
                             <div class="upload-text">Click to upload or drag & drop</div>
                             <div class="upload-hint">PNG, JPG or WebP up to 5MB (will be auto-optimized)</div>
-                            <input type="file" id="dish-image-file" accept="image/*" style="display: none;">
+                            <input type="file" id="dish-image-file" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
                         </div>
                         <div id="image-preview" class="image-preview">
                             <img id="preview-image" class="preview-image" src="" alt="Preview">
@@ -1900,7 +1906,7 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // FIXED: Use set with merge option instead of update
+                // Use set with merge option instead of update
                 await db.collection('restaurants').doc(currentUser.uid).set(updateData, { merge: true });
 
                 // Update local restaurantInfo
@@ -2003,7 +2009,167 @@
             clearImage();
         }
 
-        // ===== 6. DISH MANAGEMENT FUNCTIONS =====
+        // ===== 6. IMAGE HANDLING FUNCTIONS =====
+        function setupFileUpload() {
+            const fileInput = document.getElementById('dish-image-file');
+            const uploadContainer = document.getElementById('file-upload-container');
+            
+            if (!fileInput || !uploadContainer) return;
+            
+            // Click to upload
+            fileInput.addEventListener('change', handleImageSelect);
+            
+            // Drag & drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                uploadContainer.classList.add('dragover');
+            }
+            
+            function unhighlight() {
+                uploadContainer.classList.remove('dragover');
+            }
+            
+            uploadContainer.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files && files[0] && files[0].type.startsWith('image/')) {
+                    handleImageSelect({ target: { files: files } });
+                }
+            }, false);
+        }
+
+        function handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showMessage('dish-form-message', 'Please select an image file', 'error');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('dish-form-message', 'Image must be less than 5MB', 'error');
+                return;
+            }
+            
+            selectedImageFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview-image');
+                const previewContainer = document.getElementById('image-preview');
+                
+                if (preview) preview.src = e.target.result;
+                if (previewContainer) previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            
+            showMessage('dish-form-message', 'Image selected. It will be optimized during upload.', 'success');
+        }
+
+        function clearImage() {
+            selectedImageFile = null;
+            const preview = document.getElementById('preview-image');
+            const previewContainer = document.getElementById('image-preview');
+            const fileInput = document.getElementById('dish-image-file');
+            
+            if (preview) preview.src = '';
+            if (previewContainer) previewContainer.style.display = 'none';
+            if (fileInput) fileInput.value = '';
+            
+            showMessage('dish-form-message', 'Image removed', 'info');
+        }
+
+        async function uploadImageToStorage(file) {
+            if (!currentUser || !file) {
+                console.error('No user or file provided');
+                return null;
+            }
+            
+            try {
+                // Show upload progress
+                const uploadProgress = document.getElementById('upload-progress');
+                if (uploadProgress) uploadProgress.classList.remove('hidden');
+                
+                // Create a reference to the storage location
+                const storageRef = storage.ref();
+                const fileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_'); // Sanitize filename
+                const fileRef = storageRef.child(`dishes/${currentUser.uid}/${Date.now()}_${fileName}`);
+                
+                console.log('Starting upload to:', fileRef.fullPath);
+                
+                // Upload file with metadata
+                const metadata = {
+                    contentType: file.type,
+                    customMetadata: {
+                        'uploadedBy': currentUser.uid,
+                        'restaurantName': restaurantInfo?.name || 'Unknown'
+                    }
+                };
+                
+                const uploadTask = fileRef.put(file, metadata);
+                
+                // Return a promise that resolves with download URL
+                return new Promise((resolve, reject) => {
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            // Track upload progress
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            const progressBar = document.getElementById('progress-fill');
+                            const progressText = document.getElementById('progress-text');
+                            if (progressBar) progressBar.style.width = progress + '%';
+                            if (progressText) progressText.textContent = `Uploading: ${Math.round(progress)}%`;
+                            console.log('Upload progress:', progress + '%');
+                        },
+                        (error) => {
+                            // Handle unsuccessful uploads
+                            console.error('Upload error:', error);
+                            if (uploadProgress) uploadProgress.classList.add('hidden');
+                            reject(error);
+                        },
+                        async () => {
+                            try {
+                                // Handle successful upload
+                                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                                console.log('Download URL obtained:', downloadURL);
+                                
+                                if (uploadProgress) uploadProgress.classList.add('hidden');
+                                resolve(downloadURL);
+                            } catch (urlError) {
+                                console.error('Error getting download URL:', urlError);
+                                reject(urlError);
+                            }
+                        }
+                    );
+                });
+                
+            } catch (error) {
+                console.error('Error in uploadImageToStorage:', error);
+                const uploadProgress = document.getElementById('upload-progress');
+                if (uploadProgress) uploadProgress.classList.add('hidden');
+                return null;
+            }
+        }
+
+        // ===== 7. DISH MANAGEMENT FUNCTIONS =====
         async function loadDishes() {
             if (!currentUser) return [];
 
@@ -2088,7 +2254,7 @@
                     </div>
                     <div class="dish-image">
                         ${dish.imageUrl ? 
-                            `<img src="${dish.imageUrl}" alt="${dish.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${dish.name.substring(0,10)}</text></svg>'">` :
+                            `<img src="${dish.imageUrl}" alt="${dish.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23f0f0f0\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%23999\" text-anchor=\"middle\" dy=\".3em\">${dish.name.substring(0,10)}</text></svg>'">` :
                             `<i class="fas fa-utensils" style="font-size: 3rem; color: var(--mm-gray-700);"></i>`
                         }
                     </div>
@@ -2146,144 +2312,6 @@
             renderDishes();
         }
 
-        // ===== 7. IMAGE UPLOAD FUNCTIONS =====
-        function setupFileUpload() {
-            const fileInput = document.getElementById('dish-image-file');
-            const uploadContainer = document.getElementById('file-upload-container');
-            
-            if (!fileInput || !uploadContainer) return;
-            
-            // Click to upload
-            fileInput.addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    handleImageSelect(this.files[0]);
-                }
-            });
-            
-            // Drag & drop
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                uploadContainer.addEventListener(eventName, preventDefaults, false);
-            });
-            
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            
-            ['dragenter', 'dragover'].forEach(eventName => {
-                uploadContainer.addEventListener(eventName, highlight, false);
-            });
-            
-            ['dragleave', 'drop'].forEach(eventName => {
-                uploadContainer.addEventListener(eventName, unhighlight, false);
-            });
-            
-            function highlight() {
-                uploadContainer.classList.add('dragover');
-            }
-            
-            function unhighlight() {
-                uploadContainer.classList.remove('dragover');
-            }
-            
-            uploadContainer.addEventListener('drop', function(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                
-                if (files && files[0] && files[0].type.startsWith('image/')) {
-                    handleImageSelect(files[0]);
-                }
-            }, false);
-        }
-
-        function handleImageSelect(file) {
-            if (!file.type.startsWith('image/')) {
-                showMessage('dish-form-message', 'Please select an image file', 'error');
-                return;
-            }
-            
-            if (file.size > 5 * 1024 * 1024) {
-                showMessage('dish-form-message', 'Image must be less than 5MB', 'error');
-                return;
-            }
-            
-            selectedImageFile = file;
-            
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('preview-image');
-                const previewContainer = document.getElementById('image-preview');
-                
-                if (preview) preview.src = e.target.result;
-                if (previewContainer) previewContainer.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-            
-            showMessage('dish-form-message', 'Image selected. It will be optimized during upload.', 'success');
-        }
-
-        function clearImage() {
-            selectedImageFile = null;
-            const preview = document.getElementById('preview-image');
-            const previewContainer = document.getElementById('image-preview');
-            const fileInput = document.getElementById('dish-image-file');
-            
-            if (preview) preview.src = '';
-            if (previewContainer) previewContainer.style.display = 'none';
-            if (fileInput) fileInput.value = '';
-            
-            showMessage('dish-form-message', 'Image removed', 'info');
-        }
-
-        async function uploadImageToStorage(file) {
-            if (!currentUser || !file) return null;
-            
-            try {
-                // Show upload progress
-                const uploadProgress = document.getElementById('upload-progress');
-                if (uploadProgress) uploadProgress.classList.remove('hidden');
-                
-                // Create a reference to the storage location
-                const storageRef = storage.ref();
-                const fileRef = storageRef.child(`dishes/${currentUser.uid}/${Date.now()}_${file.name}`);
-                
-                // Upload file
-                const uploadTask = fileRef.put(file);
-                
-                // Return a promise that resolves with download URL
-                return new Promise((resolve, reject) => {
-                    uploadTask.on('state_changed',
-                        (snapshot) => {
-                            // Track upload progress
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            const progressBar = document.getElementById('progress-fill');
-                            const progressText = document.getElementById('progress-text');
-                            if (progressBar) progressBar.style.width = progress + '%';
-                            if (progressText) progressText.textContent = `Uploading: ${Math.round(progress)}%`;
-                        },
-                        (error) => {
-                            // Handle unsuccessful uploads
-                            if (uploadProgress) uploadProgress.classList.add('hidden');
-                            reject(error);
-                        },
-                        async () => {
-                            // Handle successful upload
-                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                            if (uploadProgress) uploadProgress.classList.add('hidden');
-                            resolve(downloadURL);
-                        }
-                    );
-                });
-                
-            } catch (error) {
-                console.error('Error uploading image:', error);
-                const uploadProgress = document.getElementById('upload-progress');
-                if (uploadProgress) uploadProgress.classList.add('hidden');
-                return null;
-            }
-        }
-
         // ===== 8. ADD DISH FUNCTIONS =====
         async function addNewDish() {
             if (!currentUser || !restaurantInfo) {
@@ -2325,12 +2353,23 @@
             try {
                 let imageUrl = null;
                 
-                // Upload image if provided
+                // Upload image if provided - ADD BETTER ERROR HANDLING
                 if (selectedImageFile) {
-                    const uploadedUrl = await uploadImageToStorage(selectedImageFile);
-                    if (uploadedUrl) {
-                        imageUrl = uploadedUrl;
+                    try {
+                        showMessage('dish-form-message', 'Uploading image...', 'info');
+                        const uploadedUrl = await uploadImageToStorage(selectedImageFile);
+                        if (uploadedUrl) {
+                            imageUrl = uploadedUrl;
+                            console.log('Image uploaded successfully:', imageUrl);
+                        } else {
+                            showMessage('dish-form-message', 'Image upload failed. Adding dish without image.', 'warning');
+                        }
+                    } catch (imageError) {
+                        console.error('Image upload error:', imageError);
+                        showMessage('dish-form-message', 'Image upload failed. Adding dish without image.', 'warning');
                     }
+                } else {
+                    console.log('No image selected for this dish');
                 }
 
                 // Process size options - filter out empty ones
@@ -2351,16 +2390,17 @@
                     category: category,
                     cuisine: cuisine || 'Various',
                     calories: calories,
-                    imageUrl: imageUrl,
+                    imageUrl: imageUrl, // This could be null
                     restaurantId: currentUser.uid,
                     restaurantName: restaurantInfo.name || 'My Restaurant',
                     restaurantZip: restaurantInfo.zipCodes?.[0] || '90001',
-                    status: 'pending', // IMPORTANT: Set to pending by default
+                    status: 'pending',
                     isActive: true,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
+                console.log('Adding dish with data:', dishDoc);
                 await db.collection('dishes').add(dishDoc);
 
                 // Reset form
@@ -2519,7 +2559,7 @@
                     hoursData.closingTime = closingTime;
                 }
                 
-                // FIXED: Use set with merge option to avoid permissions error
+                // Use set with merge option to avoid permissions error
                 await db.collection('businessHours').doc(currentUser.uid).set(hoursData, { merge: true });
                 businessHours = hoursData;
                 
@@ -2632,7 +2672,7 @@
                 
                 restaurantInfo.documents[docType] = documentData;
                 
-                // FIXED: Use set with merge option instead of update
+                // Use set with merge option instead of update
                 await db.collection('restaurants').doc(currentUser.uid).set({
                     documents: restaurantInfo.documents,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2657,7 +2697,7 @@
                 // Remove from restaurant info
                 delete restaurantInfo.documents[docType];
                 
-                // FIXED: Use set with merge option instead of update
+                // Use set with merge option instead of update
                 await db.collection('restaurants').doc(currentUser.uid).set({
                     documents: restaurantInfo.documents,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2874,10 +2914,10 @@
             if (!element) return;
 
             element.innerHTML = `
-               <div class="${type}-message">
-    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i>
-    ${message}
-</div>
+                <div class="${type}-message">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i>
+                    ${message}
+                </div>
             `;
             element.classList.remove('hidden');
 
