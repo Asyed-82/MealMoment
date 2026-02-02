@@ -3117,6 +3117,21 @@
 
         // ===== 15. INITIALIZE ON LOAD =====
         window.onload = initDashboard;
+        // ===== ADD THESE LINES AT THE VERY END OF YOUR SCRIPT =====
+// Add this right before the very last </script> tag
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js')
+      .then(function(registration) {
+        console.log('MealMoment Owner app installed successfully!');
+      })
+      .catch(function(err) {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+  });
+}
     </script>
 </body>
 </html>
