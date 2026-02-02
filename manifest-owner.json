@@ -2,20 +2,20 @@
   "name": "MealMoment Owner",
   "short_name": "MealMoment Owner",
   "description": "Restaurant owner dashboard",
-  "start_url": "./owner-dashboard.html",
-  "scope": "./",
+  "start_url": "owner-dashboard.html",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#2E7D32",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "./icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
