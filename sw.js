@@ -1,160 +1,134 @@
-// MealMoment Service Worker - sw.js
-const CACHE_NAME = 'mealmoment-v1';
-const APP_VERSION = 'v1.0';
+// MealMoment Service Worker - Fixed for GitHub Pages PWA
+const CACHE_NAME = 'mealmoment-fixed-v2';
+const APP_VERSION = '2.0';
 
-// Files to cache for offline use
-const urlsToCache = [
-  './',                          // Root page
-  './index.html',                // Customer app
-  './owner-dashboard.html',      // Owner dashboard
-  './install.html',              // Install page
-  './sw.js',                     // This service worker
-  './manifest-customer.json',    // Customer manifest
-  './manifest-owner.json',       // Owner manifest
-  './icon-192.png',              // App icon
-  './icon-512.png',              // App icon
-  './firebase-config.js',        // Firebase config
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap'
+// All paths MUST be relative for GitHub Pages
+const CORE_FILES = [
+  './',                    // Root - MOST IMPORTANT!
+  './index.html',
+  './owner-dashboard.html',
+  './install.html',
+  './manifest-customer.json',
+  './manifest-owner.json',
+  './firebase-config.js',
+  './sw.js',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// Install service worker - cache all important files
-self.addEventListener('install', event => {
-  console.log('[Service Worker] Installing MealMoment app version', APP_VERSION);
-  
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Caching app files');
-        return cache.addAll(urlsToCache).catch(error => {
-          console.log('[Service Worker] Cache addAll failed:', error);
-        });
-      })
-      .then(() => {
-        console.log('[Service Worker] Installation complete');
-        return self.skipWaiting(); // Activate immediately
-      })
-  );
-});
-
-// Activate service worker - clean up old caches
-self.addEventListener('activate', event => {
-  console.log('[Service Worker] Activating new version');
-  
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          // Delete old caches that aren't current
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-    .then(() => {
-      console.log('[Service Worker] Claiming clients');
-      return self.clients.claim();
-    })
-  );
-});
-
-// Intercept network requests
+// EXTRA IMPORTANT: This intercepts ALL fetch requests
 self.addEventListener('fetch', event => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin) && 
-      !event.request.url.includes('cdnjs.cloudflare.com') &&
-      !event.request.url.includes('fonts.googleapis.com') &&
-      !event.request.url.includes('fonts.gstatic.com')) {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
+  
+  const requestUrl = new URL(event.request.url);
+  
+  console.log('🔍 SW: Fetching', requestUrl.pathname);
+  
+  // For navigation requests, always serve index.html
+  if (event.request.mode === 'navigate') {
+    console.log('📍 SW: Navigation request detected');
+    event.respondWith(
+      caches.match('./index.html')
+        .then(response => {
+          if (response) {
+            console.log('✅ SW: Serving index.html from cache');
+            return response;
+          }
+          console.log('⚠️ SW: Fetching index.html from network');
+          return fetch('./index.html');
+        })
+        .catch(error => {
+          console.error('❌ SW: Error serving index.html:', error);
+          return new Response(`
+            <!DOCTYPE html>
+            <html>
+              <head><title>MealMoment</title></head>
+              <body style="font-family: Arial; text-align: center; padding: 50px;">
+                <h1>🍽️ MealMoment</h1>
+                <p>App loading...</p>
+                <script>
+                  setTimeout(() => {
+                    window.location.href = './index.html';
+                  }, 1000);
+                </script>
+              </body>
+            </html>
+          `, { headers: { 'Content-Type': 'text/html' } });
+        })
+    );
     return;
   }
   
+  // For other requests, try cache then network
   event.respondWith(
     caches.match(event.request)
-      .then(cachedResponse => {
-        // If found in cache, return it
-        if (cachedResponse) {
-          console.log('[Service Worker] Serving from cache:', event.request.url);
-          return cachedResponse;
+      .then(cached => {
+        if (cached) {
+          console.log('✅ SW: Serving from cache');
+          return cached;
         }
         
-        // Otherwise fetch from network
-        console.log('[Service Worker] Fetching from network:', event.request.url);
+        console.log('🌐 SW: Fetching from network');
         return fetch(event.request)
-          .then(networkResponse => {
-            // Don't cache if not a valid response
-            if (!networkResponse || networkResponse.status !== 200) {
-              return networkResponse;
+          .then(response => {
+            // Only cache successful responses
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME)
+                .then(cache => cache.put(event.request, clone));
             }
-            
-            // Clone the response to cache it
-            const responseToCache = networkResponse.clone();
-            
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-                console.log('[Service Worker] Cached new resource:', event.request.url);
-              });
-              
-            return networkResponse;
+            return response;
           })
-          .catch(error => {
-            console.log('[Service Worker] Network request failed:', error);
-            
-            // If it's an HTML request and we're offline, show the root page
-            if (event.request.headers.get('accept').includes('text/html')) {
+          .catch(() => {
+            // If fetch fails and it's an HTML request, serve index.html
+            if (event.request.headers.get('accept')?.includes('text/html')) {
               return caches.match('./index.html');
             }
-            
-            // For other requests, return a fallback
-            return new Response('You are offline. Please check your internet connection.', {
-              status: 503,
-              statusText: 'Service Unavailable',
-              headers: new Headers({
-                'Content-Type': 'text/plain'
-              })
-            });
+            return new Response('Offline');
           });
       })
   );
 });
 
-// Handle push notifications (for future use)
-self.addEventListener('push', event => {
-  console.log('[Service Worker] Push received:', event);
-  
-  const title = 'MealMoment';
-  const options = {
-    body: 'New order received!',
-    icon: './icon-192.png',
-    badge: './icon-192.png'
-  };
+// Install - Cache all core files
+self.addEventListener('install', event => {
+  console.log('🔄 SW: Installing version', APP_VERSION);
   
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('📦 SW: Caching core files');
+        return cache.addAll(CORE_FILES);
+      })
+      .then(() => {
+        console.log('✅ SW: Installation complete');
+        return self.skipWaiting(); // Activate immediately
+      })
+      .catch(error => {
+        console.error('❌ SW: Cache error:', error);
+      })
   );
 });
 
-// Handle notification click
-self.addEventListener('notificationclick', event => {
-  console.log('[Service Worker] Notification clicked:', event);
-  event.notification.close();
+// Activate - Clean up old caches
+self.addEventListener('activate', event => {
+  console.log('🚀 SW: Activating');
   
   event.waitUntil(
-    clients.matchAll({ type: 'window' })
-      .then(clientList => {
-        // If a window is already open, focus it
-        for (const client of clientList) {
-          if (client.url === '/' && 'focus' in client) {
-            return client.focus();
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            console.log('🗑️ SW: Deleting old cache:', key);
+            return caches.delete(key);
           }
-        }
-        
-        // Otherwise open a new window
-        if (clients.openWindow) {
-          return clients.openWindow('./');
-        }
-      })
+        })
+      );
+    })
+    .then(() => {
+      console.log('✅ SW: Activation complete');
+      return self.clients.claim(); // Take control immediately
+    })
   );
 });
