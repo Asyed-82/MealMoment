@@ -1,20 +1,21 @@
 {
-  "name": "MealMoment - Food Delivery",
+  "name": "MealMoment",
   "short_name": "MealMoment",
   "description": "Fresh meals based on local time",
-  "start_url": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#2E7D32",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
