@@ -95,7 +95,7 @@
         }
 
         .logo-image {
-            height: 40px;
+            height: 45px; /* Increased from 40px */
             width: auto;
             object-fit: contain;
             border-radius: var(--radius-sm);
@@ -208,9 +208,9 @@
         }
 
         .login-logo {
-            height: 90px; /* Increased from 60px */
+            height: 100px; /* Increased from 90px */
             width: auto;
-            margin-bottom: 15px; /* Increased from 10px */
+            margin-bottom: 20px; /* Increased from 15px */
             display: block;
             margin-left: auto;
             margin-right: auto;
@@ -783,8 +783,8 @@
             }
             
             .login-logo {
-                height: 80px; /* Adjusted for mobile */
-                margin-bottom: 12px;
+                height: 90px; /* Adjusted for mobile */
+                margin-bottom: 15px;
             }
             
             .login-title {
@@ -800,7 +800,7 @@
             }
             
             .logo-image {
-                height: 35px;
+                height: 40px; /* Adjusted for mobile */
             }
             
             .toggle-switch {
@@ -830,8 +830,8 @@
             }
             
             .login-logo {
-                height: 70px; /* Adjusted for small mobile */
-                margin-bottom: 10px;
+                height: 80px; /* Adjusted for small mobile */
+                margin-bottom: 12px;
             }
             
             .login-title {
@@ -867,7 +867,7 @@
             }
             
             .logo-image {
-                height: 30px;
+                height: 35px; /* Adjusted for small mobile */
             }
             
             .header-content {
@@ -892,8 +892,8 @@
             }
             
             .login-logo {
-                height: 65px;
-                margin-bottom: 8px;
+                height: 75px; /* Adjusted for very small mobile */
+                margin-bottom: 10px;
             }
             
             .login-title {
@@ -906,6 +906,10 @@
             
             .stat-number {
                 font-size: 1.25rem;
+            }
+            
+            .logo-image {
+                height: 30px; /* Adjusted for very small mobile */
             }
         }
 
@@ -1239,6 +1243,10 @@
         async function signInWithGoogle() {
             try {
                 const provider = new firebase.auth.GoogleAuthProvider();
+                // Add scopes if needed
+                provider.addScope('email');
+                provider.addScope('profile');
+                
                 const result = await auth.signInWithPopup(provider);
                 currentDriver = result.user;
                 
@@ -1249,7 +1257,7 @@
                     const driverProfile = {
                         name: result.user.displayName || 'Driver',
                         email: result.user.email,
-                        phone: '',
+                        phone: result.user.phoneNumber || '',
                         vehicle: 'car',
                         isOnline: false,
                         isAvailable: true,
@@ -1272,7 +1280,19 @@
                 
             } catch (error) {
                 console.error('Google sign in error:', error);
-                showMessage('login-message', 'Error signing in with Google: ' + error.message, 'error');
+                let errorMessage = 'Error signing in with Google. ';
+                
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    errorMessage += 'An account already exists with the same email address. Try logging in with email/password instead.';
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMessage += 'Popup was blocked by your browser. Please allow popups for this site.';
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    errorMessage += 'Sign-in popup was closed. Please try again.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showMessage('login-message', errorMessage, 'error');
             }
         }
 
@@ -1298,13 +1318,26 @@
                 
             } catch (error) {
                 console.error('Login error:', error);
-                showMessage(messageEl, error.message, 'error');
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'No account found with this email. Please create an account.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Incorrect password. Please try again.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address.';
+                }
+                
+                showMessage(messageEl, errorMessage, 'error');
             }
         }
 
         function showRegisterForm() {
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('register-section').classList.remove('hidden');
+            // Clear any previous messages
+            document.getElementById('register-message').innerHTML = '';
+            document.getElementById('register-message').classList.add('hidden');
             // Scroll to top
             window.scrollTo(0, 0);
         }
@@ -1312,6 +1345,9 @@
         function showLoginForm() {
             document.getElementById('register-section').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
+            // Clear any previous messages
+            document.getElementById('login-message').innerHTML = '';
+            document.getElementById('login-message').classList.add('hidden');
             // Scroll to top
             window.scrollTo(0, 0);
         }
@@ -1382,7 +1418,17 @@
                 
             } catch (error) {
                 console.error('Registration error:', error);
-                showMessage(messageEl, error.message, 'error');
+                let errorMessage = error.message;
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'This email is already registered. Please login instead.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please choose a stronger password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address.';
+                }
+                
+                showMessage(messageEl, errorMessage, 'error');
             }
         }
 
@@ -1538,8 +1584,9 @@
             } catch (error) {
                 console.error('Error loading deliveries:', error);
                 container.innerHTML = `
-                    <div class="message error-message">
-                        <p>Error loading deliveries. Please try again.</p>
+                    <div class="message info-message">
+                        <p>No deliveries available right now.</p>
+                        <p>Check back in a few minutes or try a different area.</p>
                     </div>
                 `;
             }
