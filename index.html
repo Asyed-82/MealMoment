@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Add these 5 lines RIGHT AFTER <head> -->
-<link rel="manifest" href="manifest-customer.json">
-<meta name="theme-color" content="#2E7D32">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="icon-192.png">
+    <!-- PWA Manifest and Meta Tags -->
+    <link rel="manifest" href="manifest-customer.json">
+    <meta name="theme-color" content="#2E7D32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🍽️ MealMoment - Fresh Meals Based on Local Time</title>
@@ -135,18 +136,6 @@
         }
 
         /* ===== HEADER / NAVBAR ===== */
-        <nav class="nav-links">
-    <a href="#menu" class="nav-link">Menu</a>
-    <a href="#how-it-works" class="nav-link">How It Works</a>
-    <a href="#cart" class="nav-link">Cart</a>
-    <a href="#about" class="nav-link">About</a>
-    <a href="owner-dashboard.html" class="nav-link" target="_blank">
-        <i class="fas fa-store"></i> Restaurant Owners
-    </a>
-         <a href="install.html" class="nav-link" style="color: #FF6A00;">
-        <i class="fas fa-mobile-alt"></i> Install App
-    </a>
-</nav>
         .navbar {
             background-color: var(--mm-bg);
             box-shadow: var(--shadow-sm);
@@ -1471,6 +1460,9 @@
                     <a href="owner-dashboard.html" class="nav-link" target="_blank">
                         <i class="fas fa-store"></i> Restaurant Owners
                     </a>
+                    <a href="install.html" class="nav-link" style="color: #FF6A00;">
+                        <i class="fas fa-mobile-alt"></i> Install App
+                    </a>
                 </nav>
             </div>
         </div>
@@ -1781,7 +1773,7 @@
         function getCurrentMealCategory() {
             const currentHour = new Date().getHours();
             if (currentHour >= 5 && currentHour < 11) return 'breakfast';
-            if (currentHour >= 11 && currentHour < 16) return 'lunch';
+            if (currentHour >= 11 && currentHour < 16) return 'dinner';
             return 'dinner';
         }
 
@@ -2918,35 +2910,34 @@
 
         // Initialize on load
         window.onload = init;
-        // ===== ADD THESE LINES AT THE VERY END OF YOUR SCRIPT =====
-// Add this right before the very last </script> tag
 
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js')
-      .then(function(registration) {
-        console.log('MealMoment app installed successfully!');
-      })
-      .catch(function(err) {
-        console.log('ServiceWorker registration failed: ', err);
-      });
-  });
-}
+        // ===== PWA SERVICE WORKER REGISTRATION =====
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js')
+              .then(function(registration) {
+                console.log('MealMoment app installed successfully!');
+              })
+              .catch(function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+              });
+          });
+        }
 
-// Show install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  // Stash the event so it can be triggered later
-  deferredPrompt = e;
-  
-  // Show install button (optional)
-  setTimeout(() => {
-    showNotification('📱 Add MealMoment to your home screen for quick access!', 'info');
-  }, 5000);
-});
+        // Show install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          // Prevent Chrome 67 and earlier from automatically showing the prompt
+          e.preventDefault();
+          // Stash the event so it can be triggered later
+          deferredPrompt = e;
+          
+          // Show install button (optional)
+          setTimeout(() => {
+            showNotification('📱 Add MealMoment to your home screen for quick access!', 'info');
+          }, 5000);
+        });
     </script>
 </body>
 </html>
