@@ -9,9 +9,8 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <meta charset="UTF-8">
-    <!-- Improved viewport for mobile -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>🚗 MealMoment Driver - Food Delivery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MealMoment Driver - Food Delivery</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -55,12 +54,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html {
-            height: 100%;
-            overflow-x: hidden;
         }
 
         body {
@@ -68,10 +61,6 @@
             background-color: var(--driver-bg);
             color: var(--driver-charcoal);
             line-height: 1.6;
-            min-height: 100%;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         .container {
@@ -85,18 +74,16 @@
         .driver-header {
             background: var(--driver-gradient);
             color: white;
-            padding: var(--space-sm) 0;
+            padding: var(--space-md) 0;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: var(--space-sm);
         }
 
         .logo {
@@ -917,9 +904,13 @@
         <!-- Login Section -->
         <section id="login-section" class="login-section">
             <div class="login-card">
-                <h1 class="text-center mb-3" style="color: var(--driver-orange);">
-                    <i class="fas fa-car"></i> Driver Login
-                </h1>
+                <div class="text-center mb-3">
+                    <img src="MealMomentDriverlogo.jpeg" alt="MealMoment Driver" style="height: 60px; width: auto; margin-bottom: 10px;">
+                    <h1 style="color: var(--driver-orange); margin-top: 10px;">
+                        Driver Login
+                    </h1>
+                </div>
+                
                 <p class="text-center mb-4" style="color: var(--driver-charcoal);">
                     Sign in to start delivering meals with MealMoment
                 </p>
@@ -960,12 +951,12 @@
 
                 <button class="btn" onclick="loginDriver()" 
                         style="background: var(--driver-orange); color: white; margin-bottom: var(--space-sm);">
-                    <i class="fas fa-sign-in-alt"></i> Sign In
+                    Sign In
                 </button>
                 
                 <button class="btn" onclick="showRegisterForm()" 
                         style="background: var(--driver-bg); color: var(--driver-charcoal); border: 2px solid var(--driver-gray-200);">
-                    <i class="fas fa-user-plus"></i> Create Driver Account
+                    Create Driver Account
                 </button>
 
                 <div class="text-center mt-4" style="font-size: 0.9rem; color: var(--driver-charcoal);">
@@ -977,9 +968,12 @@
         <!-- Register Section -->
         <section id="register-section" class="login-section hidden">
             <div class="login-card">
-                <h1 class="text-center mb-3" style="color: var(--driver-orange);">
-                    <i class="fas fa-user-plus"></i> Driver Registration
-                </h1>
+                <div class="text-center mb-3">
+                    <img src="MealMomentDriverlogo.jpeg" alt="MealMoment Driver" style="height: 60px; width: auto; margin-bottom: 10px;">
+                    <h1 style="color: var(--driver-orange); margin-top: 10px;">
+                        Driver Registration
+                    </h1>
+                </div>
                 
                 <div class="mb-3">
                     <label for="driver-name" style="display: block; margin-bottom: var(--space-xs); font-weight: 500;">
@@ -999,7 +993,7 @@
 
                 <div class="mb-3">
                     <label for="driver-vehicle" style="display: block; margin-bottom: var(--space-xs); font-weight: 500;">
-                        <i class="fas fa-car"></i> Vehicle Type *
+                        Vehicle Type *
                     </label>
                     <select id="driver-vehicle">
                         <option value="">Select Vehicle</option>
@@ -1030,12 +1024,12 @@
 
                 <button class="btn" onclick="registerDriver()" 
                         style="background: var(--driver-green); color: white; margin-bottom: var(--space-sm);">
-                    <i class="fas fa-check-circle"></i> Create Driver Account
+                    Create Driver Account
                 </button>
                 
                 <button class="btn" onclick="showLoginForm()" 
                         style="background: var(--driver-bg); color: var(--driver-charcoal); border: 2px solid var(--driver-gray-200);">
-                    <i class="fas fa-arrow-left"></i> Back to Login
+                    Back to Login
                 </button>
             </div>
         </section>
@@ -1044,9 +1038,12 @@
         <section id="dashboard-section" class="main-content hidden">
             <!-- Earnings Summary -->
             <div class="earnings-summary">
-                <h3 style="color: white; margin-bottom: var(--space-xs);">
-                    <i class="fas fa-dollar-sign"></i> Today's Earnings
-                </h3>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: var(--space-xs);">
+                    <img src="MealMomentDriverlogo.jpeg" alt="MealMoment" style="height: 30px; width: auto; filter: brightness(0) invert(1);">
+                    <h3 style="color: white; margin: 0;">
+                        Today's Earnings
+                    </h3>
+                </div>
                 <div class="today-earnings" id="today-total">$0.00</div>
                 <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">
                     <span id="deliveries-count">0</span> deliveries • <span id="online-time">0h 0m</span> online
@@ -1076,7 +1073,7 @@
             <!-- Active Delivery -->
             <div id="active-delivery-container" class="hidden">
                 <div class="section-header">
-                    <h3><i class="fas fa-shipping-fast"></i> Active Delivery</h3>
+                    <h3>Active Delivery</h3>
                     <div style="color: var(--driver-green); font-weight: 600;" id="delivery-timer">00:00</div>
                 </div>
                 
@@ -1088,7 +1085,7 @@
             <!-- Available Deliveries -->
             <div class="deliveries-section">
                 <div class="section-header">
-                    <h3><i class="fas fa-list-alt"></i> Available Deliveries</h3>
+                    <h3>Available Deliveries</h3>
                     <button class="refresh-btn" onclick="loadAvailableDeliveries()" title="Refresh">
                         <i class="fas fa-sync-alt"></i>
                     </button>
@@ -1096,7 +1093,6 @@
                 
                 <div id="deliveries-container">
                     <div class="message info-message">
-                        <i class="fas fa-search"></i>
                         <p>Looking for available deliveries...</p>
                         <p>Turn on "Online" status to receive delivery requests.</p>
                     </div>
@@ -1105,7 +1101,7 @@
 
             <!-- Earnings History -->
             <div class="earnings-history">
-                <h3 class="mb-3"><i class="fas fa-history"></i> Recent Earnings</h3>
+                <h3 class="mb-3">Recent Earnings</h3>
                 <div id="earnings-history-list">
                     <div class="earning-item">
                         <div>
@@ -1124,7 +1120,7 @@
     <div id="earnings-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);">
         <div style="background: white; border-radius: var(--radius-lg); padding: var(--space-xl); max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; margin: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
-                <h2 style="color: var(--driver-orange);"><i class="fas fa-chart-line"></i> Earnings Dashboard</h2>
+                <h2 style="color: var(--driver-orange);">Earnings Dashboard</h2>
                 <button onclick="hideEarnings()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--driver-charcoal); padding: 0.5rem;">&times;</button>
             </div>
             
@@ -1450,7 +1446,6 @@
                 const container = document.getElementById('deliveries-container');
                 container.innerHTML = `
                     <div class="message info-message">
-                        <i class="fas fa-signal"></i>
                         <p>Go online to see available deliveries</p>
                         <p>Turn on "Online" status in the header to start receiving delivery requests.</p>
                     </div>
@@ -1488,7 +1483,6 @@
                 console.error('Error loading deliveries:', error);
                 container.innerHTML = `
                     <div class="message error-message">
-                        <i class="fas fa-exclamation-circle"></i>
                         <p>Error loading deliveries. Please try again.</p>
                     </div>
                 `;
@@ -1501,7 +1495,6 @@
             if (availableDeliveries.length === 0) {
                 container.innerHTML = `
                     <div class="message info-message">
-                        <i class="fas fa-search"></i>
                         <p>No deliveries available right now</p>
                         <p>New delivery requests will appear here automatically.</p>
                     </div>
@@ -1530,8 +1523,7 @@
                                 Order #${delivery.orderNumber || delivery.id.substring(0, 8)}
                             </h4>
                             <div class="delivery-distance">
-                                <i class="fas fa-road"></i> ${distance.toFixed(1)} mi • 
-                                <i class="fas fa-clock"></i> ${time} min
+                                ${distance.toFixed(1)} mi • ${time} min
                             </div>
                         </div>
                         <div class="delivery-price">$${estimatedEarnings}</div>
@@ -1576,10 +1568,10 @@
                     
                     <div class="delivery-actions">
                         <button class="btn btn-decline" onclick="declineDelivery('${delivery.id}')">
-                            <i class="fas fa-times"></i> Decline
+                            Decline
                         </button>
                         <button class="btn btn-accept" onclick="acceptDelivery('${delivery.id}')">
-                            <i class="fas fa-check"></i> Accept Delivery
+                            Accept Delivery
                         </button>
                     </div>
                 </div>
@@ -1674,7 +1666,7 @@
             
             activeDiv.innerHTML = `
                 <h3 style="color: var(--driver-green); margin-bottom: var(--space-md);">
-                    <i class="fas fa-shipping-fast"></i> Order #${activeDelivery.orderNumber || activeDelivery.id.substring(0, 8)}
+                    Order #${activeDelivery.orderNumber || activeDelivery.id.substring(0, 8)}
                 </h3>
                 
                 <div class="progress-steps">
@@ -1721,25 +1713,24 @@
                 <div style="text-align: center; margin-top: var(--space-lg);">
                     ${currentStep < 2 ? `
                         <button class="btn btn-nav" onclick="updateDeliveryStatus('picked_up')" style="max-width: 300px; margin: 0 auto;">
-                            <i class="fas fa-store"></i> Confirm Pickup
+                            Confirm Pickup
                         </button>
                     ` : ''}
                     
                     ${currentStep === 2 ? `
                         <button class="btn btn-nav" onclick="updateDeliveryStatus('on_the_way')" style="max-width: 300px; margin: 0 auto;">
-                            <i class="fas fa-road"></i> Start Delivery
+                            Start Delivery
                         </button>
                     ` : ''}
                     
                     ${currentStep === 3 ? `
                         <button class="btn btn-complete" onclick="completeDelivery()" style="max-width: 300px; margin: 0 auto;">
-                            <i class="fas fa-check-circle"></i> Mark as Delivered
+                            Mark as Delivered
                         </button>
                     ` : ''}
                     
                     ${currentStep === 4 ? `
                         <div class="message success-message" style="text-align: center;">
-                            <i class="fas fa-check-circle"></i>
                             <p>Delivery completed! Earnings will be added to your account.</p>
                         </div>
                     ` : ''}
@@ -1921,7 +1912,7 @@
             details.innerHTML = `
                 <div style="margin-bottom: var(--space-lg);">
                     <h3 style="color: var(--driver-green); margin-bottom: var(--space-sm);">
-                        <i class="fas fa-calendar-week"></i> This Week
+                        This Week
                     </h3>
                     <div style="background: var(--driver-bg-soft); padding: var(--space-md); border-radius: var(--radius-md);">
                         ${weeklyEarnings.map(day => `
@@ -1935,7 +1926,7 @@
                 
                 <div style="margin-bottom: var(--space-lg);">
                     <h3 style="color: var(--driver-green); margin-bottom: var(--space-sm);">
-                        <i class="fas fa-chart-pie"></i> Earnings Summary
+                        Earnings Summary
                     </h3>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-sm);">
                         <div style="background: var(--driver-bg-soft); padding: var(--space-md); border-radius: var(--radius-md); text-align: center;">
@@ -1951,7 +1942,7 @@
                 
                 <div>
                     <h3 style="color: var(--driver-green); margin-bottom: var(--space-sm);">
-                        <i class="fas fa-lightbulb"></i> Tips for More Earnings
+                        Tips for More Earnings
                     </h3>
                     <div style="background: var(--driver-bg-soft); padding: var(--space-md); border-radius: var(--radius-md);">
                         <ul style="padding-left: 1.5rem;">
@@ -2029,7 +2020,6 @@
 
             element.innerHTML = `
                 <div class="${type}-message">
-                    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i>
                     ${message}
                 </div>
             `;
@@ -2053,10 +2043,7 @@
             notification.style.zIndex = '3000';
             notification.style.maxWidth = '300px';
             notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'}"></i>
-                ${message}
-            `;
+            notification.innerHTML = `${message}`;
             
             document.body.appendChild(notification);
             
