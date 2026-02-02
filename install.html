@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install MealMoment App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #FF6A00, #2E7D32);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin: 30px 0;
+        }
+        
+        .card {
+            background: white;
+            color: #333;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #2E7D32;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #FF6A00;
+            margin: 25px 0 15px;
+            text-align: left;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 5px solid #2E7D32;
+            text-align: left;
+        }
+        
+        .badge {
+            background: #2E7D32;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px;
+        }
+        
+        .app-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            display: block;
+            padding: 18px;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: transform 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        .btn-customer {
+            background: linear-gradient(90deg, #FF6A00, #FF8A2A);
+            color: white;
+        }
+        
+        .btn-owner {
+            background: linear-gradient(90deg, #2E7D32, #4CAF50);
+            color: white;
+        }
+        
+        .qr-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 3rem;
+        }
+        
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+            
+            .btn {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📱</div>
+        
+        <div class="card">
+            <h1>Install MealMoment App</h1>
+            <p style="color: #666; margin-bottom: 25px;">
+                Get the full app experience on your phone! Works on iPhone, Android, iPad.
+            </p>
+            
+            <div class="app-buttons">
+                <a href="index.html" class="btn btn-customer">
+                    🍽️ Open Customer App
+                </a>
+                <a href="owner-dashboard.html" class="btn btn-owner">
+                    👨‍🍳 Open Restaurant Owner Dashboard
+                </a>
+            </div>
+            
+            <h2>📱 For iPhone/iPad (Safari):</h2>
+            <div class="step">
+                1. Open <span class="badge">Safari</span> browser<br><br>
+                2. Go to MealMoment website<br><br>
+                3. Tap <span class="badge">Share</span> button (📤)<br><br>
+                4. Scroll and tap <span class="badge">Add to Home Screen</span><br><br>
+                5. Tap <span class="badge">Add</span> in top right corner
+            </div>
+            
+            <h2>🤖 For Android (Chrome):</h2>
+            <div class="step">
+                1. Open <span class="badge">Chrome</span> browser<br><br>
+                2. Go to MealMoment website<br><br>
+                3. Tap <span class="badge">⋮</span> (3 dots menu)<br><br>
+                4. Tap <span class="badge">Add to Home screen</span><br><br>
+                5. Tap <span class="badge">Add</span> to install
+            </div>
+            
+            <div class="qr-section">
+                <h2 style="color: #333; text-align: center;">📲 Scan to Open</h2>
+                <p style="color: #666; text-align: center; margin-bottom: 15px;">
+                    Use your phone camera to scan this QR code
+                </p>
+                <div class="qr-code">
+                    📱
+                </div>
+                <p style="color: #666; font-size: 0.9rem; text-align: center; margin-top: 10px;">
+                    (QR code will appear when you host the website)
+                </p>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 0.9rem;">
+                    💡 <strong>Tip:</strong> Once installed, the app works even offline!<br>
+                    🔔 You'll get notifications for new orders<br>
+                    ⚡ Faster loading than website
+                </p>
+            </div>
+        </div>
+        
+        <p style="margin-top: 20px; color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+            Need help? Contact: support@mealmoment.com
+        </p>
+    </div>
+</body>
+</html>
