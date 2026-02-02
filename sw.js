@@ -6,9 +6,13 @@ const urlsToCache = [
   '/',
   'index.html',
   'owner-dashboard.html',
+  'install.html',
   'image/MealMomenetlogo.jpeg',
   'manifest-customer.json',
-  'manifest-owner.json'
+  'manifest-owner.json',
+  'icon-192.png',
+  'icon-512.png',
+  'sw.js'
 ];
 
 // Install service worker
