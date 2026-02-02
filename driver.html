@@ -201,6 +201,36 @@
             width: 100%;
         }
 
+        /* Login Header Styling */
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .login-logo {
+            height: 90px; /* Increased from 60px */
+            width: auto;
+            margin-bottom: 15px; /* Increased from 10px */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            object-fit: contain;
+        }
+
+        .login-title {
+            color: var(--driver-orange);
+            margin-top: 15px; /* Increased from 10px */
+            font-size: 1.8rem; /* Slightly larger */
+            font-weight: 700;
+        }
+
+        .login-subtitle {
+            color: var(--driver-charcoal);
+            font-size: 1rem;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
         /* ===== DASHBOARD SECTION ===== */
         .dashboard-section {
             display: none;
@@ -752,6 +782,15 @@
                 padding: var(--space-lg);
             }
             
+            .login-logo {
+                height: 80px; /* Adjusted for mobile */
+                margin-bottom: 12px;
+            }
+            
+            .login-title {
+                font-size: 1.6rem;
+            }
+            
             .logo-text {
                 font-size: 1rem;
             }
@@ -788,6 +827,15 @@
             
             .login-section {
                 padding: var(--space-md) 0;
+            }
+            
+            .login-logo {
+                height: 70px; /* Adjusted for small mobile */
+                margin-bottom: 10px;
+            }
+            
+            .login-title {
+                font-size: 1.4rem;
             }
             
             .progress-steps {
@@ -841,6 +889,15 @@
             
             .login-card {
                 padding: var(--space-md);
+            }
+            
+            .login-logo {
+                height: 65px;
+                margin-bottom: 8px;
+            }
+            
+            .login-title {
+                font-size: 1.3rem;
             }
             
             .today-earnings {
@@ -904,16 +961,15 @@
         <!-- Login Section -->
         <section id="login-section" class="login-section">
             <div class="login-card">
-                <div class="text-center mb-3">
-                    <img src="MealMomentDriverlogo.jpeg" alt="MealMoment Driver" style="height: 60px; width: auto; margin-bottom: 10px;">
-                    <h1 style="color: var(--driver-orange); margin-top: 10px;">
+                <div class="login-header">
+                    <img src="MealMomentDriverlogo.jpeg" alt="MealMoment Driver" class="login-logo">
+                    <h1 class="login-title">
                         Driver Login
                     </h1>
+                    <p class="login-subtitle">
+                        Sign in to start delivering meals with MealMoment
+                    </p>
                 </div>
-                
-                <p class="text-center mb-4" style="color: var(--driver-charcoal);">
-                    Sign in to start delivering meals with MealMoment
-                </p>
                 
                 <button id="google-signin-btn" class="google-signin-btn" onclick="signInWithGoogle()">
                     <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -968,9 +1024,9 @@
         <!-- Register Section -->
         <section id="register-section" class="login-section hidden">
             <div class="login-card">
-                <div class="text-center mb-3">
-                    <img src="MealMomentDriverlogo.jpeg" alt="MealMoment Driver" style="height: 60px; width: auto; margin-bottom: 10px;">
-                    <h1 style="color: var(--driver-orange); margin-top: 10px;">
+                <div class="login-header">
+                    <img src="MealMomentDriverlogo.jpeg" alt="MealMoment Driver" class="login-logo">
+                    <h1 class="login-title">
                         Driver Registration
                     </h1>
                 </div>
