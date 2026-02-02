@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Add these 5 lines RIGHT AFTER <head> -->
-<link rel="manifest" href="manifest-owner.json">
-<meta name="theme-color" content="#2E7D32">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="icon-192.png">
+    <!-- PWA Manifest and Meta Tags -->
+    <link rel="manifest" href="manifest-owner.json">
+    <meta name="theme-color" content="#2E7D32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🍽️ MealMoment - Restaurant Owner Dashboard</title>
@@ -130,15 +131,6 @@
         }
 
         /* ===== HEADER / NAVBAR ===== */
-        <div style="display: flex; gap: var(--space-md); align-items: center;">
-    <span id="restaurant-name">Welcome</span>
-    <button class="btn btn-secondary" id="auth-button" onclick="toggleAuth()">
-        <i class="fas fa-sign-in-alt"></i> Sign In
-    </button>
-</div>
-        <a href="install.html" class="nav-link" style="margin-left: var(--space-sm); color: #FF6A00;">
-    <i class="fas fa-mobile-alt"></i> App
-</a>
         .navbar {
             background-color: var(--mm-bg);
             box-shadow: var(--shadow-sm);
@@ -1084,6 +1076,9 @@
                     <button class="btn btn-secondary" id="auth-button" onclick="toggleAuth()">
                         <i class="fas fa-sign-in-alt"></i> Sign In
                     </button>
+                    <a href="install.html" class="nav-link" style="margin-left: var(--space-sm); color: #FF6A00;">
+                        <i class="fas fa-mobile-alt"></i> App
+                    </a>
                 </div>
             </div>
         </div>
@@ -3126,21 +3121,20 @@
 
         // ===== 15. INITIALIZE ON LOAD =====
         window.onload = initDashboard;
-        // ===== ADD THESE LINES AT THE VERY END OF YOUR SCRIPT =====
-// Add this right before the very last </script> tag
 
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js')
-      .then(function(registration) {
-        console.log('MealMoment Owner app installed successfully!');
-      })
-      .catch(function(err) {
-        console.log('ServiceWorker registration failed: ', err);
-      });
-  });
-}
+        // ===== PWA SERVICE WORKER REGISTRATION =====
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js')
+              .then(function(registration) {
+                console.log('MealMoment Owner app installed successfully!');
+              })
+              .catch(function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+              });
+          });
+        }
     </script>
 </body>
 </html>
