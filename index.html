@@ -1772,20 +1772,29 @@
         // ===== 1. DISH CATEGORY BY TIME FUNCTIONS =====
         function getCurrentMealCategory() {
             const currentHour = new Date().getHours();
+            console.log('Current hour:', currentHour);
+            
             if (currentHour >= 5 && currentHour < 11) return 'breakfast';
-            if (currentHour >= 11 && currentHour < 16) return 'dinner';
+            if (currentHour >= 11 && currentHour < 16) return 'lunch'; // FIXED: Changed from 'dinner' to 'lunch'
             return 'dinner';
         }
 
         function filterDishesByMealTime(dishesArray) {
             const currentCategory = getCurrentMealCategory();
+            console.log('Current meal category:', currentCategory);
+            
             if (!dishesArray || !Array.isArray(dishesArray)) return [];
             
-            return dishesArray.filter(dish => {
+            const filteredDishes = dishesArray.filter(dish => {
                 if (!dish) return false;
                 const dishCategory = dish.category || 'all-day';
+                console.log('Dish:', dish.name, 'Category:', dishCategory);
+                
                 return dishCategory === currentCategory || dishCategory === 'all-day';
             });
+            
+            console.log('Filtered dishes count:', filteredDishes.length);
+            return filteredDishes;
         }
 
         // ===== 2. RESTAURANT OPEN & CLOSE HOURS FUNCTIONS =====
@@ -1844,6 +1853,7 @@
                         // Log dish info for debugging
                         console.log('Dish loaded:', {
                             name: dish.name,
+                            category: dish.category,
                             hasImage: !!dish.imageUrl,
                             imageUrl: dish.imageUrl,
                             restaurantName: dish.restaurantName
@@ -2137,7 +2147,7 @@
                 // Update UI with real data
                 cityNameElement.textContent = `${currentCity.city}, ${currentCity.state}`;
 
-                // Determine meal type based on time
+                // Determine meal type based on time - FIXED: Correct meal times
                 const currentHour = updateTime();
                 let mealText, mealIcon;
                 
@@ -2145,7 +2155,7 @@
                     mealText = 'BREAKFAST MENU';
                     mealIcon = '☕';
                 } else if (currentHour >= 11 && currentHour < 16) {
-                    mealText = 'LUNCH MENU';
+                    mealText = 'LUNCH MENU'; // FIXED: This should be lunch, not dinner
                     mealIcon = '🥪';
                 } else {
                     mealText = 'DINNER MENU';
@@ -2234,7 +2244,7 @@
                     mealText = 'BREAKFAST MENU';
                     mealIcon = '☕';
                 } else if (currentHour >= 11 && currentHour < 16) {
-                    mealText = 'LUNCH MENU';
+                    mealText = 'LUNCH MENU'; // FIXED: This should be lunch, not dinner
                     mealIcon = '🥪';
                 } else {
                     mealText = 'DINNER MENU';
@@ -2348,6 +2358,10 @@
                 const currentMealCategory = getCurrentMealCategory();
                 const filteredDishes = filterDishesByMealTime(allDishes);
                 
+                console.log('All dishes count:', allDishes.length);
+                console.log('Filtered dishes count:', filteredDishes.length);
+                console.log('Current meal category:', currentMealCategory);
+                
                 if (!filteredDishes || filteredDishes.length === 0) {
                     menuContainer.innerHTML = `
                         <div class="message info-message">
@@ -2363,7 +2377,7 @@
                 // Build menu HTML with restaurant cards
                 let html = '';
                 
-                // Display time-based menu header
+                // Display time-based menu header with correct count
                 html += `<h3><i class="fas fa-clock" style="color: var(--mm-orange);"></i> ${currentMealCategory.toUpperCase()} Menu (${filteredDishes.length} items)</h3>`;
                 
                 // Group filtered dishes by restaurant
@@ -2529,7 +2543,7 @@
                 menuContainer.innerHTML = html;
                 updateCheckoutButton();
                 
-                // Show success message
+                // Show success message with correct count
                 showNotification(`Found ${filteredDishes.length} ${currentMealCategory} items from ${filteredRestaurants.length} restaurants!`, 'success');
                 
             } catch (error) {
@@ -2596,7 +2610,8 @@
                     const currentHour = updateTime();
                     let mealType = 'dinner';
                     if (currentHour >= 5 && currentHour < 11) mealType = 'breakfast';
-                    else if (currentHour >= 11 && currentHour < 16) mealType = 'lunch';
+                    else if (currentHour >= 11 && currentHour < 16) mealType = 'lunch'; // FIXED: Correct meal type
+                    else mealType = 'dinner';
                     loadMenu(zipCode, mealType);
                 }
                 
@@ -2627,7 +2642,8 @@
                 const currentHour = updateTime();
                 let mealType = 'dinner';
                 if (currentHour >= 5 && currentHour < 11) mealType = 'breakfast';
-                else if (currentHour >= 11 && currentHour < 16) mealType = 'lunch';
+                else if (currentHour >= 11 && currentHour < 16) mealType = 'lunch'; // FIXED: Correct meal type
+                else mealType = 'dinner';
                 loadMenu(zipCode, mealType);
             }
             
